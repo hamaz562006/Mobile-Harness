@@ -53,6 +53,7 @@ import com.jarves.mh.network.GitHubRepository
 import com.jarves.mh.runtime.ClaudeRuntimeBridge
 import com.jarves.mh.runtime.DshRuntimeBridge
 import com.jarves.mh.runtime.AgentRegistry
+import com.jarves.mh.runtime.AgentPlatform
 import com.jarves.mh.runtime.AgentUpdateInfo
 import com.jarves.mh.runtime.AntigravityAuthController
 import com.jarves.mh.runtime.AntigravityAuthState
@@ -413,8 +414,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val vault = ApiKeyVault(application)
     private val preferences = AppPreferences(application)
-    private val claudeRuntime = ClaudeRuntimeBridge(application) { profile -> vault.get(profile.kind.name) }
-    private val dshRuntime = DshRuntimeBridge(application) { profile -> vault.get(profile.kind.name) }
+    /** Shared workspace/change services used by every agent bridge. */
+    private val agentPlatform = AgentPlatform(application)
+    private val claudeRuntime = ClaudeRuntimeBridge(
+        application,
+        secretFor = { profile -> vault.get(profile.kind.name) },
+        changeControl = agentPlatform.changeControl,
+    )
+    private val dshRuntime = DshRuntimeBridge(
+        application,
+        secretFor = { profile -> vault.get(profile.kind.name) },
+        changeControl = agentPlatform.changeControl,
+    )
     private val installer = RuntimeInstaller(application)
     private val antigravityRuntime = AntigravityRuntimeBridge(
         application,
@@ -426,6 +437,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         saveConversationId = { projectId, id ->
             _state.value.activeChatId?.let { preferences.saveAgentConversation(AgentKind.ANTIGRAVITY, projectId, it, id) }
         },
+        changeControl = agentPlatform.changeControl,
     )
     private val agentRegistry = AgentRegistry.builtIns(claudeRuntime, dshRuntime, antigravityRuntime)
     private fun activeRuntime(): com.jarves.mh.runtime.RuntimeBridge = agentRegistry.require(_state.value.agentKind).runtime
@@ -568,8 +580,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
-        viewModelScope.launch { dshRuntime.events.collect(::onRuntimeEvent) }
-        viewModelScope.launch { antigravityRuntime.events.collect(::onRuntimeEvent) }
         viewModelScope.launch {
             antigravityAuthController.state.collect { auth ->
                 _state.update { it.copy(antigravityAuth = auth) }
@@ -2040,16 +2050,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Keeps both agent bridges mapped to the same workspace root; the active one is used. */
+    /** Maps every agent bridge to the same workspace root via the shared platform. */
     private fun configureBridgeRoots(projectId: String, rootPath: String) {
-        claudeRuntime.configureProjectRoot(projectId, rootPath)
-        dshRuntime.configureProjectRoot(projectId, rootPath)
-        antigravityRuntime.configureProjectRoot(projectId, rootPath)
+        agentPlatform.configureProjectRoot(projectId, rootPath)
     }
 
     init {
         viewModelScope.launch { RuntimeSetupController.snapshot.collect(::onSetupSnapshot) }
-        viewModelScope.launch { claudeRuntime.events.collect(::onRuntimeEvent) }
+        viewModelScope.launch { agentRegistry.mergedEvents().collect(::onRuntimeEvent) }
         viewModelScope.launch { bootstrap() }
     }
 

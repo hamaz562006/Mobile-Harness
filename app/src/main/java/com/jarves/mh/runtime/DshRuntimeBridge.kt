@@ -44,9 +44,10 @@ import org.json.JSONObject
 class DshRuntimeBridge(
     private val context: Context,
     private val secretFor: (ProviderProfile) -> String?,
+    private val changeControl: SharedChangeControl,
 ) : RuntimeBridge {
     private val installer = RuntimeInstaller(context)
-    private val checkpoints = WorkspaceCheckpoints(context.filesDir, context)
+    private val checkpoints = changeControl.checkpoints
     private val eventBus = MutableSharedFlow<RuntimeEvent>(extraBufferCapacity = 64)
     override val events: Flow<RuntimeEvent> = eventBus
     private val finishedSessions = ConcurrentHashMap.newKeySet<String>()
@@ -401,73 +402,24 @@ class DshRuntimeBridge(
     }
 
     fun configureProjectRoot(projectId: String, rootPath: String) {
-        checkpoints.configureProjectRoot(projectId, rootPath)
+        changeControl.configureProjectRoot(projectId, rootPath)
     }
 
-    override suspend fun undoLastChanges(projectId: String): Boolean = withContext(Dispatchers.IO) {
-        val checkpoint = checkpoints.checkpointDir(projectId)
-        val backup = File(checkpoint, "project")
-        if (!backup.isDirectory || !File(checkpoint, "changes.json").isFile) return@withContext false
-        val workspace = checkpoints.ensureWorkspace(projectId)
-        val paths = checkpoints.readChangedPaths(projectId).filterNot(checkpoints::isInternalRuntimePath)
-        if (paths.isEmpty()) return@withContext false
-        paths.forEach { path ->
-            val target = checkpoints.safeWorkspaceFile(workspace, path)
-            val original = checkpoints.safeWorkspaceFile(backup, path)
-            if (original.isFile) {
-                target.parentFile?.mkdirs()
-                original.copyTo(target, overwrite = true)
-            } else if (target.isFile) {
-                target.delete()
-            }
-        }
-        checkpoint.deleteRecursively()
-        true
-    }
+    override suspend fun undoLastChanges(projectId: String): Boolean =
+        changeControl.undoLastChanges(projectId)
 
-    override suspend fun acceptLastChanges(projectId: String) {
-        withContext(Dispatchers.IO) {
-            checkpoints.checkpointDir(projectId).deleteRecursively()
-        }
-    }
+    override suspend fun acceptLastChanges(projectId: String) =
+        changeControl.acceptLastChanges(projectId)
 
-    override suspend fun loadPendingChanges(projectId: String): List<ChangeItem> = withContext(Dispatchers.IO) {
-        val workspace = checkpoints.ensureWorkspace(projectId)
-        val paths = checkpoints.readChangedPaths(projectId).filterNot(checkpoints::isInternalRuntimePath)
-        if (paths.isEmpty()) emptyList() else checkpoints.buildChangeDetails(projectId, workspace, paths)
-    }
+    override suspend fun loadPendingChanges(projectId: String): List<ChangeItem> =
+        changeControl.loadPendingChanges(projectId)
 
-    override suspend fun undoFileChange(projectId: String, path: String): Boolean = withContext(Dispatchers.IO) {
-        if (checkpoints.isInternalRuntimePath(path) || path !in checkpoints.readChangedPaths(projectId)) return@withContext false
-        val workspace = checkpoints.ensureWorkspace(projectId)
-        val backup = File(checkpoints.checkpointDir(projectId), "project")
-        val target = checkpoints.safeWorkspaceFile(workspace, path)
-        val original = checkpoints.safeWorkspaceFile(backup, path)
-        if (original.isFile) {
-            target.parentFile?.mkdirs()
-            original.copyTo(target, overwrite = true)
-        } else if (target.isFile) {
-            target.delete()
-        }
-        checkpoints.removeChangedPath(projectId, path)
-        true
-    }
+    override suspend fun undoFileChange(projectId: String, path: String): Boolean =
+        changeControl.undoFileChange(projectId, path)
 
-    override suspend fun acceptFileChange(projectId: String, path: String): Boolean = withContext(Dispatchers.IO) {
-        if (checkpoints.isInternalRuntimePath(path) || path !in checkpoints.readChangedPaths(projectId)) return@withContext false
-        val workspace = checkpoints.ensureWorkspace(projectId)
-        val backup = File(checkpoints.checkpointDir(projectId), "project")
-        val current = checkpoints.safeWorkspaceFile(workspace, path)
-        val baseline = checkpoints.safeWorkspaceFile(backup, path)
-        if (current.isFile) {
-            baseline.parentFile?.mkdirs()
-            current.copyTo(baseline, overwrite = true)
-        } else if (baseline.isFile) {
-            baseline.delete()
-        }
-        checkpoints.removeChangedPath(projectId, path)
-        true
-    }
+    override suspend fun acceptFileChange(projectId: String, path: String): Boolean =
+        changeControl.acceptFileChange(projectId, path)
+
 
     private fun writeDshSettings(rootfs: File, route: DshRoute, provider: ProviderProfile) {
         val home = File(rootfs, DSH_HOME_GUEST_PATH.removePrefix("/")).apply { mkdirs() }
