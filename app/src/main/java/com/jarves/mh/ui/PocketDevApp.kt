@@ -3167,7 +3167,7 @@ private fun ProviderCredentialsStep(
     var modelSearch by rememberSaveable { mutableStateOf("") }
     val modelSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     // Custom API servers that are self-hosted (llama.cpp, LM Studio…) often need no key.
-    val hasKey = apiKey.isNotBlank() || hasStoredSecret || provider == ProviderKind.CUSTOM
+    val hasKey = apiKey.isNotBlank() || hasStoredSecret || provider == ProviderKind.CUSTOM || provider == ProviderKind.FREE_MODELS
     val filteredModels = remember(models, modelSearch) {
         val query = modelSearch.trim()
         if (query.isEmpty()) models else models.filter {

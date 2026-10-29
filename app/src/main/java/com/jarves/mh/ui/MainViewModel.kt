@@ -2829,6 +2829,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun discoverModels(profile: ProviderProfile, secret: String): ModelDiscoveryResult {
         val key = secret.ifBlank { vault.get(profile.kind.name).orEmpty() }
         if (profile.kind == ProviderKind.FREE_MODELS) {
+            // Curated free list is always available without an API key.
+            if (key.isBlank()) {
+                return ModelDiscoveryResult.Success(
+                    models = FreeModelCatalog.asDiscovered(),
+                    endpoint = profile.resolvedBaseUrl,
+                )
+            }
             val live = providerApi.discoverModels(
                 profile.resolvedBaseUrl,
                 key,
@@ -2839,14 +2846,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     models = FreeModelCatalog.mergeLive(live.models),
                     endpoint = live.endpoint,
                 )
-                is ModelDiscoveryResult.Failure -> {
-                    // Offline curated list still lets onboarding continue without network catalog.
-                    if (key.isBlank()) live
-                    else ModelDiscoveryResult.Success(
-                        models = FreeModelCatalog.asDiscovered(),
-                        endpoint = profile.resolvedBaseUrl,
-                    )
-                }
+                is ModelDiscoveryResult.Failure -> ModelDiscoveryResult.Success(
+                    models = FreeModelCatalog.asDiscovered(),
+                    endpoint = profile.resolvedBaseUrl,
+                )
             }
         }
         return providerApi.discoverModels(profile.baseUrl, key, providerProtocolForAgent(profile, _state.value.agentKind))
