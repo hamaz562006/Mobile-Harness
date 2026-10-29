@@ -52,8 +52,8 @@
     <string name="st_models_filtered_count">%1$d از %2$d</string>
     <string name="st_no_api_key_saved">کلید API ذخیره نشده</string>
     <string name="st_no_matching_models_found">مدل منطبقی پیدا نشد</string>
-    <string name="st_no_subscription_token_saved">No subscription token saved</string>
-    <string name="st_no_verified_agent">No verified agent installation</string>
+    <string name="st_no_subscription_token_saved">توکن اشتراک ذخیره نشده</string>
+    <string name="st_no_verified_agent">ایجنت تأییدشده‌ای نیست</string>
     <string name="st_not_configured">پیکربندی نشده</string>
     <string name="st_not_installed">نصب نشده</string>
     <string name="st_not_signed_in">وارد نشده‌اید</string>

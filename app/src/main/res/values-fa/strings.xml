@@ -58,54 +58,54 @@
     <string name="language_system_default">پیش‌فرض سیستم</string>
 
     <!-- Developer Tools -->
-    <string name="tools_subtitle">Core tools + %1$d optional toolchains</string>
-    <string name="tools_included">Included</string>
-    <string name="tools_installing">Installing…</string>
-    <string name="tools_removing">Removing…</string>
-    <string name="tools_remove_dialog_title">Remove %1$s?</string>
-    <string name="tools_remove_dialog_desc">This removes the toolchain and its runtime caches to free storage. Your projects and source files will not be deleted.</string>
+    <string name="tools_subtitle">ابزارهای هسته + %1$d toolchain اختیاری</string>
+    <string name="tools_included">شامل</string>
+    <string name="tools_installing">در حال نصب…</string>
+    <string name="tools_removing">در حال حذف…</string>
+    <string name="tools_remove_dialog_title">حذف %1$s؟</string>
+    <string name="tools_remove_dialog_desc">این toolchain و کش‌های رانتایم را برای آزاد کردن فضا حذف می‌کند. پروژه‌ها و فایل‌های منبع پاک نمی‌شوند.</string>
 
     <!-- Linux Runtime -->
-    <string name="runtime_architecture">Architecture</string>
-    <string name="runtime_environment">Environment</string>
-    <string name="runtime_active_agent">Active agent</string>
-    <string name="runtime_installed_agents">Installed agents</string>
-    <string name="runtime_clear_history">Clear terminal history</string>
-    <string name="runtime_history_cleared">Terminal history cleared</string>
-    <string name="runtime_advanced_reliability">Advanced runtime reliability</string>
+    <string name="runtime_architecture">معماری</string>
+    <string name="runtime_environment">محیط</string>
+    <string name="runtime_active_agent">ایجنت فعال</string>
+    <string name="runtime_installed_agents">ایجنت‌های نصب‌شده</string>
+    <string name="runtime_clear_history">پاک کردن تاریخچهٔ ترمینال</string>
+    <string name="runtime_history_cleared">تاریخچهٔ ترمینال پاک شد</string>
+    <string name="runtime_advanced_reliability">پایداری پیشرفتهٔ رانتایم</string>
 
     <!-- Provider & Connection -->
-    <string name="provider_active_connection">Active connection</string>
-    <string name="provider_label">Provider</string>
-    <string name="provider_base_url">Base URL</string>
-    <string name="provider_model_id">Model ID</string>
-    <string name="provider_api_keys">API keys</string>
-    <string name="provider_add_key">Add key</string>
-    <string name="provider_key_name">Key name</string>
-    <string name="provider_api_key">API key</string>
-    <string name="provider_testing">Testing…</string>
+    <string name="provider_active_connection">اتصال فعال</string>
+    <string name="provider_label">پروایدر</string>
+    <string name="provider_base_url">آدرس پایه</string>
+    <string name="provider_model_id">شناسه مدل</string>
+    <string name="provider_api_keys">کلیدهای API</string>
+    <string name="provider_add_key">افزودن کلید</string>
+    <string name="provider_key_name">نام کلید</string>
+    <string name="provider_api_key">کلید API</string>
+    <string name="provider_testing">در حال تست…</string>
 
     <!-- Projects -->
-    <string name="projects_title">Projects</string>
-    <string name="projects_new">New project</string>
-    <string name="projects_quick_chat">Quick chat</string>
-    <string name="projects_clone">Clone repository</string>
-    <string name="projects_search">Search projects</string>
+    <string name="projects_title">پروژه‌ها</string>
+    <string name="projects_new">پروژهٔ جدید</string>
+    <string name="projects_quick_chat">گفتگوی سریع</string>
+    <string name="projects_clone">کلون مخزن</string>
+    <string name="projects_search">جستجوی پروژه‌ها</string>
 
     <!-- Chat / Workspace -->
-    <string name="chat_placeholder">Ask anything or describe a task…</string>
-    <string name="chat_send">Send</string>
-    <string name="chat_stop">Stop</string>
-    <string name="chat_keep_changes">Keep changes</string>
-    <string name="chat_undo_changes">Undo changes</string>
-    <string name="chat_review_changes">Review changes</string>
-    <string name="chat_no_changes">No changes</string>
-    <string name="chat_export_project">Export project</string>
+    <string name="chat_placeholder">هر چیزی بپرسید یا یک کار توصیف کنید…</string>
+    <string name="chat_send">ارسال</string>
+    <string name="chat_stop">توقف</string>
+    <string name="chat_keep_changes">نگه داشتن تغییرات</string>
+    <string name="chat_undo_changes">بازگردانی تغییرات</string>
+    <string name="chat_review_changes">بازبینی تغییرات</string>
+    <string name="chat_no_changes">بدون تغییر</string>
+    <string name="chat_export_project">خروجی پروژه</string>
 
     <!-- Agent -->
-    <string name="agent_title">Agent</string>
+    <string name="agent_title">ایجنت</string>
     <string name="agent_choose">انتخاب ایجنت کدنویسی</string>
-    <string name="agent_google_signin">Sign in with Google</string>
+    <string name="agent_google_signin">ورود با گوگل</string>
 
     <!-- Background & Runtime Onboarding -->
     <string name="bg_setup_title">آماده‌سازی برای راه‌اندازی پایدار</string>
@@ -137,14 +137,14 @@
     <string name="runtime_setup_device_check_badge">بررسی دستگاه</string>
     <string name="runtime_setup_device_ready_title">آمادهٔ ساخت روی این گوشی</string>
     <string name="runtime_setup_device_ready_desc">گوشی شما شرایط لازم را دارد. در مرحلهٔ بعد ابزارهای کدنویسی را انتخاب کنید تا موبایل هارنس راه‌اندازی را انجام دهد.</string>
-    <string name="runtime_setup_sys_compat">System compatibility</string>
+    <string name="runtime_setup_sys_compat">سازگاری سیستم</string>
     <string name="runtime_setup_device_ready">دستگاه شما آماده است</string>
-    <string name="runtime_setup_device_unsupported">This device is unsupported</string>
-    <string name="runtime_setup_status_ready">Ready</string>
-    <string name="runtime_setup_status_unsupported">Unsupported</string>
-    <string name="runtime_setup_memory_ram">Memory (RAM)</string>
+    <string name="runtime_setup_device_unsupported">این دستگاه پشتیبانی نمی‌شود</string>
+    <string name="runtime_setup_status_ready">آماده</string>
+    <string name="runtime_setup_status_unsupported">پشتیبانی نمی‌شود</string>
+    <string name="runtime_setup_memory_ram">حافظه (رم)</string>
     <string name="runtime_setup_ram_usable">%1$s گیگابایت قابل استفاده</string>
-    <string name="runtime_setup_processor">Processor</string>
+    <string name="runtime_setup_processor">پردازنده</string>
     <string name="runtime_setup_download_req">دانلود موردنیاز</string>
     <string name="runtime_setup_download_range">149–774 MB</string>
     <string name="runtime_setup_download_based_on_tools">بر اساس ابزارهایی که انتخاب می‌کنید</string>
@@ -159,232 +159,233 @@
     <string name="runtime_setup_coding_agent_badge">ایجنت کدنویسی</string>
     <string name="runtime_setup_coding_agent_note">فقط ایجنت اختیاری انتخاب‌شده دانلود می‌شود. بعداً از تنظیمات می‌توانید ایجنت نصب یا عوض کنید.</string>
     <string name="runtime_setup_optional_toolchains_badge">ابزارهای اختیاری</string>
-    <string name="runtime_setup_install_btn">Install Mobile Harness</string>
+    <string name="runtime_setup_install_btn">نصب موبایل هارنس</string>
 
     <!-- Setup and Runtime Installation Screens -->
     <string name="setup_mobile_harness">راه‌اندازی موبایل هارنس</string>
-    <string name="setup_local_badge">Local setup</string>
-    <string name="setup_build_workspace">Build your workspace</string>
-    <string name="setup_installation_progress">Installation progress</string>
-    <string name="setup_estimated_time">Estimated %1$s</string>
-    <string name="setup_time_minutes">%1$d–%2$d minutes</string>
-    <string name="setup_live_terminal">Live setup terminal</string>
-    <string name="setup_background_note">You can leave Mobile Harness in the background and follow setup from the notification.</string>
-    <string name="startup_msg_setting_up">Setting up your workspace</string>
-    <string name="startup_msg_preparing_tools">Preparing your coding tools</string>
-    <string name="startup_msg_almost_ready">Almost ready</string>
-    <string name="workspace_launch_badge">PRIVATE MOBILE WORKSPACE</string>
-    <string name="workspace_launch_title">Getting everything ready</string>
-    <string name="workspace_launch_desc">Restoring your projects and reconnecting your local coding agent.</string>
-    <string name="workspace_launch_footer">Runs locally on this device · Your project files stay private</string>
+    <string name="setup_local_badge">راه‌اندازی محلی</string>
+    <string name="setup_build_workspace">ساخت فضای کاری</string>
+    <string name="setup_installation_progress">پیشرفت نصب</string>
+    <string name="setup_estimated_time">تخمینی %1$s</string>
+    <string name="setup_time_minutes">%1$d–%2$d دقیقه</string>
+    <string name="setup_live_terminal">ترمینال نصب زنده</string>
+    <string name="setup_background_note">می‌توانید موبایل هارنس را در پس‌زمینه بگذارید و نصب را از اعلان دنبال کنید.</string>
+    <string name="startup_msg_setting_up">راه‌اندازی فضای کاری</string>
+    <string name="startup_msg_preparing_tools">آماده‌سازی ابزارهای کدنویسی</string>
+    <string name="startup_msg_almost_ready">تقریباً آماده</string>
+    <string name="workspace_launch_badge">فضای کاری موبایل خصوصی</string>
+    <string name="workspace_launch_title">در حال آماده‌سازی همه چیز</string>
+    <string name="workspace_launch_desc">بازیابی پروژه‌ها و اتصال دوباره به ایجنت کدنویسی محلی.</string>
+    <string name="workspace_launch_footer">اجرای محلی روی این دستگاه · فایل‌های پروژه خصوصی می‌مانند</string>
 
     <!-- Runtime Installer Dynamic Progress Messages -->
-    <string name="runtime_msg_downloading_bundle">Downloading %1$s bundle</string>
-    <string name="runtime_msg_loading_bundle">Loading %1$s bundle</string>
-    <string name="runtime_msg_preparing_runtime">Preparing the private development runtime</string>
-    <string name="runtime_msg_verifying_unpacking">Verifying and unpacking the %1$s runtime</string>
-    <string name="runtime_msg_tools_installed">%1$s tools installed</string>
-    <string name="runtime_msg_checking_files">Checking private runtime files</string>
-    <string name="runtime_msg_preparing_bridge">Preparing the Android runtime bridge</string>
-    <string name="runtime_msg_runtime_ready">Private runtime is ready</string>
-    <string name="runtime_msg_setup_complete">Setup complete</string>
-    <string name="runtime_msg_resuming_setup">Resuming Mobile Harness setup</string>
-    <string name="runtime_msg_downloading_generic">Downloading %1$s</string>
-    <string name="runtime_msg_installing_generic">Installing %1$s</string>
+    <string name="runtime_msg_downloading_bundle">دانلود بستهٔ %1$s</string>
+    <string name="runtime_msg_loading_bundle">بارگذاری بستهٔ %1$s</string>
+    <string name="runtime_msg_preparing_runtime">آماده‌سازی رانتایم توسعهٔ خصوصی</string>
+    <string name="runtime_msg_verifying_unpacking">تأیید و باز کردن رانتایم %1$s</string>
+    <string name="runtime_msg_tools_installed">ابزارهای %1$s نصب شدند</string>
+    <string name="runtime_msg_checking_files">بررسی فایل‌های رانتایم خصوصی</string>
+    <string name="runtime_msg_preparing_bridge">آماده‌سازی پل رانتایم اندروید</string>
+    <string name="runtime_msg_runtime_ready">رانتایم خصوصی آماده است</string>
+    <string name="runtime_msg_setup_complete">راه‌اندازی کامل شد</string>
+    <string name="runtime_msg_resuming_setup">ادامهٔ راه‌اندازی موبایل هارنس</string>
+    <string name="runtime_msg_downloading_generic">دانلود %1$s</string>
+    <string name="runtime_msg_installing_generic">نصب %1$s</string>
     <!-- Provider onboarding -->
-    <string name="theme_toggle">Toggle theme</string>
-    <string name="provider_setup_settings_title">AI Provider &amp; Settings</string>
-    <string name="provider_device_title">Your phone is the workspace</string>
-    <string name="provider_device_desc">Mobile Harness checks compatibility before downloading the private Linux runtime.</string>
-    <string name="provider_memory">Memory</string>
-    <string name="provider_memory_mode">%1$s GB usable · %2$s</string>
-    <string name="provider_full_mode">Full mode</string>
-    <string name="provider_lite_mode">Lite mode</string>
-    <string name="provider_unknown">Unknown</string>
-    <string name="provider_android_version">Android %1$s</string>
-    <string name="provider_security_warning">Only open projects you trust. The local Linux environment is a compatibility layer, not a hardened security sandbox.</string>
-    <string name="provider_step_of">STEP %1$d OF %2$d</string>
+    <string name="theme_toggle">تغییر تم</string>
+    <string name="provider_setup_settings_title">پروایدر AI و تنظیمات</string>
+    <string name="provider_device_title">گوشی شما فضای کاری است</string>
+    <string name="provider_device_desc">موبایل هارنس قبل از دانلود رانتایم لینوکس خصوصی، سازگاری را بررسی می‌کند.</string>
+    <string name="provider_memory">حافظه</string>
+    <string name="provider_memory_mode">%1$s گیگابایت قابل استفاده · %2$s</string>
+    <string name="provider_full_mode">حالت کامل</string>
+    <string name="provider_lite_mode">حالت سبک</string>
+    <string name="provider_unknown">نامشخص</string>
+    <string name="provider_android_version">اندروید %1$s</string>
+    <string name="provider_security_warning">فقط پروژه‌هایی را باز کنید که به آن‌ها اعتماد دارید. محیط لینوکس محلی لایهٔ سازگاری است، نه سندباکس سخت‌افزاری امن.</string>
+    <string name="provider_step_of">گام %1$d از %2$d</string>
     <string name="provider_secure_setup">راه‌اندازی امن</string>
     <string name="provider_connect_ai">اتصال به هوش مصنوعی</string>
     <string name="provider_connect_ai_desc">نحوهٔ دسترسی موبایل هارنس به مدل کدنویسی را انتخاب کنید.</string>
     <string name="provider_keys_secure">کلیدهای API در فضای امن اندروید رمزنگاری می‌شوند.</string>
     <string name="provider_continue">ادامه</string>
     <string name="provider_use_another_agent">استفاده از ایجنت کدنویسی دیگر</string>
-    <string name="provider_beta">Beta</string>
+    <string name="provider_beta">بتا</string>
     <string name="provider_free_badge">رایگان</string>
-    <string name="provider_title_claude">Claude subscription</string>
-    <string name="provider_title_anthropic">Anthropic API</string>
+    <string name="provider_title_claude">اشتراک Claude</string>
+    <string name="provider_title_anthropic">API آنتروپیک</string>
     <string name="provider_title_openrouter">OpenRouter</string>
     <string name="provider_title_deepseek">DeepSeek</string>
     <string name="provider_title_kimi">Kimi</string>
     <string name="provider_title_opencode">OpenCode Zen</string>
     <string name="provider_title_nvidia">NVIDIA NIM</string>
     <string name="provider_title_free_models">مدل‌های رایگان</string>
-    <string name="provider_title_custom">Custom API</string>
-    <string name="provider_subtitle_claude">Pro, Max, Team or Enterprise</string>
-    <string name="provider_subtitle_anthropic">Usage billed through Console</string>
-    <string name="provider_subtitle_openrouter">Use your OpenRouter API key</string>
-    <string name="provider_subtitle_deepseek">Use your DeepSeek API key</string>
-    <string name="provider_subtitle_anthropic_compatible">Anthropic-compatible endpoint</string>
-    <string name="provider_subtitle_opencode">Models through the OpenCode Zen gateway</string>
-    <string name="provider_subtitle_nvidia">OpenAI-compatible models hosted by NVIDIA</string>
+    <string name="provider_title_custom">API سفارشی</string>
+    <string name="provider_subtitle_claude">Pro، Max، Team یا Enterprise</string>
+    <string name="provider_subtitle_anthropic">هزینه از طریق Console محاسبه می‌شود</string>
+    <string name="provider_subtitle_openrouter">از کلید API اوپن‌روتر خود استفاده کنید</string>
+    <string name="provider_subtitle_deepseek">از کلید API دیپ‌سیک خود استفاده کنید</string>
+    <string name="provider_subtitle_anthropic_compatible">اندپوینت سازگار با Anthropic</string>
+    <string name="provider_subtitle_opencode">مدل‌ها از طریق gateway اوپن‌کد زن</string>
+    <string name="provider_subtitle_nvidia">مدل‌های سازگار با OpenAI میزبانی‌شده توسط NVIDIA</string>
     <string name="provider_subtitle_free_models">استخر رایگان Kilo · بدون کلید API</string>
-    <string name="provider_gateway_protocol">Gateway protocol</string>
-    <string name="provider_gateway_protocol_help">Pick the protocol your gateway speaks; DeepSeek Harness routes it directly.</string>
-    <string name="provider_models_found">Found %1$d available models.</string>
-    <string name="provider_available_models">Available models</string>
-    <string name="provider_models_count">%1$d of %2$d models</string>
-    <string name="provider_refresh_models">Refresh models</string>
-    <string name="provider_search_models">Search model name or ID</string>
-    <string name="provider_no_matching_models">No matching models</string>
-    <string name="provider_free"> FREE</string>
-    <string name="provider_encrypted_locally">Encrypted locally</string>
-    <string name="provider_endpoint_deepseek">DeepSeek Harness will connect through this API endpoint.</string>
-    <string name="provider_endpoint_translate">Mobile Harness will translate Claude Code requests for this provider.</string>
-    <string name="provider_endpoint_claude">Claude Code will connect through this API endpoint.</string>
-    <string name="provider_fixed_by">Fixed by %1$s</string>
-    <string name="provider_saved_key_placeholder">Saved securely — leave blank to keep it</string>
-    <string name="provider_enter_key">Enter your API key</string>
-    <string name="provider_saved_key_ready">A saved key is ready to use</string>
-    <string name="provider_model_name">Model name</string>
-    <string name="provider_model_help">Select an available model or enter an exact model ID.</string>
-    <string name="provider_find_models">Find available models</string>
-    <string name="provider_available_models_count">Available models (%1$d)</string>
-    <string name="provider_checking_settings">Checking API key, model, and Claude Code settings…</string>
-    <string name="provider_checking">Checking</string>
-    <string name="provider_claude_connect_desc">Connect a Claude Pro, Max, Team, or Enterprise subscription to Claude Code.</string>
-    <string name="provider_claude_step_one">1. On a computer where Claude Code is installed, run:</string>
-    <string name="provider_claude_step_two">2. Sign in to Claude and paste the generated token here.</string>
-    <string name="provider_claude_token">Claude setup token</string>
-    <string name="provider_paste_token">Paste token</string>
-    <string name="provider_saved_token_ready">A saved subscription token is ready to use</string>
-    <string name="provider_toggle_token_visibility">Toggle token visibility</string>
-    <string name="provider_save_continue">Save and continue</string>
+    <string name="provider_gateway_protocol">پروتکل Gateway</string>
+    <string name="provider_gateway_protocol_help">پروتکلی که gateway صحبت می‌کند را انتخاب کنید؛ دیپ‌سیک هارنس مستقیماً آن را مسیریابی می‌کند.</string>
+    <string name="provider_models_found">%1$d مدل موجود پیدا شد.</string>
+    <string name="provider_available_models">مدل‌های موجود</string>
+    <string name="provider_models_count">%1$d از %2$d مدل</string>
+    <string name="provider_refresh_models">بروزرسانی مدل‌ها</string>
+    <string name="provider_search_models">جستجوی نام یا شناسه مدل</string>
+    <string name="provider_no_matching_models">مدل منطبقی نیست</string>
+    <string name="provider_free"> رایگان</string>
+    <string name="provider_encrypted_locally">رمزنگاری‌شده به‌صورت محلی</string>
+    <string name="provider_endpoint_deepseek">دیپ‌سیک هارنس از طریق این اندپوینت API متصل می‌شود.</string>
+    <string name="provider_endpoint_translate">موبایل هارنس درخواست‌های Claude Code را برای این پروایدر ترجمه می‌کند.</string>
+    <string name="provider_endpoint_claude">کلود کد از طریق این اندپوینت API متصل می‌شود.</string>
+    <string name="provider_fixed_by">ثابت توسط %1$s</string>
+    <string name="provider_saved_key_placeholder">امن ذخیره شده — برای نگه‌داشتن خالی بگذارید</string>
+    <string name="provider_enter_key">کلید API را وارد کنید</string>
+    <string name="provider_saved_key_ready">یک کلید ذخیره‌شده آمادهٔ استفاده است</string>
+    <string name="provider_model_name">نام مدل</string>
+    <string name="provider_model_help">یک مدل موجود انتخاب کنید یا شناسهٔ دقیق مدل را وارد کنید.</string>
+    <string name="provider_find_models">یافتن مدل‌های موجود</string>
+    <string name="provider_available_models_count">مدل‌های موجود (%1$d)</string>
+    <string name="provider_checking_settings">بررسی کلید API، مدل و تنظیمات Claude Code…</string>
+    <string name="provider_checking">در حال بررسی</string>
+    <string name="provider_claude_connect_desc">اشتراک Claude Pro، Max، Team یا Enterprise را به Claude Code وصل کنید.</string>
+    <string name="provider_claude_step_one">۱. روی رایانه‌ای که Claude Code نصب است اجرا کنید:</string>
+    <string name="provider_claude_step_two">۲. وارد Claude شوید و توکن تولیدشده را اینجا بچسبانید.</string>
+    <string name="provider_claude_token">توکن راه‌اندازی Claude</string>
+    <string name="provider_paste_token">چسباندن توکن</string>
+    <string name="provider_saved_token_ready">توکن اشتراک ذخیره‌شده آمادهٔ استفاده است</string>
+    <string name="provider_toggle_token_visibility">نمایش/مخفی کردن توکن</string>
+    <string name="provider_save_continue">ذخیره و ادامه</string>
     <string name="agent_choose_title">انتخاب ایجنت کدنویسی</string>
     <string name="agent_choose_desc">اگر سرویس فعلی در دسترس نیست عوض کنید. ورود و اعتبارنامه‌های قبلی ذخیره می‌مانند.</string>
-    <string name="agent_recommended">Recommended</string>
+    <string name="agent_recommended">پیشنهادی</string>
     <string name="agent_title_claude">Claude Code</string>
     <string name="agent_title_deepseek">DeepSeek Harness</string>
     <string name="agent_title_antigravity">Antigravity CLI</string>
     <string name="agent_subtitle_claude">ایجنت کدنویسی آنتروپیک · پشتیبانی گسترده از پروایدر</string>
     <string name="agent_subtitle_deepseek">ایجنت رسمی دیپ‌سیک · پروایدرهای مبتنی بر کلید API</string>
     <string name="agent_subtitle_antigravity">ایجنت رسمی گوگل · حساب گوگل</string>
-    <string name="projects_hero_title">Build from your phone</string><string name="projects_hero_desc">Chat, review changes, and preview your project.</string><string name="projects_quick_project">Quick project</string><string name="projects_new_project">New project</string><string name="projects_bring_existing">Bring an existing project</string><string name="projects_import_expanded">Import files or clone complete Git history</string><string name="projects_import_sources">ZIP file, Git repository, or GitHub</string><string name="projects_your_projects">Your projects</string><string name="projects_empty_title">No projects yet</string><string name="projects_empty_desc">Create a named project or start instantly with a Quick Project.</string><string name="projects_terminal">Terminal</string>
-    <string name="agent_screen_title">AI Agent</string><string name="agent_status_testing">Testing…</string><string name="agent_status_attention">Attention</string><string name="agent_status_online">Online</string><string name="agent_status_not_tested">Not tested</string><string name="agent_provider_title">AI provider</string><string name="agent_custom_api_settings">Custom API settings</string><string name="agent_endpoint_protocol">Endpoint &amp; protocol</string><string name="agent_model_access">Model &amp; access</string><string name="agent_discovering">Discovering…</string><string name="agent_discover_models">Discover models</string><string name="agent_models_count">%1$d models</string><string name="agent_ai_model">AI model</string><string name="agent_select_model">Select or type a model ID</string><string name="agent_subscription_token">Subscription token</string><string name="agent_credentials">Credentials</string><string name="agent_test_connection">Test connection</string><string name="agent_runtime_updates">Runtime updates</string><string name="agent_updates_current">Installed agents stay current</string><string name="agent_check_updates">Check updates</string><string name="agent_security_footer">API keys encrypted in Android secure storage · Terminal is accessible from any project</string><string name="agent_approval_footer">Automatic tool approval · Runs inside the private Linux workspace</string>
-    <string name="projects_importing">Importing…</string><string name="projects_zip_file">ZIP file</string><string name="projects_cloning">Cloning…</string><string name="projects_git_url">Git URL</string><string name="projects_github_account">GitHub · @%1$s</string><string name="projects_connect_github">Connect GitHub</string><string name="projects_browse_repositories">Browse public and private repositories</string><string name="projects_sign_in_repositories">Sign in to access your repositories</string>
-    <string name="agent_not_installed">%1$s is not installed</string><string name="agent_install_description">Install its %1$s agent package to use it with your existing projects.</string><string name="agent_install_action">Install %1$s</string>
-    <string name="agent_installing_binary">Installing agent binary…</string><string name="chat_welcome">Hi! Tell me what you want to build or change.</string><string name="chat_message_agent">Message %1$s…</string><string name="workspace_files">Files</string><string name="workspace_no_files">No files yet</string><string name="workspace_no_files_description">Ask your coding agent to create something in this project.</string><string name="workspace_project_terminal">Project Terminal</string><string name="workspace_terminal_ready">Mobile Harness Terminal ready.\nType a bash command below or tap a quick command chip above.</string><string name="workspace_preview_url">Preview URL</string><string name="workspace_preview_not_running">Preview not running</string><string name="workspace_preview_not_running_description">Enter a localhost URL above, or start a local web server in the project Terminal.</string>
-    <string name="agent_connection_verified">%1$s connection verified.</string><string name="agent_status_verified">Verified</string>
-    <string name="chat_attach_files">Attach files</string><string name="chat_take_photo">Take photo</string><string name="chat_choose_files">Choose files</string><string name="chat_camera_unavailable">No camera app is available</string>
-    <string name="export_busy">Stop the running task, terminal command, build, or file save before exporting.</string>
-    <string name="export_success">%1$s exported</string>
-    <string name="export_failed">Export failed: %1$s</string>
-    <string name="unknown_error">Unknown error</string>
-    <string name="file_saved">File saved</string>
-    <string name="file_save_failed">The file could not be saved</string>
-    <string name="select_files">Select files</string>
-    <string name="select_all">Select all</string>
-    <string name="collapse_all">Collapse all</string>
-    <string name="export_project_zip">Export project as ZIP</string>
-    <string name="collapse_folder">Collapse folder</string>
-    <string name="expand_folder">Expand folder</string>
-    <string name="creating_zip">Creating ZIP…</string>
-    <string name="download_zip">Download ZIP</string>
-    <string name="unsaved_changes">Unsaved changes</string>
-    <string name="unsaved_changes_description">Save your changes before leaving this file?</string>
-    <string name="save">Save</string>
-    <string name="discard">Discard</string>
-    <string name="keep_editing">Keep editing</string>
-    <string name="file_changed_title">File changed</string>
-    <string name="file_changed_description">This file changed outside the editor. Reload it to avoid overwriting newer changes.</string>
-    <string name="reload">Reload</string>
-    <string name="cancel">Cancel</string>
-    <string name="close_file">Close file</string>
-    <string name="save_file">Save file</string>
-    <string name="copy_file_contents">Copy file contents</string>
-    <string name="edit_file">Edit file</string>
-    <string name="no_content">No content</string>
-    <string name="file_could_not_read">The file could not be read.</string>
-    <string name="file_binary_description">Binary files cannot be displayed or edited.</string>
-    <string name="file_invalid_utf8_description">Only valid UTF-8 text files can be edited.</string>
-    <string name="file_unsafe_description">This protected or unsafe path cannot be opened.</string>
-    <string name="file_too_large_description">Files larger than 512 KB are previewed and remain read-only.</string>
-    <string name="undo">Undo</string>
-    <string name="redo">Redo</string>
-    <string name="find_in_file">Find in file</string>
-    <string name="find">Find</string>
-    <string name="previous_match">Previous match</string>
-    <string name="next_match">Next match</string>
-    <string name="unsaved">Unsaved</string>
-    <string name="saved">Saved</string>
-    <string name="android_dashboard">Android dashboard</string>
-    <string name="android_build_tab">Build</string><string name="android_logcat_tab">Logcat</string><string name="android_health_tab">Health</string>
-    <string name="android_ready">Ready for Android development</string><string name="close">Close</string><string name="refresh">Refresh</string><string name="more_options">More options</string>
-    <string name="force_rebuild">Force rebuild</string><string name="clean_project">Clean project</string><string name="build_progress">Build progress</string>
-    <string name="android_stage_idle">Ready</string><string name="android_stage_preparing">Preparing</string><string name="android_stage_resolving">Resolving</string><string name="android_stage_compiling">Compiling</string><string name="android_stage_resources">Resources</string><string name="android_stage_packaging">Packaging</string><string name="android_stage_finding_apk">Finding APK</string><string name="android_stage_installing">Installing</string><string name="android_stage_launching">Launching</string><string name="android_stage_complete">Complete</string><string name="android_stage_failed">Failed</string><string name="android_stage_cancelling">Cancelling</string><string name="android_stage_cancelled">Cancelled</string>
-    <string name="android_tools_required">Android development tools are required before building.</string><string name="install_android_tools">Install Android tools</string>
-    <string name="build">Build</string><string name="install">Install</string><string name="run">Run</string><string name="build_and_run">Build &amp; run</string><string name="cancel_operation">Cancel operation</string>
-    <string name="build_issues">Build issues</string><string name="unknown_package">Unknown package</string><string name="installed">Installed</string><string name="not_installed">Not installed</string><string name="stale_apk_warning">Source files changed after this APK was built. You can still use it, or build a current APK.</string>
-    <string name="apk_version_info">Version %1$s (%2$s) · min SDK %3$s · target SDK %4$s</string><string name="share">Share</string><string name="save_copy">Save copy</string><string name="copy_path">Copy path</string><string name="app_info">App info</string><string name="uninstall">Uninstall</string>
-    <string name="show_build_details">Show build details</string><string name="hide_build_details">Hide build details</string><string name="copy_log">Copy log</string>
-    <string name="logcat_access_required">Logcat access required</string><string name="logcat_access_description">Grant the development log permission once with ADB, then refresh this screen.</string><string name="copy_command">Copy command</string><string name="search_logs">Search logs</string><string name="pause">Pause</string><string name="resume">Resume</string><string name="clear">Clear</string>
-    <string name="project_health">Project health</string><string name="fix">Fix</string>
-    <string name="android_screen_title">Android</string>
-    <string name="android_ready_to_build">Ready to build</string>
-    <string name="android_ready_to_rebuild">Ready to rebuild</string>
-    <string name="android_ready_to_run">Ready to run</string>
-    <string name="android_ready_to_install">Ready to install</string>
-    <string name="android_build_failed_title">Build failed</string>
-    <string name="android_no_apk_description">Create a debug APK to run this project.</string>
-    <string name="android_source_changed_short">Source changed since the last build.</string>
-    <string name="android_build_current_installed">Build is up to date · Installed on this device</string>
-    <string name="android_build_current_not_installed">Build is up to date · Ready to install</string>
-    <string name="run_app">Run app</string>
-    <string name="android_build_again">Build again</string>
-    <string name="android_build_output">Build output</string>
-    <string name="android_view">View</string>
-    <string name="android_completed_in">Completed in %1$s</string>
-    <string name="android_build_in_progress">Running for %1$s</string>
-    <string name="android_no_build_yet">No build yet</string>
-    <string name="android_no_build_output">No build output yet.</string>
-    <string name="android_checking_health">Checking project…</string>
-    <string name="android_health_needs_attention">%1$d checks need attention</string>
-    <string name="android_health_not_checked">Tap to check the project</string>
-    <string name="android_health_checks_passed">%1$d checks passed</string>
-    <string name="project_type">Project type</string>
-    <string name="project_type_general">General</string>
-    <string name="project_type_general_desc">Any coding project</string>
+    <string name="projects_hero_title">از گوشی بسازید</string><string name="projects_hero_desc">گفتگو کنید، تغییرات را بازبینی کنید و پروژه را پیش‌نمایش کنید.</string><string name="projects_quick_project">پروژهٔ سریع</string><string name="projects_new_project">پروژهٔ جدید</string><string name="projects_bring_existing">آوردن پروژهٔ موجود</string><string name="projects_import_expanded">ورود فایل یا کلون تاریخچهٔ کامل Git</string><string name="projects_import_sources">فایل ZIP، مخزن Git یا GitHub</string><string name="projects_your_projects">پروژه‌های شما</string><string name="projects_empty_title">هنوز پروژه‌ای نیست</string><string name="projects_empty_desc">یک پروژهٔ نام‌دار بسازید یا فوراً با پروژهٔ سریع شروع کنید.</string><string name="projects_terminal">ترمینال</string>
+    <string name="agent_screen_title">ایجنت AI</string><string name="agent_status_testing">در حال تست…</string><string name="agent_status_attention">توجه</string><string name="agent_status_online">آنلاین</string><string name="agent_status_not_tested">تست نشده</string><string name="agent_provider_title">پروایدر AI</string><string name="agent_custom_api_settings">تنظیمات API سفارشی</string><string name="agent_endpoint_protocol">اندپوینت و پروتکل</string><string name="agent_model_access">مدل و دسترسی</string><string name="agent_discovering">در حال کشف…</string><string name="agent_discover_models">کشف مدل‌ها</string><string name="agent_models_count">%1$d مدل</string><string name="agent_ai_model">مدل AI</string><string name="agent_select_model">انتخاب یا ورود شناسه مدل</string><string name="agent_subscription_token">توکن اشتراک</string><string name="agent_credentials">اعتبارنامه‌ها</string><string name="agent_test_connection">تست اتصال</string><string name="agent_runtime_updates">به‌روزرسانی رانتایم</string><string name="agent_updates_current">ایجنت‌های نصب‌شده به‌روز می‌مانند</string><string name="agent_check_updates">بررسی به‌روزرسانی</string><string name="agent_security_footer">کلیدهای API در فضای امن اندروید رمزنگاری می‌شوند · ترمینال از هر پروژه در دسترس است</string><string name="agent_approval_footer">تأیید خودکار ابزار · اجرا داخل فضای لینوکس خصوصی</string>
+    <string name="projects_importing">در حال ورود…</string><string name="projects_zip_file">فایل ZIP</string><string name="projects_cloning">در حال کلون…</string><string name="projects_git_url">آدرس Git</string><string name="projects_github_account">GitHub · @%1$s</string><string name="projects_connect_github">اتصال GitHub</string><string name="projects_browse_repositories">مرور مخازن عمومی و خصوصی</string><string name="projects_sign_in_repositories">برای دسترسی به مخازن وارد شوید</string>
+    <string name="agent_not_installed">%1$s نصب نیست</string><string name="agent_install_description">بستهٔ ایجنت %1$s را نصب کنید تا با پروژه‌های فعلی استفاده شود.</string><string name="agent_install_action">نصب %1$s</string>
+    <string name="agent_installing_binary">نصب باینری ایجنت…</string><string name="chat_welcome">سلام! بگویید چه چیزی می‌خواهید بسازید یا تغییر دهید.</string><string name="chat_message_agent">پیام به %1$s…</string><string name="workspace_files">فایل‌ها</string><string name="workspace_no_files">هنوز فایلی نیست</string><string name="workspace_no_files_description">از ایجنت کدنویسی بخواهید چیزی در این پروژه بسازد.</string><string name="workspace_project_terminal">ترمینال پروژه</string><string name="workspace_terminal_ready">ترمینال موبایل هارنس آماده است.
+یک دستور bash بنویسید یا روی میانبر بالا بزنید.</string><string name="workspace_preview_url">آدرس پیش‌نمایش</string><string name="workspace_preview_not_running">پیش‌نمایش در حال اجرا نیست</string><string name="workspace_preview_not_running_description">یک آدرس localhost بالا وارد کنید، یا سرور وب محلی را در ترمینال پروژه اجرا کنید.</string>
+    <string name="agent_connection_verified">اتصال %1$s تأیید شد.</string><string name="agent_status_verified">تأیید شد</string>
+    <string name="chat_attach_files">پیوست فایل</string><string name="chat_take_photo">گرفتن عکس</string><string name="chat_choose_files">انتخاب فایل</string><string name="chat_camera_unavailable">اپ دوربین در دسترس نیست</string>
+    <string name="export_busy">قبل از خروجی‌گرفتن، کار در حال اجرا، دستور ترمینال، بیلد یا ذخیرهٔ فایل را متوقف کنید.</string>
+    <string name="export_success">%1$s خروجی گرفته شد</string>
+    <string name="export_failed">خروجی ناموفق: %1$s</string>
+    <string name="unknown_error">خطای نامشخص</string>
+    <string name="file_saved">فایل ذخیره شد</string>
+    <string name="file_save_failed">ذخیرهٔ فایل ممکن نشد</string>
+    <string name="select_files">انتخاب فایل‌ها</string>
+    <string name="select_all">انتخاب همه</string>
+    <string name="collapse_all">جمع کردن همه</string>
+    <string name="export_project_zip">خروجی پروژه به‌صورت ZIP</string>
+    <string name="collapse_folder">جمع کردن پوشه</string>
+    <string name="expand_folder">باز کردن پوشه</string>
+    <string name="creating_zip">ساخت ZIP…</string>
+    <string name="download_zip">دانلود ZIP</string>
+    <string name="unsaved_changes">تغییرات ذخیره‌نشده</string>
+    <string name="unsaved_changes_description">قبل از ترک این فایل، تغییرات را ذخیره می‌کنید؟</string>
+    <string name="save">ذخیره</string>
+    <string name="discard">دور انداختن</string>
+    <string name="keep_editing">ادامهٔ ویرایش</string>
+    <string name="file_changed_title">فایل تغییر کرد</string>
+    <string name="file_changed_description">این فایل خارج از ویرایشگر تغییر کرده. برای جلوگیری از بازنویسی تغییرات جدیدتر، دوباره بارگذاری کنید.</string>
+    <string name="reload">بارگذاری دوباره</string>
+    <string name="cancel">لغو</string>
+    <string name="close_file">بستن فایل</string>
+    <string name="save_file">ذخیره فایل</string>
+    <string name="copy_file_contents">کپی محتوای فایل</string>
+    <string name="edit_file">ویرایش فایل</string>
+    <string name="no_content">محتوایی نیست</string>
+    <string name="file_could_not_read">خواندن فایل ممکن نشد.</string>
+    <string name="file_binary_description">فایل‌های باینری قابل نمایش یا ویرایش نیستند.</string>
+    <string name="file_invalid_utf8_description">فقط فایل‌های متنی UTF-8 معتبر قابل ویرایش‌اند.</string>
+    <string name="file_unsafe_description">این مسیر محافظت‌شده یا ناامن باز نمی‌شود.</string>
+    <string name="file_too_large_description">فایل‌های بزرگ‌تر از ۵۱۲ کیلوبایت فقط پیش‌نمایش می‌شوند و فقط‌خواندنی می‌مانند.</string>
+    <string name="undo">بازگردانی</string>
+    <string name="redo">انجام دوباره</string>
+    <string name="find_in_file">یافتن در فایل</string>
+    <string name="find">یافتن</string>
+    <string name="previous_match">مورد قبلی</string>
+    <string name="next_match">مورد بعدی</string>
+    <string name="unsaved">ذخیره‌نشده</string>
+    <string name="saved">ذخیره شد</string>
+    <string name="android_dashboard">داشبورد اندروید</string>
+    <string name="android_build_tab">بیلد</string><string name="android_logcat_tab">Logcat</string><string name="android_health_tab">سلامت</string>
+    <string name="android_ready">آمادهٔ توسعهٔ اندروید</string><string name="close">بستن</string><string name="refresh">بروزرسانی</string><string name="more_options">گزینه‌های بیشتر</string>
+    <string name="force_rebuild">بیلد اجباری دوباره</string><string name="clean_project">پاک‌سازی پروژه</string><string name="build_progress">پیشرفت بیلد</string>
+    <string name="android_stage_idle">آماده</string><string name="android_stage_preparing">آماده‌سازی</string><string name="android_stage_resolving">حل وابستگی</string><string name="android_stage_compiling">کامپایل</string><string name="android_stage_resources">منابع</string><string name="android_stage_packaging">بسته‌بندی</string><string name="android_stage_finding_apk">یافتن APK</string><string name="android_stage_installing">نصب</string><string name="android_stage_launching">اجرا</string><string name="android_stage_complete">کامل</string><string name="android_stage_failed">ناموفق</string><string name="android_stage_cancelling">در حال لغو</string><string name="android_stage_cancelled">لغو شد</string>
+    <string name="android_tools_required">قبل از بیلد، ابزارهای توسعهٔ اندروید لازم است.</string><string name="install_android_tools">نصب ابزارهای اندروید</string>
+    <string name="build">بیلد</string><string name="install">نصب</string><string name="run">اجرا</string><string name="build_and_run">بیلد و اجرا</string><string name="cancel_operation">لغو عملیات</string>
+    <string name="build_issues">مشکلات بیلد</string><string name="unknown_package">بستهٔ نامشخص</string><string name="installed">نصب‌شده</string><string name="not_installed">نصب نشده</string><string name="stale_apk_warning">فایل‌های منبع بعد از ساخت این APK تغییر کرده‌اند. می‌توانید از همین استفاده کنید یا APK جدید بسازید.</string>
+    <string name="apk_version_info">نسخه %1$s (%2$s) · حداقل SDK %3$s · هدف SDK %4$s</string><string name="share">اشتراک‌گذاری</string><string name="save_copy">ذخیرهٔ کپی</string><string name="copy_path">کپی مسیر</string><string name="app_info">اطلاعات اپ</string><string name="uninstall">حذف نصب</string>
+    <string name="show_build_details">نمایش جزئیات بیلد</string><string name="hide_build_details">مخفی کردن جزئیات بیلد</string><string name="copy_log">کپی لاگ</string>
+    <string name="logcat_access_required">دسترسی Logcat لازم است</string><string name="logcat_access_description">یک‌بار مجوز لاگ توسعه را با ADB بدهید، سپس این صفحه را بروزرسانی کنید.</string><string name="copy_command">کپی دستور</string><string name="search_logs">جستجوی لاگ‌ها</string><string name="pause">مکث</string><string name="resume">ادامه</string><string name="clear">پاک کردن</string>
+    <string name="project_health">سلامت پروژه</string><string name="fix">رفع</string>
+    <string name="android_screen_title">اندروید</string>
+    <string name="android_ready_to_build">آمادهٔ ساخت</string>
+    <string name="android_ready_to_rebuild">آمادهٔ ساخت دوباره</string>
+    <string name="android_ready_to_run">آمادهٔ اجرا</string>
+    <string name="android_ready_to_install">آمادهٔ نصب</string>
+    <string name="android_build_failed_title">بیلد ناموفق</string>
+    <string name="android_no_apk_description">برای اجرای این پروژه یک APK دیباگ بسازید.</string>
+    <string name="android_source_changed_short">منبع از آخرین بیلد تغییر کرده است.</string>
+    <string name="android_build_current_installed">بیلد به‌روز است · روی این دستگاه نصب شده</string>
+    <string name="android_build_current_not_installed">بیلد به‌روز است · آمادهٔ نصب</string>
+    <string name="run_app">اجرای اپ</string>
+    <string name="android_build_again">ساخت دوباره</string>
+    <string name="android_build_output">خروجی بیلد</string>
+    <string name="android_view">مشاهده</string>
+    <string name="android_completed_in">در %1$s کامل شد</string>
+    <string name="android_build_in_progress">در حال اجرا به‌مدت %1$s</string>
+    <string name="android_no_build_yet">هنوز بیلدی نیست</string>
+    <string name="android_no_build_output">هنوز خروجی بیلد نیست.</string>
+    <string name="android_checking_health">بررسی پروژه…</string>
+    <string name="android_health_needs_attention">%1$d بررسی نیاز به توجه دارد</string>
+    <string name="android_health_not_checked">برای بررسی پروژه ضربه بزنید</string>
+    <string name="android_health_checks_passed">%1$d بررسی پاس شد</string>
+    <string name="project_type">نوع پروژه</string>
+    <string name="project_type_general">عمومی</string>
+    <string name="project_type_general_desc">هر پروژهٔ کدنویسی</string>
     <string name="project_type_compose">Compose</string>
-    <string name="project_type_compose_desc">Modern Android UI</string>
+    <string name="project_type_compose_desc">UI مدرن اندروید</string>
     <string name="project_type_xml">XML</string>
-    <string name="project_type_xml_desc">Classic Android UI</string>
-    <string name="android_estimated_remaining">About %1$s remaining</string>
-    <string name="android_finishing_build">Finishing build…</string>
-    <string name="android_estimating_build">Learning build time…</string>
-    <string name="android_usually_takes">Usually about %1$s</string>
-    <string name="diagnostics_title">Developer diagnostics</string>
-    <string name="diagnostics_subtitle">Performance, processes, and runtime storage</string>
-    <string name="diagnostics_refresh">Refresh diagnostics</string>
-    <string name="diagnostics_memory">Memory</string>
-    <string name="diagnostics_app_memory">App memory</string>
-    <string name="diagnostics_java_heap">Java heap</string>
-    <string name="diagnostics_processes">Active processes</string>
-    <string name="diagnostics_no_processes">No development process is running</string>
-    <string name="diagnostics_stop_inactive">Stop inactive processes</string>
-    <string name="diagnostics_buffers">In-app buffers</string>
-    <string name="diagnostics_messages">Chat messages</string>
-    <string name="diagnostics_live_activity">Live activity rows</string>
-    <string name="diagnostics_terminal_buffer">Terminal text</string>
-    <string name="diagnostics_build_log">Build log</string>
-    <string name="diagnostics_logcat_lines">Log lines</string>
-    <string name="diagnostics_file_entries">Loaded file entries</string>
-    <string name="diagnostics_runtime_cache">Runtime output cache</string>
-    <string name="diagnostics_cached_output">Cached output</string>
-    <string name="diagnostics_clear_cache">Clear disposable output</string>
-    <string name="diagnostics_cache_disabled">Available after active work finishes.</string>
-    <string name="diagnostics_recent_exit">Recent app issue</string>
-    <string name="diagnostics_no_recent_exit">No recent crash or ANR recorded</string>
-    <string name="diagnostics_inactive_stopped">Inactive processes stopped</string>
-    <string name="diagnostics_cache_busy">Wait for active work to finish before clearing output</string>
-    <string name="diagnostics_cache_cleared">Disposable runtime output cleared</string>
+    <string name="project_type_xml_desc">UI کلاسیک اندروید</string>
+    <string name="android_estimated_remaining">حدود %1$s باقی مانده</string>
+    <string name="android_finishing_build">اتمام بیلد…</string>
+    <string name="android_estimating_build">یادگیری زمان بیلد…</string>
+    <string name="android_usually_takes">معمولاً حدود %1$s</string>
+    <string name="diagnostics_title">تشخیص توسعه‌دهنده</string>
+    <string name="diagnostics_subtitle">عملکرد، فرایندها و فضای رانتایم</string>
+    <string name="diagnostics_refresh">بروزرسانی تشخیص</string>
+    <string name="diagnostics_memory">حافظه</string>
+    <string name="diagnostics_app_memory">حافظهٔ اپ</string>
+    <string name="diagnostics_java_heap">هیپ Java</string>
+    <string name="diagnostics_processes">فرایندهای فعال</string>
+    <string name="diagnostics_no_processes">هیچ فرایند توسعه‌ای در حال اجرا نیست</string>
+    <string name="diagnostics_stop_inactive">توقف فرایندهای غیرفعال</string>
+    <string name="diagnostics_buffers">بافرهای داخل اپ</string>
+    <string name="diagnostics_messages">پیام‌های گفتگو</string>
+    <string name="diagnostics_live_activity">ردیف‌های فعالیت زنده</string>
+    <string name="diagnostics_terminal_buffer">متن ترمینال</string>
+    <string name="diagnostics_build_log">لاگ بیلد</string>
+    <string name="diagnostics_logcat_lines">خطوط لاگ</string>
+    <string name="diagnostics_file_entries">ورودی‌های فایل بارگذاری‌شده</string>
+    <string name="diagnostics_runtime_cache">کش خروجی رانتایم</string>
+    <string name="diagnostics_cached_output">خروجی کش‌شده</string>
+    <string name="diagnostics_clear_cache">پاک کردن خروجی موقت</string>
+    <string name="diagnostics_cache_disabled">پس از پایان کار فعال در دسترس است.</string>
+    <string name="diagnostics_recent_exit">مشکل اخیر اپ</string>
+    <string name="diagnostics_no_recent_exit">کرش یا ANR اخیری ثبت نشده</string>
+    <string name="diagnostics_inactive_stopped">فرایندهای غیرفعال متوقف شدند</string>
+    <string name="diagnostics_cache_busy">قبل از پاک کردن خروجی، صبر کنید کار فعال تمام شود</string>
+    <string name="diagnostics_cache_cleared">خروجی موقت رانتایم پاک شد</string>
 </resources>
