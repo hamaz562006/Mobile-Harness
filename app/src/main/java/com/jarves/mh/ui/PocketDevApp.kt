@@ -487,12 +487,6 @@ private fun AntigravityOnboardingScreen(
             onSelect = { agent ->
                 showAgentPicker = false
                 onSelectAgent(agent)
-                if (onboarding) {
-                    selected = ProviderKind.FREE_MODELS
-                    baseUrl = ProviderKind.FREE_MODELS.defaultBaseUrl
-                    model = ProviderKind.FREE_MODELS.defaultModel
-                    apiKey = ""
-                }
             },
             onDismiss = { showAgentPicker = false },
         )
@@ -2726,6 +2720,12 @@ private fun ProviderSetupScreen(
             onSelect = { agent ->
                 showAgentPicker = false
                 onSelectAgent(agent)
+                if (onboarding) {
+                    selected = ProviderKind.FREE_MODELS
+                    baseUrl = ProviderKind.FREE_MODELS.defaultBaseUrl
+                    model = ProviderKind.FREE_MODELS.defaultModel
+                    apiKey = ""
+                }
             },
             onDismiss = { showAgentPicker = false },
         )
