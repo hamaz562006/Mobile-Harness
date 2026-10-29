@@ -725,7 +725,7 @@ fun AgentScreen(
                                     Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Column(modifier.weight(1f)) {
+                                    Column(Modifier.weight(1f)) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             // Model id is the stable primary line (max 1 line).
                                             Text(

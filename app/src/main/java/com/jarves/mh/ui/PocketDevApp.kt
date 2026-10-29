@@ -3282,7 +3282,7 @@ private fun ProviderCredentialsStep(
                                     .padding(vertical = 14.dp, horizontal = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(modifier.weight(1f)) {
+                                Column(Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
                                             option.id,
