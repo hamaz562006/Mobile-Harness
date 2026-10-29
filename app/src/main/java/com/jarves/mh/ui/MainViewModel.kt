@@ -2838,9 +2838,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
             return when (live) {
                 is ModelDiscoveryResult.Success -> ModelDiscoveryResult.Success(
-                    models = FreeModelCatalog.mergeLive(
-                        live.models.map { it.copy(isFree = true) },
-                    ),
+                    // Keep only true free rows from Kilo; never promote the full catalog.
+                    models = FreeModelCatalog.mergeLive(live.models),
                     endpoint = FreeModelCatalog.KILO_BASE_URL,
                 )
                 is ModelDiscoveryResult.Failure -> ModelDiscoveryResult.Success(
@@ -2857,6 +2856,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         secret: String,
         models: List<com.jarves.mh.network.DiscoveredModel>,
     ): ConnectionValidation {
+        if (profile.kind == ProviderKind.FREE_MODELS) {
+            // Keyless Kilo/Pollinations path — no API key to check.
+            val id = profile.model.ifBlank { FreeModelCatalog.DEFAULT_ID }
+            return ConnectionValidation.Success("Free model ready: $id")
+        }
         val key = secret.ifBlank { vault.get(profile.kind.name).orEmpty() }
         return providerApi.validate(
             profile.baseUrl,

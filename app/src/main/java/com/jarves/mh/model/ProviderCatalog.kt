@@ -90,12 +90,23 @@ object FreeModelCatalog {
 
     /** Prefer live free rows when present; otherwise curated offline list. */
     fun mergeLive(live: List<DiscoveredModel>): List<DiscoveredModel> {
-        val freeLive = live.filter { it.isFree }
+        val freeLive = live
+            .filter { model ->
+                model.isFree ||
+                    model.id.equals(DEFAULT_ID, ignoreCase = true) ||
+                    model.id.endsWith(":free", ignoreCase = true) ||
+                    model.id.contains("/free", ignoreCase = true)
+            }
             .map { it.copy(isFree = true) }
             .distinctBy { it.id }
         if (freeLive.isEmpty()) return asDiscovered()
         // Keep Pollinations offline fallback visible even when Kilo returns a full list.
         val pollinations = asDiscovered().first { it.id == POLLINATIONS_ID }
-        return (freeLive + pollinations).distinctBy { it.id }
+        // Prefer Auto Free first for a clear default.
+        val ordered = freeLive.sortedWith(
+            compareByDescending<DiscoveredModel> { it.id == DEFAULT_ID }
+                .thenBy { it.displayName.lowercase() },
+        )
+        return (ordered + pollinations).distinctBy { it.id }
     }
 }

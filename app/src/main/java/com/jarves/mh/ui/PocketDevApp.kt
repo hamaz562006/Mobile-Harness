@@ -228,6 +228,7 @@ import com.jarves.mh.model.ProjectType
 import com.jarves.mh.model.AndroidTemplate
 import com.jarves.mh.model.ProjectChat
 import com.jarves.mh.model.ProviderKind
+import com.jarves.mh.model.FreeModelCatalog
 import com.jarves.mh.model.ProviderProfile
 import com.jarves.mh.model.inferredDshApiForUrl
 import com.jarves.mh.model.providersForAgent
@@ -3196,7 +3197,19 @@ private fun ProviderCredentialsStep(
                     models = result.models
                     statusOk = true
                     status = context.getString(R.string.provider_models_found, result.models.size)
-                    if (model.isBlank() && result.models.isNotEmpty()) onModel(result.models.first().id)
+                    val ids = result.models.map { it.id }.toSet()
+                    when {
+                        model.isBlank() && result.models.isNotEmpty() ->
+                            onModel(
+                                result.models.firstOrNull { it.id == FreeModelCatalog.DEFAULT_ID }?.id
+                                    ?: result.models.first().id,
+                            )
+                        provider == ProviderKind.FREE_MODELS && model.isNotBlank() && model !in ids && result.models.isNotEmpty() ->
+                            onModel(
+                                result.models.firstOrNull { it.id == FreeModelCatalog.DEFAULT_ID }?.id
+                                    ?: result.models.first().id,
+                            )
+                    }
                     if (openWhenReady && result.models.isNotEmpty()) showModels = true
                 }
                 is ModelDiscoveryResult.Failure -> {
@@ -3346,19 +3359,21 @@ private fun ProviderCredentialsStep(
                     if (agentKind == AgentKind.DEEPSEEK_HARNESS && provider in DSH_PROTOCOL_PROVIDERS && !provider.fixedProtocol) {
                         DshApiProtocolPicker(selected = dshApi, onSelected = { onDshApi(it); status = null })
                     }
-                    OutlinedTextField(
-                        apiKey,
-                        { onApiKey(it); status = null; statusDetails = null },
-                        label = { Text(stringResource(R.string.provider_api_key)) },
-                        placeholder = { Text(stringResource(if (hasStoredSecret) R.string.provider_saved_key_placeholder else R.string.provider_enter_key)) },
-                        supportingText = {
-                            if (hasStoredSecret && apiKey.isBlank()) Text(stringResource(R.string.provider_saved_key_ready))
-                        },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    if (provider != ProviderKind.FREE_MODELS) {
+                        OutlinedTextField(
+                            apiKey,
+                            { onApiKey(it); status = null; statusDetails = null },
+                            label = { Text(stringResource(R.string.provider_api_key)) },
+                            placeholder = { Text(stringResource(if (hasStoredSecret) R.string.provider_saved_key_placeholder else R.string.provider_enter_key)) },
+                            supportingText = {
+                                if (hasStoredSecret && apiKey.isBlank()) Text(stringResource(R.string.provider_saved_key_ready))
+                            },
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                     OutlinedTextField(
                         model,
                         { onModel(it); status = null; statusDetails = null },
