@@ -188,11 +188,12 @@ class AppPreferences(private val context: Context) {
             storedBaseUrl == ProviderKind.ANTHROPIC.defaultBaseUrl &&
             storedModel == ProviderKind.ANTHROPIC.defaultModel
         val kind = when {
-            agent == null -> storedKind ?: ProviderKind.ANTHROPIC
+            agent == null -> storedKind ?: ProviderKind.FREE_MODELS
             agent == AgentKind.DEEPSEEK_HARNESS && (!hasAgentProfile || legacyClaudeDefaultInDeepSeek) -> ProviderKind.DEEPSEEK
             storedKind != null && storedKind in providersForAgent(agent) -> storedKind
             agent == AgentKind.DEEPSEEK_HARNESS -> ProviderKind.DEEPSEEK
-            else -> ProviderKind.ANTHROPIC
+            // Claude Code onboarding defaults to keyless Free models.
+            else -> ProviderKind.FREE_MODELS
         }
         val useStoredValues = storedKind == kind
         val savedModel = if (useStoredValues) {

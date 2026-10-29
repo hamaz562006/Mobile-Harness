@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MH Hamaz</string>
+
+    <string name="tab_projects">پروژه‌ها</string>
+    <string name="tab_agent">ایجنت</string>
+    <string name="tab_settings">تنظیمات</string>
+    <string name="tab_chat">گفتگو</string>
+    <string name="tab_files">فایل‌ها</string>
+    <string name="tab_terminal">ترمینال</string>
+    <string name="tab_changes">تغییرات</string>
+    <string name="tab_preview">پیش‌نمایش</string>
+
+    <string name="action_ok">تأیید</string>
+    <string name="action_cancel">لغو</string>
+    <string name="action_save">ذخیره</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_remove">برداشتن</string>
+    <string name="action_add">افزودن</string>
+    <string name="action_edit">ویرایش</string>
+    <string name="action_close">بستن</string>
+    <string name="action_back">بازگشت</string>
+    <string name="action_next">بعدی</string>
+    <string name="action_continue">ادامه</string>
+    <string name="action_retry">تلاش دوباره</string>
+    <string name="action_clear">پاک کردن</string>
+    <string name="action_refresh">بروزرسانی</string>
+    <string name="action_test">تست</string>
+
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_subtitle">ترجیحات و پیکربندی</string>
+    <string name="settings_appearance">ظاهر</string>
+    <string name="settings_language">زبان</string>
+    <string name="settings_tools">ابزارهای توسعه‌دهنده</string>
+    <string name="settings_runtime">محیط لینوکس</string>
+    <string name="settings_privacy">حریم خصوصی</string>
+    <string name="settings_privacy_desc">نحوهٔ مدیریت دادهٔ محلی و درخواست‌های هوش مصنوعی</string>
+    <string name="settings_app_desc">فضای کاری کدنویسی محلی با هوش مصنوعی</string>
+    <string name="settings_reliability">پایداری اجرا</string>
+    <string name="settings_reliability_subtitle">اعلان‌ها، پس‌زمینه و محافظت از کار</string>
+
+    <string name="theme_dark">تیره</string>
+    <string name="theme_light">روشن</string>
+    <string name="theme_system">سیستم</string>
+    <string name="theme_dark_subtitle">تم تیره</string>
+    <string name="theme_light_subtitle">تم روشن</string>
+    <string name="theme_system_subtitle">پیروی از سیستم</string>
+
+    <string name="language_choose_title">انتخاب زبان</string>
+    <string name="language_welcome_title">زبان خود را انتخاب کنید</string>
+    <string name="language_welcome_subtitle">زبان ترجیحی را انتخاب کنید. هر زمان در تنظیمات قابل تغییر است.</string>
+    <string name="language_system_default">پیش‌فرض سیستم</string>
+
+    <string name="provider_title_free_models">مدل‌های رایگان</string>
+    <string name="provider_subtitle_free_models">استخر رایگان Kilo · بدون کلید API</string>
+    <string name="provider_free_badge">رایگان</string>
+    <string name="provider_connect_ai">اتصال به هوش مصنوعی</string>
+    <string name="provider_connect_ai_desc">نحوهٔ دسترسی Mobile Harness به مدل کدنویسی را انتخاب کنید.</string>
+    <string name="setup_mobile_harness">راه‌اندازی Mobile Harness</string>
+    <string name="provider_continue">ادامه</string>
+    <string name="provider_secure_setup">راه‌اندازی امن</string>
+    <string name="provider_keys_secure">کلیدهای API در فضای امن اندروید رمزنگاری می‌شوند.</string>
+
+    <string name="bg_setup_title">آماده‌سازی برای راه‌اندازی پایدار</string>
+    <string name="bg_setup_subtitle">زمان نصب به ابزارهایی که انتخاب می‌کنید بستگی دارد. می‌توانید اپ را در پس‌زمینه باز نگه دارید.</string>
+    <string name="bg_step_notifications">اعلان‌ها</string>
+    <string name="bg_step_background">پس‌زمینه</string>
+    <string name="bg_step_task_protection">محافظت از کار</string>
+    <string name="bg_status_required">الزامی</string>
+    <string name="bg_status_next">بعدی</string>
+    <string name="bg_status_granted">فعال</string>
+    <string name="bg_step_indicator">گام %1$d از %2$d</string>
+    <string name="bg_notifications_title">اعلان کارهای در حال اجرا</string>
+    <string name="bg_notifications_desc">پیشرفت زنده و هشدار وقتی ایجنت تمام می‌شود یا به توجه شما نیاز دارد.</string>
+    <string name="bg_notifications_privacy">فقط اعلان پیشرفت، اتمام و خطا ارسال می‌شود.</string>
+    <string name="bg_notifications_allow">اجازه به اعلان‌ها</string>
+    <string name="bg_notifications_settings">باز کردن تنظیمات اعلان</string>
+    <string name="bg_notifications_skip">ادامه بدون اعلان</string>
+    <string name="bg_reliability_title">پایداری پس‌زمینه</string>
+    <string name="bg_reliability_desc">اجازه دهید Mobile Harness هنگام قفل بودن صفحه هم کار را ادامه دهد.</string>
+    <string name="bg_reliability_privacy">کنترل با شماست و هر کار را می‌توانید از اعلان متوقف کنید.</string>
+    <string name="bg_reliability_settings">باز کردن تنظیمات باتری</string>
+    <string name="bg_reliability_skip">ادامه بدون معافیت باتری</string>
+    <string name="bg_protection_title">محافظت از کار</string>
+    <string name="bg_protection_desc">CPU فقط هنگام اجرای یک کار کدنویسی قابل‌مشاهده بیدار می‌ماند.</string>
+    <string name="bg_protection_privacy">صفحه خاموش می‌ماند. محافظت حداکثر ۹۰ دقیقه است.</string>
+    <string name="bg_protection_enable">فعال‌سازی و پایان</string>
+    <string name="bg_setup_footer">بعداً می‌توانید این تنظیمات را تغییر دهید. اندروید ممکن است در کمبود حافظه کارهای سنگین را متوقف کند.</string>
+</resources>

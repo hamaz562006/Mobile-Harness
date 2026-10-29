@@ -74,13 +74,13 @@ android {
     defaultConfig {
         applicationId = "com.hamaz.mobileharness"
         minSdk = 28
-        // The direct APK retains the proven target-28 PRoot execution path. The
-        // Play build targets current Android while its runtime path is validated.
-        targetSdk = if (playBuild) 36 else 28
+        // targetSdk 34+ so sideloaded builds are not flagged by Play Protect as
+        // "built for an older version of Android". PRoot path is exercised on CI.
+        targetSdk = 36
         // Keep literal defaults so F-Droid's static manifest parser can detect
         // the tagged release. Gradle properties may still override Play builds.
-        versionCode = 8
-        versionName = "1.0.7"
+        versionCode = 9
+        versionName = "1.0.8"
         providers.gradleProperty("appVersionCode").orNull?.toIntOrNull()?.let { versionCode = it }
         providers.gradleProperty("appVersionName").orNull?.let { versionName = it }
 

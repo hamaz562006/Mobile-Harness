@@ -1,8 +1,15 @@
 package com.jarves.mh.ui
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -42,6 +49,9 @@ import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.BatterySaver
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Tune
@@ -109,7 +119,7 @@ import com.jarves.mh.ui.theme.AppThemeMode
 import com.jarves.mh.ui.theme.PocketOrange
 import kotlinx.coroutines.launch
 
-private enum class SettingsSection { APPEARANCE, LANGUAGE, TOOLS, RUNTIME, DIAGNOSTICS, UPDATE_CHANNEL }
+private enum class SettingsSection { APPEARANCE, LANGUAGE, RELIABILITY, TOOLS, RUNTIME, DIAGNOSTICS, UPDATE_CHANNEL }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -309,6 +319,18 @@ fun SettingsScreen(
                             }
                         }
                     }
+                }
+            }
+
+            item {
+                SettingsAccordion(
+                    title = stringResource(R.string.settings_reliability),
+                    subtitle = stringResource(R.string.settings_reliability_subtitle),
+                    icon = Icons.Default.Shield,
+                    expanded = expanded == SettingsSection.RELIABILITY,
+                    onClick = { toggle(SettingsSection.RELIABILITY) },
+                ) {
+                    ReliabilitySettingsPanel()
                 }
             }
 
@@ -1110,6 +1132,95 @@ private fun DebugUpdateChannelSection(
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+
+@Composable
+private fun ReliabilitySettingsPanel() {
+    val context = LocalContext.current
+    val powerManager = context.getSystemService(PowerManager::class.java)
+    fun notificationsAllowed(): Boolean {
+        val runtimeGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+        return runtimeGranted && androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+    }
+    fun batteryUnrestricted(): Boolean = powerManager.isIgnoringBatteryOptimizations(context.packageName)
+
+    var notificationGranted by remember { mutableStateOf(notificationsAllowed()) }
+    var batteryGranted by remember { mutableStateOf(batteryUnrestricted()) }
+
+    val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        notificationGranted = notificationsAllowed()
+    }
+    val notificationSettingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        notificationGranted = notificationsAllowed()
+    }
+    val batteryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        batteryGranted = batteryUnrestricted()
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)) {
+        ReliabilityRow(
+            title = stringResource(R.string.bg_step_notifications),
+            subtitle = stringResource(R.string.bg_notifications_desc),
+            granted = notificationGranted,
+            actionLabel = stringResource(if (notificationGranted) R.string.bg_status_granted else R.string.bg_notifications_allow),
+            onAction = {
+                if (notificationGranted) {
+                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    }
+                    notificationSettingsLauncher.launch(intent)
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    }
+                    notificationSettingsLauncher.launch(intent)
+                }
+            },
+        )
+        ReliabilityRow(
+            title = stringResource(R.string.bg_step_background),
+            subtitle = stringResource(R.string.bg_reliability_desc),
+            granted = batteryGranted,
+            actionLabel = stringResource(if (batteryGranted) R.string.bg_status_granted else R.string.bg_reliability_settings),
+            onAction = {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                }
+                runCatching { batteryLauncher.launch(intent) }
+            },
+        )
+        Text(
+            stringResource(R.string.bg_setup_footer),
+            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun ReliabilityRow(
+    title: String,
+    subtitle: String,
+    granted: Boolean,
+    actionLabel: String,
+    onAction: () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        Spacer(Modifier.height(2.dp))
+        Text(subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(onClick = onAction, modifier = Modifier.fillMaxWidth()) {
+            Text(actionLabel)
         }
     }
 }

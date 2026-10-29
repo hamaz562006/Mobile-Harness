@@ -7,11 +7,7 @@ enum class AppLanguage(
 ) {
     SYSTEM("system", "System Default", "Default"),
     ENGLISH("en", "English", "English"),
-    SPANISH("es", "Spanish", "Español"),
-    CHINESE("zh", "Chinese (Simplified)", "简体中文"),
-    ARABIC("ar", "Arabic", "العربية"),
-    HINDI("hi", "Hindi", "हिन्दी"),
-    RUSSIAN("ru", "Russian", "Русский");
+    FARSI("fa", "Farsi", "فارسی");
 
     companion object {
         fun fromCode(code: String?): AppLanguage =

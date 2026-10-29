@@ -35,6 +35,8 @@
     <string name="settings_subtitle">Preferences &amp; Configuration</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_language">Language</string>
+    <string name="settings_reliability">Reliable execution</string>
+    <string name="settings_reliability_subtitle">Notifications, background, and task protection</string>
     <string name="settings_tools">Developer tools</string>
     <string name="settings_runtime">Linux runtime</string>
     <string name="settings_privacy">Privacy policy</string>
