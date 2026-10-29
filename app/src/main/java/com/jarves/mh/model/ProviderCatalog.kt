@@ -13,7 +13,7 @@ object ProviderCatalog {
 
     /**
      * Providers offered for [agent], ordered for onboarding.
-     * Free models stay first so a keyless-feeling path is obvious.
+     * Free models stay first so a keyless path is obvious.
      */
     fun providersFor(agent: AgentKind): List<ProviderKind> = when (agent) {
         AgentKind.CLAUDE_CODE -> buildList {
@@ -37,37 +37,43 @@ object ProviderCatalog {
 }
 
 /**
- * Curated OpenRouter free-tier models aimed at coding agents.
- * IDs use the `:free` suffix so cost stays $0 / token (rate limits still apply).
+ * Free models as used by AndroidHarness / and-code Harness provider:
+ * keyless Kilo gateway (+ Pollinations fallback), not OpenRouter paid-account free tier.
  *
- * Live discovery may return a larger free list; this catalog is the offline
- * fallback and the default onboarding picks.
+ * Live catalog is fetched from Kilo (`isFree` + tools). Offline fallback keeps
+ * the same default Auto Free entry and Pollinations so setup works offline.
  */
 object FreeModelCatalog {
-    const val DEFAULT_ID = "recursive/flint-v1.0:free"
+    const val KILO_BASE_URL = "https://api.kilo.ai/api/gateway"
+    const val POLLINATIONS_BASE_URL = "https://text.pollinations.ai/openai"
+    const val DEFAULT_ID = "kilo-auto/free"
+    const val POLLINATIONS_ID = "openai-fast"
 
     data class Entry(
         val id: String,
         val title: String,
         val note: String,
+        /** Upstream base URL for this free model (Kilo vs Pollinations). */
+        val baseUrl: String = KILO_BASE_URL,
     )
 
     val curated: List<Entry> = listOf(
-        Entry("recursive/flint-v1.0:free", "Flint", "Coding agents"),
-        Entry("cohere/north-mini-code:free", "North Mini Code", "Agentic coding"),
-        Entry("google/gemma-4-31b-it:free", "Gemma 4 31B", "General · tools"),
-        Entry("google/gemma-4-26b-a4b-it:free", "Gemma 4 26B", "General · lighter"),
-        Entry("nvidia/nemotron-3.5-lightning:free", "Nemotron 3.5 Lightning", "High-volume agents"),
-        Entry("nvidia/nemotron-3-ultra-550b-a55b:free", "Nemotron 3 Ultra", "Reasoning"),
-        Entry("nvidia/nemotron-3.5-super-vl:free", "Nemotron 3.5 Super VL", "Multimodal"),
-        Entry("thinkingmachines/inkling:free", "Inkling", "General · long context"),
-        Entry("thinkingmachines/inkling-small:free", "Inkling Small", "General · lighter"),
-        Entry("xingchen-agi/xing4.0-29b-a4b:free", "Xing4.0 29B", "General"),
-        Entry("nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free", "Nemotron 3 Nano Omni", "Reasoning"),
-        Entry("liquid/lfm-2.5-2.6b:free", "LFM 2.5", "Small · fast"),
-        Entry("dots-studio/dots-3-note-preview:free", "Dots3 Note", "General preview"),
-        Entry("poolside/laguna-s-2.1:free", "Laguna S 2.1", "Coding · may expire"),
-        Entry("poolside/laguna-xs-2.1:free", "Laguna XS 2.1", "Coding · lighter"),
+        Entry(DEFAULT_ID, "Auto Free", "Kilo · rotates free models · ~200 req/h · no key"),
+        Entry(POLLINATIONS_ID, "Pollinations Fast", "Pollinations · ~4 req/min · no key", POLLINATIONS_BASE_URL),
+        Entry("nvidia/nemotron-3.5-super-vl:free", "Nemotron 3.5 Super VL", "Kilo free · tools"),
+        Entry("nvidia/nemotron-3-ultra-550b-a55b:free", "Nemotron 3 Ultra", "Kilo free · tools"),
+        Entry("nvidia/nemotron-3.5-lightning:free", "Nemotron 3.5 Lightning", "Kilo free · tools"),
+        Entry("google/gemma-4-31b-it:free", "Gemma 4 31B", "Kilo free · tools"),
+        Entry("google/gemma-4-26b-a4b-it:free", "Gemma 4 26B", "Kilo free · tools"),
+        Entry("cohere/north-mini-code:free", "North Mini Code", "Kilo free · coding"),
+        Entry("recursive/flint-v1.0:free", "Flint", "Kilo free · coding"),
+        Entry("reflection/beam-free", "Beam Free", "Kilo free"),
+        Entry("dots-studio/dots-3-note-preview:free", "Dots3 Note", "Kilo free"),
+        Entry("stealth/glyph-cluster", "Glyph Cluster", "Kilo free"),
+        Entry("thinkingmachines/inkling:free", "Inkling", "Kilo free"),
+        Entry("thinkingmachines/inkling-small:free", "Inkling Small", "Kilo free"),
+        Entry("poolside/laguna-s-2.1:free", "Laguna S 2.1", "Kilo free · coding"),
+        Entry("poolside/laguna-xs-2.1:free", "Laguna XS 2.1", "Kilo free · coding"),
     )
 
     fun asDiscovered(): List<DiscoveredModel> =
@@ -79,17 +85,17 @@ object FreeModelCatalog {
             )
         }
 
+    fun baseUrlFor(modelId: String): String =
+        curated.firstOrNull { it.id == modelId }?.baseUrl ?: KILO_BASE_URL
+
     /** Prefer live free rows when present; otherwise curated offline list. */
     fun mergeLive(live: List<DiscoveredModel>): List<DiscoveredModel> {
-        val freeLive = live.filter { it.isFree || it.id.endsWith(":free", ignoreCase = true) }
+        val freeLive = live.filter { it.isFree }
             .map { it.copy(isFree = true) }
             .distinctBy { it.id }
         if (freeLive.isEmpty()) return asDiscovered()
-        val curatedIds = curated.map { it.id }.toSet()
-        val preferred = freeLive.sortedWith(
-            compareByDescending<DiscoveredModel> { it.id in curatedIds }
-                .thenBy { it.displayName.lowercase() },
-        )
-        return preferred
+        // Keep Pollinations offline fallback visible even when Kilo returns a full list.
+        val pollinations = asDiscovered().first { it.id == POLLINATIONS_ID }
+        return (freeLive + pollinations).distinctBy { it.id }
     }
 }

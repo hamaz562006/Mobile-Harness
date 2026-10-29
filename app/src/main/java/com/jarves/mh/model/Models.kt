@@ -43,11 +43,12 @@ enum class ProviderKind(
     ),
     FREE_MODELS(
         "Free models",
-        "OpenRouter free tier · coding-ready models",
-        ProviderProtocol.OPENROUTER,
-        "https://openrouter.ai/api",
-        "recursive/flint-v1.0:free",
+        "Kilo free pool · no API key (same path as AndroidHarness)",
+        ProviderProtocol.OPENAI_CHAT,
+        "https://api.kilo.ai/api/gateway",
+        "kilo-auto/free",
         fixedBaseUrl = true,
+        fixedProtocol = true,
     ),
     CUSTOM("Custom API", "Anthropic-compatible endpoint", ProviderProtocol.ANTHROPIC_GATEWAY, "", "", true),
 }
@@ -110,7 +111,7 @@ val DSH_PROTOCOL_PROVIDERS: Set<ProviderKind> = setOf(
 
 fun defaultDshApiForProvider(kind: ProviderKind): String = when (kind) {
     ProviderKind.OPENCODE_ZEN -> "openai-responses"
-    ProviderKind.NVIDIA_NIM -> "openai-completions"
+    ProviderKind.NVIDIA_NIM, ProviderKind.FREE_MODELS -> "openai-completions"
     else -> "anthropic-messages"
 }
 

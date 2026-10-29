@@ -336,11 +336,14 @@ object ModelResponseParser {
                         if (id.isNotBlank()) {
                             val label = item.optString("display_name").ifBlank { item.optString("displayName") }.ifBlank { id }
                             val pricing = item.optJSONObject("pricing")
-                            val free = id.endsWith(":free", ignoreCase = true) || pricing?.let {
-                                listOf("prompt", "completion", "request").all { field ->
-                                    it.optString(field, "0").toDoubleOrNull() == 0.0
-                                }
-                            } == true
+                            val free = item.optBoolean("isFree", false) ||
+                                id.endsWith(":free", ignoreCase = true) ||
+                                id.contains("/free", ignoreCase = true) ||
+                                pricing?.let {
+                                    listOf("prompt", "completion", "request").all { field ->
+                                        it.optString(field, "0").toDoubleOrNull() == 0.0
+                                    }
+                                } == true
                             add(DiscoveredModel(id, label, free))
                         }
                     }

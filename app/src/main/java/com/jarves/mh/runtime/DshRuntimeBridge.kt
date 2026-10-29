@@ -10,6 +10,7 @@ import com.jarves.mh.model.ChatMessage
 import com.jarves.mh.model.DevStack
 import com.jarves.mh.model.ProjectKind
 import com.jarves.mh.model.ProviderKind
+import com.jarves.mh.model.FreeModelCatalog
 import com.jarves.mh.model.ProviderProfile
 import com.jarves.mh.model.RuntimeEvent
 import com.jarves.mh.model.ToolRequest
@@ -692,11 +693,20 @@ internal object DshRouteMapper {
                 defaultModel = model,
                 custom = DshCustomRoute("anthropic-messages", profile.resolvedBaseUrl),
             )
-            ProviderKind.LLM_ROUTER, ProviderKind.FREE_MODELS -> DshRoute(
+            ProviderKind.LLM_ROUTER -> DshRoute(
                 name = "mh-openrouter",
                 keyEnv = DshRuntimeBridge.FALLBACK_KEY_ENV,
                 defaultModel = model,
                 custom = DshCustomRoute("anthropic-messages", profile.resolvedBaseUrl),
+            )
+            ProviderKind.FREE_MODELS -> DshRoute(
+                name = "mh-free-models",
+                keyEnv = DshRuntimeBridge.FALLBACK_KEY_ENV,
+                defaultModel = model.ifBlank { FreeModelCatalog.DEFAULT_ID },
+                custom = DshCustomRoute(
+                    "openai-completions",
+                    FreeModelCatalog.baseUrlFor(model.ifBlank { FreeModelCatalog.DEFAULT_ID }),
+                ),
             )
             ProviderKind.KIMI -> DshRoute(
                 name = "mh-kimi",

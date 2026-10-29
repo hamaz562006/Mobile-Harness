@@ -39,6 +39,7 @@ import com.jarves.mh.model.ProjectType
 import com.jarves.mh.model.AndroidTemplate
 import com.jarves.mh.model.ProjectChat
 import com.jarves.mh.model.ProviderKind
+import com.jarves.mh.model.ProviderProtocol
 import com.jarves.mh.model.FreeModelCatalog
 import com.jarves.mh.model.ProviderProfile
 import com.jarves.mh.model.RuntimeEvent
@@ -2829,26 +2830,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun discoverModels(profile: ProviderProfile, secret: String): ModelDiscoveryResult {
         val key = secret.ifBlank { vault.get(profile.kind.name).orEmpty() }
         if (profile.kind == ProviderKind.FREE_MODELS) {
-            // Curated free list is always available without an API key.
-            if (key.isBlank()) {
-                return ModelDiscoveryResult.Success(
-                    models = FreeModelCatalog.asDiscovered(),
-                    endpoint = profile.resolvedBaseUrl,
-                )
-            }
+            // AndroidHarness path: keyless Kilo catalog (isFree + tools). Offline fallback if network fails.
             val live = providerApi.discoverModels(
-                profile.resolvedBaseUrl,
-                key,
-                providerProtocolForAgent(profile, _state.value.agentKind),
+                FreeModelCatalog.KILO_BASE_URL,
+                /* keyless */ "",
+                ProviderProtocol.OPENAI_CHAT,
             )
             return when (live) {
                 is ModelDiscoveryResult.Success -> ModelDiscoveryResult.Success(
-                    models = FreeModelCatalog.mergeLive(live.models),
-                    endpoint = live.endpoint,
+                    models = FreeModelCatalog.mergeLive(
+                        live.models.map { it.copy(isFree = true) },
+                    ),
+                    endpoint = FreeModelCatalog.KILO_BASE_URL,
                 )
                 is ModelDiscoveryResult.Failure -> ModelDiscoveryResult.Success(
                     models = FreeModelCatalog.asDiscovered(),
-                    endpoint = profile.resolvedBaseUrl,
+                    endpoint = FreeModelCatalog.KILO_BASE_URL,
                 )
             }
         }
