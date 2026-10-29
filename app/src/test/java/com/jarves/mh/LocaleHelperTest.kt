@@ -7,22 +7,20 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.Locale
 
 class LocaleHelperTest {
 
     @Test
     fun appLanguageResolutionFromCode() {
         assertEquals(AppLanguage.ENGLISH, AppLanguage.fromCode("en"))
-        assertEquals(AppLanguage.SPANISH, AppLanguage.fromCode("es"))
-        assertEquals(AppLanguage.CHINESE, AppLanguage.fromCode("zh"))
-        assertEquals(AppLanguage.ARABIC, AppLanguage.fromCode("ar"))
-        assertEquals(AppLanguage.HINDI, AppLanguage.fromCode("hi"))
-        assertEquals(AppLanguage.RUSSIAN, AppLanguage.fromCode("ru"))
+        assertEquals(AppLanguage.FARSI, AppLanguage.fromCode("fa"))
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode("system"))
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode(""))
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode(null))
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode("unknown_language"))
+        // Removed locales fall back to SYSTEM so old preferences do not crash.
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode("es"))
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode("ar"))
     }
 
     @Test
@@ -34,29 +32,14 @@ class LocaleHelperTest {
         assertNotNull(enLocale)
         assertEquals("en", enLocale?.language)
 
-        val esLocale = LocaleHelper.getLocale("es")
-        assertNotNull(esLocale)
-        assertEquals("es", esLocale?.language)
-
-        val zhLocale = LocaleHelper.getLocale("zh")
-        assertNotNull(zhLocale)
-        assertEquals("zh", zhLocale?.language)
-
-        val arLocale = LocaleHelper.getLocale("ar")
-        assertNotNull(arLocale)
-        assertEquals("ar", arLocale?.language)
-
-        val hiLocale = LocaleHelper.getLocale("hi")
-        assertNotNull(hiLocale)
-        assertEquals("hi", hiLocale?.language)
-
-        val ruLocale = LocaleHelper.getLocale("ru")
-        assertNotNull(ruLocale)
-        assertEquals("ru", ruLocale?.language)
+        val faLocale = LocaleHelper.getLocale("fa")
+        assertNotNull(faLocale)
+        assertEquals("fa", faLocale?.language)
     }
 
     @Test
     fun appLanguageProperties() {
+        assertEquals(listOf("system", "en", "fa"), AppLanguage.entries.map { it.code })
         for (lang in AppLanguage.entries) {
             assertTrue("Display name should not be blank for ${lang.name}", lang.displayName.isNotBlank())
             assertTrue("Native name should not be blank for ${lang.name}", lang.nativeName.isNotBlank())
