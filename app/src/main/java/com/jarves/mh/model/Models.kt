@@ -41,6 +41,14 @@ enum class ProviderKind(
         fixedBaseUrl = true,
         fixedProtocol = true,
     ),
+    FREE_MODELS(
+        "Free models",
+        "OpenRouter free tier · coding-ready models",
+        ProviderProtocol.OPENROUTER,
+        "https://openrouter.ai/api",
+        "recursive/flint-v1.0:free",
+        fixedBaseUrl = true,
+    ),
     CUSTOM("Custom API", "Anthropic-compatible endpoint", ProviderProtocol.ANTHROPIC_GATEWAY, "", "", true),
 }
 
@@ -83,6 +91,7 @@ enum class AgentKind(
 
 /** Provider kinds usable with [AgentKind.DEEPSEEK_HARNESS]. Claude OAuth login has no dsh equivalent. */
 val DEEPSEEK_HARNESS_PROVIDERS: Set<ProviderKind> = setOf(
+    ProviderKind.FREE_MODELS,
     ProviderKind.DEEPSEEK,
     ProviderKind.ANTHROPIC,
     ProviderKind.LLM_ROUTER,
@@ -132,12 +141,8 @@ fun providerProtocolForAgent(profile: ProviderProfile, agent: AgentKind): Provid
     }
 }
 
-/** Provider choices shown for the selected coding agent. */
-fun providersForAgent(agent: AgentKind): List<ProviderKind> = when (agent) {
-    AgentKind.DEEPSEEK_HARNESS -> ProviderKind.entries.filter { it in DEEPSEEK_HARNESS_PROVIDERS }
-    AgentKind.CLAUDE_CODE -> ProviderKind.entries.filterNot { it == ProviderKind.OPENCODE_ZEN }
-    AgentKind.ANTIGRAVITY -> emptyList()
-}
+/** Provider choices shown for the selected coding agent — see [ProviderCatalog]. */
+fun providersForAgent(agent: AgentKind): List<ProviderKind> = ProviderCatalog.providersFor(agent)
 
 data class ProviderProfile(
     val kind: ProviderKind,

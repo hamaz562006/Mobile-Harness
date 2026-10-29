@@ -2183,6 +2183,7 @@ private fun defaultModelsForProvider(kind: ProviderKind, context: android.conten
         DiscoveredModel("openai/gpt-4o", "GPT-4o"),
         DiscoveredModel("meta-llama/llama-3.3-70b-instruct", "Llama 3.3 70B"),
     )
+    ProviderKind.FREE_MODELS -> com.jarves.mh.model.FreeModelCatalog.asDiscovered()
     ProviderKind.KIMI -> listOf(
         DiscoveredModel("kimi-k2.6", "Kimi K2.6"),
         DiscoveredModel("moonshot-v1-8k", "Moonshot v1 8K"),

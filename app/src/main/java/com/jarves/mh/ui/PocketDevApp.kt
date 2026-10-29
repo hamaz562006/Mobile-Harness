@@ -3010,6 +3010,7 @@ private fun providerTitleResource(provider: ProviderKind): Int = when (provider)
     ProviderKind.KIMI -> R.string.provider_title_kimi
     ProviderKind.OPENCODE_ZEN -> R.string.provider_title_opencode
     ProviderKind.NVIDIA_NIM -> R.string.provider_title_nvidia
+    ProviderKind.FREE_MODELS -> R.string.provider_title_free_models
     ProviderKind.CUSTOM -> R.string.provider_title_custom
 }
 
@@ -3022,6 +3023,7 @@ private fun providerSubtitleResource(provider: ProviderKind): Int = when (provid
     ProviderKind.KIMI, ProviderKind.CUSTOM -> R.string.provider_subtitle_anthropic_compatible
     ProviderKind.OPENCODE_ZEN -> R.string.provider_subtitle_opencode
     ProviderKind.NVIDIA_NIM -> R.string.provider_subtitle_nvidia
+    ProviderKind.FREE_MODELS -> R.string.provider_subtitle_free_models
 }
 
 @Composable
@@ -3038,6 +3040,7 @@ private fun ProviderChoiceRow(
         ProviderKind.KIMI -> Color(0xFF8B7CF6)
         ProviderKind.OPENCODE_ZEN -> Color(0xFF22C55E)
         ProviderKind.NVIDIA_NIM -> Color(0xFF76B900)
+        ProviderKind.FREE_MODELS -> Color(0xFF10B981)
         ProviderKind.CUSTOM -> PocketOrange
     }
     val mark = when (provider) {
@@ -3048,6 +3051,7 @@ private fun ProviderChoiceRow(
         ProviderKind.KIMI -> "K"
         ProviderKind.OPENCODE_ZEN -> "Z"
         ProviderKind.NVIDIA_NIM -> "NV"
+        ProviderKind.FREE_MODELS -> "FR"
         ProviderKind.CUSTOM -> "<>"
     }
 
@@ -3077,7 +3081,21 @@ private fun ProviderChoiceRow(
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                if (provider.experimental) {
+                if (provider == ProviderKind.FREE_MODELS) {
+                    Spacer(Modifier.width(6.dp))
+                    Surface(
+                        color = Color(0xFF10B981).copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(5.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.provider_free_badge),
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                            color = Color(0xFF10B981),
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                } else if (provider.experimental) {
                     Spacer(Modifier.width(6.dp))
                     Surface(
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),

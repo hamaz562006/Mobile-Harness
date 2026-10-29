@@ -39,6 +39,7 @@ import com.jarves.mh.model.ProjectType
 import com.jarves.mh.model.AndroidTemplate
 import com.jarves.mh.model.ProjectChat
 import com.jarves.mh.model.ProviderKind
+import com.jarves.mh.model.FreeModelCatalog
 import com.jarves.mh.model.ProviderProfile
 import com.jarves.mh.model.RuntimeEvent
 import com.jarves.mh.model.ToolRequest
@@ -2827,6 +2828,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun discoverModels(profile: ProviderProfile, secret: String): ModelDiscoveryResult {
         val key = secret.ifBlank { vault.get(profile.kind.name).orEmpty() }
+        if (profile.kind == ProviderKind.FREE_MODELS) {
+            val live = providerApi.discoverModels(
+                profile.resolvedBaseUrl,
+                key,
+                providerProtocolForAgent(profile, _state.value.agentKind),
+            )
+            return when (live) {
+                is ModelDiscoveryResult.Success -> ModelDiscoveryResult.Success(
+                    models = FreeModelCatalog.mergeLive(live.models),
+                    endpoint = live.endpoint,
+                )
+                is ModelDiscoveryResult.Failure -> {
+                    // Offline curated list still lets onboarding continue without network catalog.
+                    if (key.isBlank()) live
+                    else ModelDiscoveryResult.Success(
+                        models = FreeModelCatalog.asDiscovered(),
+                        endpoint = profile.resolvedBaseUrl,
+                    )
+                }
+            }
+        }
         return providerApi.discoverModels(profile.baseUrl, key, providerProtocolForAgent(profile, _state.value.agentKind))
     }
 

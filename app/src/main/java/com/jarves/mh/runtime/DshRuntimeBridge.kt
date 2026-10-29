@@ -692,7 +692,7 @@ internal object DshRouteMapper {
                 defaultModel = model,
                 custom = DshCustomRoute("anthropic-messages", profile.resolvedBaseUrl),
             )
-            ProviderKind.LLM_ROUTER -> DshRoute(
+            ProviderKind.LLM_ROUTER, ProviderKind.FREE_MODELS -> DshRoute(
                 name = "mh-openrouter",
                 keyEnv = DshRuntimeBridge.FALLBACK_KEY_ENV,
                 defaultModel = model,

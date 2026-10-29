@@ -209,6 +209,7 @@
     <string name="provider_continue">Continue</string>
     <string name="provider_use_another_agent">Use another coding agent</string>
     <string name="provider_beta">Beta</string>
+    <string name="provider_free_badge">Free</string>
     <string name="provider_title_claude">Claude subscription</string>
     <string name="provider_title_anthropic">Anthropic API</string>
     <string name="provider_title_openrouter">OpenRouter</string>
@@ -216,6 +217,7 @@
     <string name="provider_title_kimi">Kimi</string>
     <string name="provider_title_opencode">OpenCode Zen</string>
     <string name="provider_title_nvidia">NVIDIA NIM</string>
+    <string name="provider_title_free_models">Free models</string>
     <string name="provider_title_custom">Custom API</string>
     <string name="provider_subtitle_claude">Pro, Max, Team or Enterprise</string>
     <string name="provider_subtitle_anthropic">Usage billed through Console</string>
@@ -224,6 +226,7 @@
     <string name="provider_subtitle_anthropic_compatible">Anthropic-compatible endpoint</string>
     <string name="provider_subtitle_opencode">Models through the OpenCode Zen gateway</string>
     <string name="provider_subtitle_nvidia">OpenAI-compatible models hosted by NVIDIA</string>
+    <string name="provider_subtitle_free_models">OpenRouter free tier · coding-ready models</string>
     <string name="provider_gateway_protocol">Gateway protocol</string>
     <string name="provider_gateway_protocol_help">Pick the protocol your gateway speaks; DeepSeek Harness routes it directly.</string>
     <string name="provider_models_found">Found %1$d available models.</string>
