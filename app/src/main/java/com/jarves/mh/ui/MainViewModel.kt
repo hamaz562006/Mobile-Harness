@@ -2399,6 +2399,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateProvider(profile: ProviderProfile, secret: String) = finishOnboarding(profile, secret)
 
+    /** Persist provider settings without re-running onboarding completion. */
+    fun stashProvider(profile: ProviderProfile, secret: String = "") {
+        if (secret.isNotBlank()) vault.put(profile.kind.name, secret)
+        preferences.saveProvider(profile, _state.value.agentKind)
+        _state.update {
+            it.copy(
+                provider = profile.copy(hasSecret = vault.contains(profile.kind.name)),
+                activeApiKeyName = vault.list(profile.kind.name).firstOrNull(ApiKeyInfo::isActive)?.name,
+            )
+        }
+    }
+
     fun finishBackgroundSetup() {
         preferences.backgroundSetupComplete = true
         _state.update { it.copy(backgroundSetupComplete = true) }

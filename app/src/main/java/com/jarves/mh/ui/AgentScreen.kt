@@ -174,6 +174,10 @@ internal fun formatAntigravityModelTier(id: String): String = when {
 fun AgentScreen(
     state: AppUiState,
     onSaveProvider: (ProviderProfile, String) -> Unit,
+    onStashProvider: (ProviderProfile, String) -> Unit = onSaveProvider,
+    onLoadProviderKind: (ProviderKind) -> ProviderProfile = { kind ->
+        ProviderProfile(kind, kind.defaultBaseUrl, kind.defaultModel)
+    },
     onDiscoverModels: suspend (ProviderProfile, String) -> ModelDiscoveryResult,
     onValidateProvider: suspend (ProviderProfile, String, List<DiscoveredModel>) -> ConnectionValidation,
     onPing: () -> Unit,
@@ -1028,12 +1032,26 @@ fun AgentScreen(
                         newApiKey = newApiKey,
                         newKeyVisible = newKeyVisible,
                         onProvider = { kind ->
+                            if (kind != selectedKind) {
+                                onStashProvider(
+                                    ProviderProfile(
+                                        kind = selectedKind,
+                                        baseUrl = baseUrl,
+                                        model = model,
+                                        dshApi = dshApi,
+                                        openRouterProviderOrder = openRouterProviderOrder,
+                                        openRouterAllowFallbacks = openRouterAllowFallbacks,
+                                    ),
+                                    apiKey,
+                                )
+                            }
+                            val restored = onLoadProviderKind(kind)
                             selectedKind = kind
-                            baseUrl = kind.defaultBaseUrl
-                            model = kind.defaultModel
-                            dshApi = defaultDshApiForProvider(kind)
-                            openRouterProviderOrder = ""
-                            openRouterAllowFallbacks = true
+                            baseUrl = restored.baseUrl.ifBlank { kind.defaultBaseUrl }
+                            model = restored.model.ifBlank { kind.defaultModel }
+                            dshApi = restored.dshApi.ifBlank { defaultDshApiForProvider(kind) }
+                            openRouterProviderOrder = restored.openRouterProviderOrder
+                            openRouterAllowFallbacks = restored.openRouterAllowFallbacks
                             models = emptyList()
                             modelSearch = ""
                             showModels = false
@@ -1041,6 +1059,8 @@ fun AgentScreen(
                             newApiKey = ""
                             status = null
                             statusProviderMessage = null
+                            apiKey = getSavedApiKey(kind)
+                            savedKeys = getSavedApiKeys(kind)
                         },
                         onBaseUrl = {
                             baseUrl = it

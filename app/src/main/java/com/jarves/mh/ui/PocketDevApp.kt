@@ -2518,6 +2518,7 @@ private fun RootScreenHost(
                     onSaveProvider = { profile, key ->
                         viewModel.updateProvider(profile, key)
                     },
+                    onStashProvider = viewModel::stashProvider,
                     onLoadProviderKind = viewModel::loadProviderKind,
                     onDiscoverModels = viewModel::discoverModels,
                     onValidateProvider = viewModel::validateProvider,
