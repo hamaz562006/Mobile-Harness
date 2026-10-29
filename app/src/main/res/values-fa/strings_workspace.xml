@@ -48,7 +48,7 @@
     <string name="ws_setup_expand_details">باز کردن جزئیات راه‌اندازی</string>
     <string name="ws_jump_to_latest">پرش به آخرین</string>
     <string name="ws_error_offline">آفلاین هستید</string>
-    <string name="ws_error_start_failed">موبایل هارنس نتوانست شروع را تمام کند</string>
+    <string name="ws_error_start_failed">یک کد هارنس نتوانست شروع را تمام کند</string>
     <string name="ws_error_try_again_msg">لطفاً دوباره تلاش کنید.</string>
     <string name="ws_setup_log_copied">لاگ راه‌اندازی کپی شد</string>
     <string name="ws_copy_setup_logs">کپی لاگ‌های راه‌اندازی</string>
@@ -79,9 +79,9 @@
     <string name="ws_repo_public">عمومی</string>
     <string name="ws_disconnect">قطع اتصال</string>
     <string name="ws_update_to">به‌روزرسانی به %1$s</string>
-    <string name="ws_update_default_notes">آخرین بهبودها و رفع اشکال‌های موبایل هارنس را دریافت کنید.</string>
+    <string name="ws_update_default_notes">آخرین بهبودها و رفع اشکال‌های یک کد هارنس را دریافت کنید.</string>
     <string name="ws_update_download_size">حجم دانلود: %1$s</string>
-    <string name="ws_update_allow_unknown_apps">«نصب اپ‌های ناشناس» را برای موبایل هارنس مجاز کنید. بدون این مجوز اندروید به‌روزرسانی را نصب نمی‌کند.</string>
+    <string name="ws_update_allow_unknown_apps">«نصب اپ‌های ناشناس» را برای یک کد هارنس مجاز کنید. بدون این مجوز اندروید به‌روزرسانی را نصب نمی‌کند.</string>
     <string name="ws_update_downloading_progress">دانلود %1$s / %2$s · %3$d٪</string>
     <string name="ws_update_downloading">دانلود %1$s</string>
     <string name="ws_update_verified_installing">دانلود تأیید شد. باز کردن نصب‌کنندهٔ اندروید…</string>
@@ -148,7 +148,7 @@
     <string name="ws_project_files">فایل‌های پروژه</string>
     <string name="ws_review_ai_changes">همهٔ تغییرات AI را بازبینی کنید.</string>
     <string name="ws_no_changes_yet">هنوز تغییری نیست</string>
-    <string name="ws_no_changes_desc">از موبایل هارنس بخواهید پروژه‌تان را به‌روز کند.</string>
+    <string name="ws_no_changes_desc">از یک کد هارنس بخواهید پروژه‌تان را به‌روز کند.</string>
     <string name="ws_hide_diff">مخفی کردن دیف خط‌به‌خط</string>
     <string name="ws_tap_review_diff">برای بازبینی دیف ضربه بزنید</string>
     <string name="ws_undo_file">بازگردانی فایل</string>

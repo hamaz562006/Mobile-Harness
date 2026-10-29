@@ -31,7 +31,7 @@
     <string name="vm_installer_start_failed">شروع نصب‌کنندهٔ اندروید ممکن نشد</string>
     <string name="vm_update_download_failed">دانلود به‌روزرسانی ناموفق بود</string>
     <string name="vm_setup_offline">به وای‌فای یا دادهٔ موبایل وصل شوید و دوباره تلاش کنید. برای پایان نصب اولیه اینترنت لازم است.</string>
-    <string name="vm_setup_generic_error">هنگام آماده‌سازی موبایل هارنس مشکلی پیش آمد. لطفاً دوباره تلاش کنید.</string>
+    <string name="vm_setup_generic_error">هنگام آماده‌سازی یک کد هارنس مشکلی پیش آمد. لطفاً دوباره تلاش کنید.</string>
     <string name="vm_antigravity_sign_in_first">ابتدا وارد آنتی‌گراویتی شوید</string>
     <string name="vm_stop_agent_before_switching">قبل از تعویض، ایجنت فعلی را متوقف کنید.</string>
     <string name="vm_preparing_named">آماده‌سازی %1$s…</string>

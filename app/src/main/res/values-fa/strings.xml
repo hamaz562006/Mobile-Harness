@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MH Hamaz</string>
+    <string name="app_name">یک کد هارنس</string>
 
     <!-- Navigation / Bottom Tabs -->
     <string name="tab_projects">پروژه‌ها</string>
@@ -124,7 +124,7 @@
     <string name="bg_notifications_settings">باز کردن تنظیمات اعلان</string>
     <string name="bg_notifications_skip">ادامه بدون اعلان</string>
     <string name="bg_reliability_title">پایداری پس‌زمینه</string>
-    <string name="bg_reliability_desc">اجازه دهید موبایل هارنس هنگام قفل بودن صفحه هم کار را ادامه دهد.</string>
+    <string name="bg_reliability_desc">اجازه دهید یک کد هارنس هنگام قفل بودن صفحه هم کار را ادامه دهد.</string>
     <string name="bg_reliability_privacy">کنترل با شماست و هر کار را می‌توانید از اعلان متوقف کنید.</string>
     <string name="bg_reliability_settings">باز کردن تنظیمات باتری</string>
     <string name="bg_reliability_skip">ادامه بدون معافیت باتری</string>
@@ -136,7 +136,7 @@
 
     <string name="runtime_setup_device_check_badge">بررسی دستگاه</string>
     <string name="runtime_setup_device_ready_title">آمادهٔ ساخت روی این گوشی</string>
-    <string name="runtime_setup_device_ready_desc">گوشی شما شرایط لازم را دارد. در مرحلهٔ بعد ابزارهای کدنویسی را انتخاب کنید تا موبایل هارنس راه‌اندازی را انجام دهد.</string>
+    <string name="runtime_setup_device_ready_desc">گوشی شما شرایط لازم را دارد. در مرحلهٔ بعد ابزارهای کدنویسی را انتخاب کنید تا یک کد هارنس راه‌اندازی را انجام دهد.</string>
     <string name="runtime_setup_sys_compat">سازگاری سیستم</string>
     <string name="runtime_setup_device_ready">دستگاه شما آماده است</string>
     <string name="runtime_setup_device_unsupported">این دستگاه پشتیبانی نمی‌شود</string>
@@ -159,17 +159,17 @@
     <string name="runtime_setup_coding_agent_badge">ایجنت کدنویسی</string>
     <string name="runtime_setup_coding_agent_note">فقط ایجنت اختیاری انتخاب‌شده دانلود می‌شود. بعداً از تنظیمات می‌توانید ایجنت نصب یا عوض کنید.</string>
     <string name="runtime_setup_optional_toolchains_badge">ابزارهای اختیاری</string>
-    <string name="runtime_setup_install_btn">نصب موبایل هارنس</string>
+    <string name="runtime_setup_install_btn">نصب یک کد هارنس</string>
 
     <!-- Setup and Runtime Installation Screens -->
-    <string name="setup_mobile_harness">راه‌اندازی موبایل هارنس</string>
+    <string name="setup_mobile_harness">راه‌اندازی یک کد هارنس</string>
     <string name="setup_local_badge">راه‌اندازی محلی</string>
     <string name="setup_build_workspace">ساخت فضای کاری</string>
     <string name="setup_installation_progress">پیشرفت نصب</string>
     <string name="setup_estimated_time">تخمینی %1$s</string>
     <string name="setup_time_minutes">%1$d–%2$d دقیقه</string>
     <string name="setup_live_terminal">ترمینال نصب زنده</string>
-    <string name="setup_background_note">می‌توانید موبایل هارنس را در پس‌زمینه بگذارید و نصب را از اعلان دنبال کنید.</string>
+    <string name="setup_background_note">می‌توانید یک کد هارنس را در پس‌زمینه بگذارید و نصب را از اعلان دنبال کنید.</string>
     <string name="startup_msg_setting_up">راه‌اندازی فضای کاری</string>
     <string name="startup_msg_preparing_tools">آماده‌سازی ابزارهای کدنویسی</string>
     <string name="startup_msg_almost_ready">تقریباً آماده</string>
@@ -188,14 +188,14 @@
     <string name="runtime_msg_preparing_bridge">آماده‌سازی پل رانتایم اندروید</string>
     <string name="runtime_msg_runtime_ready">رانتایم خصوصی آماده است</string>
     <string name="runtime_msg_setup_complete">راه‌اندازی کامل شد</string>
-    <string name="runtime_msg_resuming_setup">ادامهٔ راه‌اندازی موبایل هارنس</string>
+    <string name="runtime_msg_resuming_setup">ادامهٔ راه‌اندازی یک کد هارنس</string>
     <string name="runtime_msg_downloading_generic">دانلود %1$s</string>
     <string name="runtime_msg_installing_generic">نصب %1$s</string>
     <!-- Provider onboarding -->
     <string name="theme_toggle">تغییر تم</string>
     <string name="provider_setup_settings_title">پروایدر AI و تنظیمات</string>
     <string name="provider_device_title">گوشی شما فضای کاری است</string>
-    <string name="provider_device_desc">موبایل هارنس قبل از دانلود رانتایم لینوکس خصوصی، سازگاری را بررسی می‌کند.</string>
+    <string name="provider_device_desc">یک کد هارنس قبل از دانلود رانتایم لینوکس خصوصی، سازگاری را بررسی می‌کند.</string>
     <string name="provider_memory">حافظه</string>
     <string name="provider_memory_mode">%1$s گیگابایت قابل استفاده · %2$s</string>
     <string name="provider_full_mode">حالت کامل</string>
@@ -206,7 +206,7 @@
     <string name="provider_step_of">گام %1$d از %2$d</string>
     <string name="provider_secure_setup">راه‌اندازی امن</string>
     <string name="provider_connect_ai">اتصال به هوش مصنوعی</string>
-    <string name="provider_connect_ai_desc">نحوهٔ دسترسی موبایل هارنس به مدل کدنویسی را انتخاب کنید.</string>
+    <string name="provider_connect_ai_desc">نحوهٔ دسترسی یک کد هارنس به مدل کدنویسی را انتخاب کنید.</string>
     <string name="provider_keys_secure">کلیدهای API در فضای امن اندروید رمزنگاری می‌شوند.</string>
     <string name="provider_continue">ادامه</string>
     <string name="provider_use_another_agent">استفاده از ایجنت کدنویسی دیگر</string>
@@ -240,7 +240,7 @@
     <string name="provider_free"> رایگان</string>
     <string name="provider_encrypted_locally">رمزنگاری‌شده به‌صورت محلی</string>
     <string name="provider_endpoint_deepseek">دیپ‌سیک هارنس از طریق این اندپوینت API متصل می‌شود.</string>
-    <string name="provider_endpoint_translate">موبایل هارنس درخواست‌های Claude Code را برای این پروایدر ترجمه می‌کند.</string>
+    <string name="provider_endpoint_translate">یک کد هارنس درخواست‌های Claude Code را برای این پروایدر ترجمه می‌کند.</string>
     <string name="provider_endpoint_claude">کلود کد از طریق این اندپوینت API متصل می‌شود.</string>
     <string name="provider_fixed_by">ثابت توسط %1$s</string>
     <string name="provider_saved_key_placeholder">امن ذخیره شده — برای نگه‌داشتن خالی بگذارید</string>
@@ -273,7 +273,7 @@
     <string name="agent_screen_title">ایجنت AI</string><string name="agent_status_testing">در حال تست…</string><string name="agent_status_attention">توجه</string><string name="agent_status_online">آنلاین</string><string name="agent_status_not_tested">تست نشده</string><string name="agent_provider_title">پروایدر AI</string><string name="agent_custom_api_settings">تنظیمات API سفارشی</string><string name="agent_endpoint_protocol">اندپوینت و پروتکل</string><string name="agent_model_access">مدل و دسترسی</string><string name="agent_discovering">در حال کشف…</string><string name="agent_discover_models">کشف مدل‌ها</string><string name="agent_models_count">%1$d مدل</string><string name="agent_ai_model">مدل AI</string><string name="agent_select_model">انتخاب یا ورود شناسه مدل</string><string name="agent_subscription_token">توکن اشتراک</string><string name="agent_credentials">اعتبارنامه‌ها</string><string name="agent_test_connection">تست اتصال</string><string name="agent_runtime_updates">به‌روزرسانی رانتایم</string><string name="agent_updates_current">ایجنت‌های نصب‌شده به‌روز می‌مانند</string><string name="agent_check_updates">بررسی به‌روزرسانی</string><string name="agent_security_footer">کلیدهای API در فضای امن اندروید رمزنگاری می‌شوند · ترمینال از هر پروژه در دسترس است</string><string name="agent_approval_footer">تأیید خودکار ابزار · اجرا داخل فضای لینوکس خصوصی</string>
     <string name="projects_importing">در حال ورود…</string><string name="projects_zip_file">فایل ZIP</string><string name="projects_cloning">در حال کلون…</string><string name="projects_git_url">آدرس Git</string><string name="projects_github_account">GitHub · @%1$s</string><string name="projects_connect_github">اتصال GitHub</string><string name="projects_browse_repositories">مرور مخازن عمومی و خصوصی</string><string name="projects_sign_in_repositories">برای دسترسی به مخازن وارد شوید</string>
     <string name="agent_not_installed">%1$s نصب نیست</string><string name="agent_install_description">بستهٔ ایجنت %1$s را نصب کنید تا با پروژه‌های فعلی استفاده شود.</string><string name="agent_install_action">نصب %1$s</string>
-    <string name="agent_installing_binary">نصب باینری ایجنت…</string><string name="chat_welcome">سلام! بگویید چه چیزی می‌خواهید بسازید یا تغییر دهید.</string><string name="chat_message_agent">پیام به %1$s…</string><string name="workspace_files">فایل‌ها</string><string name="workspace_no_files">هنوز فایلی نیست</string><string name="workspace_no_files_description">از ایجنت کدنویسی بخواهید چیزی در این پروژه بسازد.</string><string name="workspace_project_terminal">ترمینال پروژه</string><string name="workspace_terminal_ready">ترمینال موبایل هارنس آماده است.
+    <string name="agent_installing_binary">نصب باینری ایجنت…</string><string name="chat_welcome">سلام! بگویید چه چیزی می‌خواهید بسازید یا تغییر دهید.</string><string name="chat_message_agent">پیام به %1$s…</string><string name="workspace_files">فایل‌ها</string><string name="workspace_no_files">هنوز فایلی نیست</string><string name="workspace_no_files_description">از ایجنت کدنویسی بخواهید چیزی در این پروژه بسازد.</string><string name="workspace_project_terminal">ترمینال پروژه</string><string name="workspace_terminal_ready">ترمینال یک کد هارنس آماده است.
 یک دستور bash بنویسید یا روی میانبر بالا بزنید.</string><string name="workspace_preview_url">آدرس پیش‌نمایش</string><string name="workspace_preview_not_running">پیش‌نمایش در حال اجرا نیست</string><string name="workspace_preview_not_running_description">یک آدرس localhost بالا وارد کنید، یا سرور وب محلی را در ترمینال پروژه اجرا کنید.</string>
     <string name="agent_connection_verified">اتصال %1$s تأیید شد.</string><string name="agent_status_verified">تأیید شد</string>
     <string name="chat_attach_files">پیوست فایل</string><string name="chat_take_photo">گرفتن عکس</string><string name="chat_choose_files">انتخاب فایل</string><string name="chat_camera_unavailable">اپ دوربین در دسترس نیست</string>

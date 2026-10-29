@@ -487,6 +487,12 @@ private fun AntigravityOnboardingScreen(
             onSelect = { agent ->
                 showAgentPicker = false
                 onSelectAgent(agent)
+                if (onboarding) {
+                    selected = ProviderKind.FREE_MODELS
+                    baseUrl = ProviderKind.FREE_MODELS.defaultBaseUrl
+                    model = ProviderKind.FREE_MODELS.defaultModel
+                    apiKey = ""
+                }
             },
             onDismiss = { showAgentPicker = false },
         )
@@ -600,7 +606,7 @@ private fun InitialLanguageSetupScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         BrandMark(compact = true)
                         Spacer(Modifier.width(9.dp))
-                        Text("Mobile Harness", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
                     }
                 },
                 actions = {
@@ -892,7 +898,7 @@ private fun BackgroundTaskSetupScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         BrandMark(compact = true)
                         Spacer(Modifier.width(9.dp))
-                        Text("Mobile Harness", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
                     }
                 },
                 actions = {
@@ -1168,7 +1174,7 @@ private fun RuntimeSetupPromptScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         BrandMark(compact = true)
                         Spacer(Modifier.width(9.dp))
-                        Text("Mobile Harness", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
                     }
                 },
                 navigationIcon = {
@@ -1863,7 +1869,7 @@ private fun localizeRuntimeMessage(message: String): String {
         trimmed.equals("Setup complete", ignoreCase = true) -> {
             stringResource(R.string.runtime_msg_setup_complete)
         }
-        trimmed.contains("Resuming Mobile Harness setup", ignoreCase = true) -> {
+        trimmed.contains("Resuming 1code harness setup", ignoreCase = true) -> {
             stringResource(R.string.runtime_msg_resuming_setup)
         }
         trimmed.startsWith("Downloading ") && !trimmed.startsWith("Downloading: ") -> {
@@ -2368,7 +2374,7 @@ private fun StartupErrorScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         BrandMark(compact = true)
                         Spacer(Modifier.width(9.dp))
-                        Text("Mobile Harness", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
                     }
                 },
                 actions = {
@@ -2695,9 +2701,21 @@ private fun ProviderSetupScreen(
 ) {
     val context = LocalContext.current
     var step by rememberSaveable { mutableIntStateOf(initialStep) }
-    var selected by rememberSaveable { mutableStateOf(initial.kind) }
-    var baseUrl by rememberSaveable { mutableStateOf(initial.baseUrl.ifBlank { initial.kind.defaultBaseUrl }) }
-    var model by rememberSaveable { mutableStateOf(initial.model.ifBlank { initial.kind.defaultModel }) }
+    // Onboarding always starts on Free models for every agent; post-setup keeps saved kind.
+    val initialKind = if (onboarding) ProviderKind.FREE_MODELS else initial.kind
+    var selected by rememberSaveable { mutableStateOf(initialKind) }
+    var baseUrl by rememberSaveable {
+        mutableStateOf(
+            if (onboarding) ProviderKind.FREE_MODELS.defaultBaseUrl
+            else initial.baseUrl.ifBlank { initial.kind.defaultBaseUrl },
+        )
+    }
+    var model by rememberSaveable {
+        mutableStateOf(
+            if (onboarding) ProviderKind.FREE_MODELS.defaultModel
+            else initial.model.ifBlank { initial.kind.defaultModel },
+        )
+    }
     var dshApi by rememberSaveable { mutableStateOf(initial.dshApi.ifBlank { "anthropic-messages" }) }
     var apiKey by rememberSaveable { mutableStateOf("") }
     var showAgentPicker by rememberSaveable { mutableStateOf(false) }
@@ -3624,7 +3642,7 @@ private fun ProjectsScreen(
         topBar = {
             TopAppBar(
                 modifier = Modifier.padding(top = 8.dp),
-                title = { Row(verticalAlignment = Alignment.CenterVertically) { BrandMark(compact = true); Spacer(Modifier.width(9.dp)); Text("Mobile Harness", fontWeight = FontWeight.Bold) } },
+                title = { Row(verticalAlignment = Alignment.CenterVertically) { BrandMark(compact = true); Spacer(Modifier.width(9.dp)); Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
@@ -3790,7 +3808,7 @@ private fun ProjectsScreen(
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("Mobile Harness ${update.versionName}", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.app_name) + " ${update.versionName}", fontWeight = FontWeight.Bold)
                                 Text(stringResource(R.string.ws_update_ready), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Text(stringResource(R.string.ws_update), color = PocketOrange, fontWeight = FontWeight.Bold, fontSize = 13.sp)
@@ -7427,7 +7445,7 @@ private fun BrandMark(modifier: Modifier = Modifier, compact: Boolean = false) {
     ) {
         Icon(
             imageVector = Icons.Default.Terminal,
-            contentDescription = "Mobile Harness",
+            contentDescription = stringResource(R.string.app_name),
             modifier = Modifier.size(iconSize),
             tint = primary,
         )

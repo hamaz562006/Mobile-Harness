@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="rt_install_incomplete">راه‌اندازی هستهٔ رانتایم ناقص است. موبایل هارنس را دوباره باز کنید تا تعمیر شود.</string>
-    <string name="rt_install_unsupported_arch">معماری پشتیبانی نمی‌شود: موبایل هارنس به دستگاه یا شبیه‌ساز ARM64 نیاز دارد</string>
+    <string name="rt_install_incomplete">راه‌اندازی هستهٔ رانتایم ناقص است. یک کد هارنس را دوباره باز کنید تا تعمیر شود.</string>
+    <string name="rt_install_unsupported_arch">معماری پشتیبانی نمی‌شود: یک کد هارنس به دستگاه یا شبیه‌ساز ARM64 نیاز دارد</string>
     <string name="rt_install_preparing_runtime">آماده‌سازی رانتایم توسعهٔ خصوصی</string>
     <string name="rt_install_unpacking_core">تأیید و باز کردن هستهٔ رانتایم</string>
     <string name="rt_install_git_base_tools">نصب Git و ابزارهای پایه</string>
@@ -45,28 +45,28 @@
     <string name="rt_install_runtime_ready">رانتایم خصوصی آماده است</string>
     <string name="rt_install_download_failed_http">دانلود با HTTP %1$d ناموفق بود</string>
     <string name="rt_setup_preparing_workspace">آماده‌سازی فضای کدنویسی خصوصی</string>
-    <string name="rt_setup_ready">موبایل هارنس آماده است</string>
+    <string name="rt_setup_ready">یک کد هارنس آماده است</string>
     <string name="rt_setup_offline">به وای‌فای یا دادهٔ موبایل وصل شوید، سپس راه‌اندازی را ادامه دهید.</string>
-    <string name="rt_setup_dpkg_interrupted">اندروید راه‌اندازی لینوکس را قطع کرد. موبایل هارنس در تلاش بعدی تعمیر می‌کند.</string>
-    <string name="rt_setup_failed_generic">موبایل هارنس نتوانست راه‌اندازی را تمام کند.</string>
+    <string name="rt_setup_dpkg_interrupted">اندروید راه‌اندازی لینوکس را قطع کرد. یک کد هارنس در تلاش بعدی تعمیر می‌کند.</string>
+    <string name="rt_setup_failed_generic">یک کد هارنس نتوانست راه‌اندازی را تمام کند.</string>
     <string name="rt_setup_paused">راه‌اندازی متوقف شد</string>
-    <string name="rt_setup_notification_title">راه‌اندازی موبایل هارنس</string>
+    <string name="rt_setup_notification_title">راه‌اندازی یک کد هارنس</string>
     <string name="rt_setup_stop">توقف راه‌اندازی</string>
     <string name="rt_setup_needs_attention">راه‌اندازی نیاز به توجه دارد</string>
     <string name="rt_setup_ready_detail">فضای کدنویسی خصوصی آماده است.</string>
-    <string name="rt_setup_channel_name">راه‌اندازی موبایل هارنس</string>
+    <string name="rt_setup_channel_name">راه‌اندازی یک کد هارنس</string>
     <string name="rt_setup_channel_description">پیشرفت دانلود و نصب محیط کدنویسی خصوصی را نشان می‌دهد</string>
     <string name="rt_exec_default_project">پروژهٔ شما</string>
-    <string name="rt_exec_default_title">موبایل هارنس در حال کار است</string>
+    <string name="rt_exec_default_title">یک کد هارنس در حال کار است</string>
     <string name="rt_exec_stopping">در حال توقف…</string>
     <string name="rt_exec_working_in">در حال کار در %1$s</string>
     <string name="rt_exec_task_completed">کار تمام شد</string>
-    <string name="rt_exec_finished_in">موبایل هارنس کار را در %1$s تمام کرد.</string>
+    <string name="rt_exec_finished_in">یک کد هارنس کار را در %1$s تمام کرد.</string>
     <string name="rt_exec_task_attention">کار به توجه نیاز دارد</string>
-    <string name="rt_exec_could_not_finish">موبایل هارنس نتوانست کار را تمام کند.</string>
+    <string name="rt_exec_could_not_finish">یک کد هارنس نتوانست کار را تمام کند.</string>
     <string name="rt_exec_stop_task">توقف کار</string>
     <string name="rt_exec_channel_running">کارهای کدنویسی در حال اجرا</string>
-    <string name="rt_exec_channel_running_description">پیشرفت را وقتی موبایل هارنس در پس‌زمینه کار می‌کند نشان می‌دهد</string>
+    <string name="rt_exec_channel_running_description">پیشرفت را وقتی یک کد هارنس در پس‌زمینه کار می‌کند نشان می‌دهد</string>
     <string name="rt_exec_channel_results">نتایج کار</string>
     <string name="rt_exec_channel_results_description">وقتی کار کدنویسی تمام می‌شود یا به توجه نیاز دارد به شما اطلاع می‌دهد</string>
     <string name="rt_bridge_starting">شروع %1$s…</string>
@@ -134,7 +134,7 @@
     <string name="rt_update_checksum_failed">APK دانلودشده تأیید SHA-256 را پاس نکرد</string>
     <string name="rt_update_prepare_failed">آماده‌سازی به‌روزرسانی دانلودشده ممکن نشد</string>
     <string name="rt_update_invalid_apk">فایل دانلودشده APK معتبر نیست</string>
-    <string name="rt_update_package_mismatch">نام بستهٔ به‌روزرسانی با موبایل هارنس یکی نیست</string>
+    <string name="rt_update_package_mismatch">نام بستهٔ به‌روزرسانی با یک کد هارنس یکی نیست</string>
     <string name="rt_update_version_mismatch">نسخهٔ به‌روزرسانی با manifest هم‌خوان نیست</string>
     <string name="rt_update_signature_mismatch">به‌روزرسانی با کلید امضای اپ نصب‌شده امضا نشده است</string>
     <string name="rt_api_http_public">http:// ساده فقط برای آدرس‌های شبکهٔ محلی مجاز است (مثل 192.168.x.x، 10.x.x.x، Tailscale یا localhost).</string>
