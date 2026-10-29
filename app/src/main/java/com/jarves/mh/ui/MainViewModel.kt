@@ -2018,6 +2018,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(initialLanguageSelected = false) }
     }
 
+    fun loadProviderKind(kind: ProviderKind): ProviderProfile {
+        return preferences.loadKindProfile(_state.value.agentKind, kind, vault)
+    }
+
     fun getSavedApiKey(kind: ProviderKind): String = vault.get(kind.name).orEmpty()
 
     fun getSavedApiKeys(kind: ProviderKind): List<ApiKeyInfo> = vault.list(kind.name)

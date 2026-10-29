@@ -80,7 +80,8 @@ object FreeModelCatalog {
         curated.map { entry ->
             DiscoveredModel(
                 id = entry.id,
-                displayName = "${entry.title} · ${entry.note}",
+                // Keep the primary line short; note stays secondary in the picker UI.
+                displayName = entry.title,
                 isFree = true,
             )
         }

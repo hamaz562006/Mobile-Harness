@@ -721,26 +721,30 @@ fun AgentScreen(
                                     Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Column(Modifier.weight(1f)) {
+                                    Column(modifier.weight(1f)) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
+                                            // Model id is the stable primary line (max 1 line).
                                             Text(
-                                                option.displayName,
+                                                option.id,
                                                 fontWeight = FontWeight.SemiBold,
-                                                fontSize = 14.sp,
+                                                fontSize = 13.sp,
                                                 color = if (isSelected) PocketOrange else MaterialTheme.colorScheme.onSurface,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f, fill = false),
                                             )
                                             if (option.isFree) {
                                                 Spacer(Modifier.width(6.dp))
                                                 Text(stringResource(R.string.st_free), color = Color(0xFF58C99C), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                             }
                                         }
-                                        if (option.displayName != option.id) {
+                                        // Optional human label — second line only, never stretch the row.
+                                        if (option.displayName.isNotBlank() &&
+                                            !option.displayName.equals(option.id, ignoreCase = true)
+                                        ) {
                                             Text(
-                                                option.id,
+                                                option.displayName,
                                                 fontSize = 11.sp,
-                                                fontFamily = FontFamily.Monospace,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,

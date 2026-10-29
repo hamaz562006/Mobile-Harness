@@ -2518,6 +2518,7 @@ private fun RootScreenHost(
                     onSaveProvider = { profile, key ->
                         viewModel.updateProvider(profile, key)
                     },
+                    onLoadProviderKind = viewModel::loadProviderKind,
                     onDiscoverModels = viewModel::discoverModels,
                     onValidateProvider = viewModel::validateProvider,
                     onPing = viewModel::pingApi,
@@ -3280,13 +3281,35 @@ private fun ProviderCredentialsStep(
                                     .padding(vertical = 14.dp, horizontal = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(Modifier.weight(1f)) {
+                                Column(modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(option.displayName, modifier = Modifier.weight(1f, fill = false), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                        if (option.isFree) Text(stringResource(R.string.provider_free), color = Color(0xFF58C99C), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            option.id,
+                                            modifier = Modifier.weight(1f, fill = false),
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        if (option.isFree) {
+                                            Text(
+                                                stringResource(R.string.provider_free),
+                                                color = Color(0xFF58C99C),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                        }
                                     }
-                                    if (option.displayName != option.id) {
-                                        Text(option.id, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    if (option.displayName.isNotBlank() &&
+                                        !option.displayName.equals(option.id, ignoreCase = true)
+                                    ) {
+                                        Text(
+                                            option.displayName,
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
                                     }
                                 }
                                 Box(

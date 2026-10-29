@@ -162,9 +162,65 @@ class AppPreferences(private val context: Context) {
                 .putString("${prefix}dsh_api", profile.dshApi)
                 .putString("${prefix}openrouter_order", profile.openRouterProviderOrder)
                 .putBoolean("${prefix}openrouter_allow_fallbacks", profile.openRouterAllowFallbacks)
+            // Stash per-kind so switching providers does not wipe other configured providers.
+            stashKindProfile(editor, prefix, profile)
+        } else {
+            stashKindProfile(editor, "provider_", profile)
         }
         editor.apply()
     }
+
+    /** Previously saved settings for [kind] under this agent, if any. */
+    fun loadKindProfile(agent: AgentKind, kind: ProviderKind, vault: ApiKeyVault): ProviderProfile {
+        val prefix = providerPrefix(agent)
+        val k = kindStashPrefix(prefix, kind)
+        val has = preferences.contains("${k}model") || preferences.contains("${k}base_url")
+        if (!has) {
+            return ProviderProfile(
+                kind = kind,
+                baseUrl = kind.defaultBaseUrl,
+                model = kind.defaultModel,
+                hasSecret = vault.contains(kind.name),
+                dshApi = defaultDshApiForProvider(kind),
+            )
+        }
+        return ProviderProfile(
+            kind = kind,
+            baseUrl = preferences.getString("${k}base_url", kind.defaultBaseUrl) ?: kind.defaultBaseUrl,
+            model = preferences.getString("${k}model", kind.defaultModel) ?: kind.defaultModel,
+            hasSecret = vault.contains(kind.name),
+            dshApi = preferences.getString("${k}dsh_api", defaultDshApiForProvider(kind))
+                ?: defaultDshApiForProvider(kind),
+            openRouterProviderOrder = preferences.getString("${k}openrouter_order", "").orEmpty(),
+            openRouterAllowFallbacks = preferences.getBoolean("${k}openrouter_allow_fallbacks", true),
+        )
+    }
+
+    fun configuredProviderKinds(agent: AgentKind): Set<ProviderKind> {
+        val prefix = providerPrefix(agent)
+        val raw = preferences.getStringSet("${prefix}configured_kinds", emptySet()).orEmpty()
+        return raw.mapNotNull { runCatching { ProviderKind.valueOf(it) }.getOrNull() }.toSet()
+    }
+
+    private fun stashKindProfile(
+        editor: android.content.SharedPreferences.Editor,
+        prefix: String,
+        profile: ProviderProfile,
+    ) {
+        val k = kindStashPrefix(prefix, profile.kind)
+        val configured = preferences.getStringSet("${prefix}configured_kinds", emptySet()).orEmpty().toMutableSet()
+        configured.add(profile.kind.name)
+        editor
+            .putString("${k}base_url", profile.baseUrl)
+            .putString("${k}model", profile.model)
+            .putString("${k}dsh_api", profile.dshApi)
+            .putString("${k}openrouter_order", profile.openRouterProviderOrder)
+            .putBoolean("${k}openrouter_allow_fallbacks", profile.openRouterAllowFallbacks)
+            .putStringSet("${prefix}configured_kinds", configured)
+    }
+
+    private fun kindStashPrefix(prefix: String, kind: ProviderKind): String =
+        "${prefix}cfg_${kind.name}_"
 
     fun loadProvider(vault: ApiKeyVault, agent: AgentKind? = null): ProviderProfile {
         val prefix = agent?.let(::providerPrefix)
@@ -189,10 +245,10 @@ class AppPreferences(private val context: Context) {
             storedModel == ProviderKind.ANTHROPIC.defaultModel
         val kind = when {
             agent == null -> storedKind ?: ProviderKind.FREE_MODELS
-            agent == AgentKind.DEEPSEEK_HARNESS && (!hasAgentProfile || legacyClaudeDefaultInDeepSeek) -> ProviderKind.DEEPSEEK
-            storedKind != null && storedKind in providersForAgent(agent) -> storedKind
-            agent == AgentKind.DEEPSEEK_HARNESS -> ProviderKind.DEEPSEEK
-            // Claude Code onboarding defaults to keyless Free models.
+            // Prefer any previously saved kind for this agent.
+            storedKind != null && storedKind in providersForAgent(agent) &&
+                !(agent == AgentKind.DEEPSEEK_HARNESS && legacyClaudeDefaultInDeepSeek) -> storedKind
+            // First-time setup for every API agent defaults to Free models.
             else -> ProviderKind.FREE_MODELS
         }
         val useStoredValues = storedKind == kind
