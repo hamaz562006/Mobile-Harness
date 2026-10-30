@@ -82,8 +82,48 @@ jobs:
           echo "Failed to install NDK after retries"
           exit 1
 
+      # Match upstream Online APK packaging: shared assets embed the Antigravity
+      # agent bundle (prepareBundledAgentAssets → assets/runtime/*.tar.zst).
+      # Without this file the Online APK is ~17MB; with it it matches the ~85–89MB
+      # upstream Online release shape for the bundled agent layer.
+      - name: Download Online runtime assets (match upstream)
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/techjarves/Mobile-Harness/releases/download/runtime-2026.09.4"
+          mkdir -p dist/runtime-bundles
+          cd dist/runtime-bundles
+
+          download_and_verify() {
+            local file="$1"
+            local sha="$2"
+            echo "Downloading $file ..."
+            curl -fL --retry 5 --retry-delay 5 -o "$file" "$BASE/$file"
+            echo "$sha  $file" | sha256sum -c -
+            ls -lh "$file"
+          }
+
+          # Shared (all Online builds) — required by prepareBundledAgentAssets
+          download_and_verify             "pocketdev-agy-arm64-2026.09.1.tar.zst"             "a659ab9188956fc4721ca86fb21b5118e0e489f47a5e02ae6b4f2fb423659d78"
+
+          echo "Online runtime assets ready:"
+          ls -lh
+
       - name: Unit tests and online debug APK
         run: ./gradlew :app:testOnlineDebugUnitTest :app:assembleOnlineDebug --stacktrace
+
+      - name: Report APK size
+        run: |
+          set -euo pipefail
+          echo "Built Online debug APK(s):"
+          ls -lh app/build/outputs/apk/online/debug/*.apk
+          # Fail loudly if the shared AGY bundle was not packaged (APK too small).
+          size=$(stat -c%s app/build/outputs/apk/online/debug/*.apk | head -n1)
+          echo "APK bytes=$size"
+          # Expect well above a stripped ~17MB APK once AGY (~40MB) is embedded.
+          if [ "$size" -lt 40000000 ]; then
+            echo "ERROR: Online APK is only $size bytes — shared runtime assets likely missing"
+            exit 1
+          fi
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
