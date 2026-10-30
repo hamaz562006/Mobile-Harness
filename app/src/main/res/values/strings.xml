@@ -395,8 +395,9 @@
     <string name="agent_provider_switch_hint">Select another row to add or edit a different provider. Active: %1$s</string>
     <string name="settings_accent_title">Accent color</string>
     <string name="settings_accent_subtitle">Inspired by coding-agent brand colors</string>
-    <string name="accent_default">Default</string>
+    <string name="accent_default">Purple</string>
     <string name="accent_claude">Claude</string>
     <string name="accent_deepseek">DeepSeek</string>
     <string name="accent_antigravity">Antigravity</string>
+    <string name="accent_orange">Orange</string>
 </resources>

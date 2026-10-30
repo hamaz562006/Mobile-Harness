@@ -396,8 +396,9 @@
     <string name="agent_provider_switch_hint">برای افزودن یا ویرایش پروایدر دیگر یک ردیف دیگر را انتخاب کنید. فعال: %1$s</string>
     <string name="settings_accent_title">رنگ شاخص</string>
     <string name="settings_accent_subtitle">الهام‌گرفته از رنگ برند ایجنت‌های کدنویسی</string>
-    <string name="accent_default">پیش‌فرض</string>
+    <string name="accent_default">بنفش</string>
     <string name="accent_claude">کلود</string>
     <string name="accent_deepseek">دیپ‌سیک</string>
     <string name="accent_antigravity">آنتی‌گراویتی</string>
+    <string name="accent_orange">نارنجی</string>
 </resources>

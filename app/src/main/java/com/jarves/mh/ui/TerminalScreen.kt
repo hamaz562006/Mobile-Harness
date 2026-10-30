@@ -88,7 +88,6 @@ import androidx.compose.ui.res.stringResource
 import com.jarves.mh.R
 import com.jarves.mh.ui.theme.AppThemeMode
 import com.jarves.mh.ui.theme.PocketGreen
-import com.jarves.mh.ui.theme.PocketOrange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -189,10 +188,10 @@ fun TerminalScreen(
                         Box(
                             modifier = Modifier
                                 .size(34.dp)
-                                .background(PocketOrange.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Default.Terminal, contentDescription = null, tint = PocketOrange, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Terminal, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                         }
                         Spacer(Modifier.width(11.dp))
                         Column(Modifier.weight(1f)) {
@@ -499,12 +498,12 @@ private fun TerminalKeyButton(
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
         modifier = Modifier.height(34.dp).then(if (fixedWidth) Modifier.width(78.dp) else Modifier),
         colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-            containerColor = if (active) PocketOrange.copy(alpha = 0.18f) else Color.Transparent,
-            contentColor = if (active) PocketOrange else MaterialTheme.colorScheme.onSurface,
+            containerColor = if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else Color.Transparent,
+            contentColor = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         ),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (active) PocketOrange else MaterialTheme.colorScheme.outlineVariant,
+            if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
         ),
     ) {
         Text(
