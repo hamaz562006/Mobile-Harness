@@ -650,20 +650,11 @@ fun AgentScreen(
                                         Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        Column(Modifier.weight(1f)) {
-                                            Text(
-                                                opt.displayName,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 14.sp,
-                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                            )
-                                            Text(
-                                                opt.id,
-                                                fontSize = 11.sp,
-                                                fontFamily = FontFamily.Monospace,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
+                                        ModelPickerDetails(
+                                            model = opt,
+                                            showCurrent = isSelected,
+                                            modifier = Modifier.weight(1f),
+                                        )
                                         AgentSelectionDot(selected = isSelected)
                                     }
                                 }

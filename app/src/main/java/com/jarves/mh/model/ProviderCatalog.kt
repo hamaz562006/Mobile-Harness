@@ -49,40 +49,52 @@ object FreeModelCatalog {
     const val DEFAULT_ID = "kilo-auto/free"
     const val POLLINATIONS_ID = "openai-fast"
 
+    const val KILO_NOTE = "Kilo · ~200 req/hour per IP"
+    const val POLLINATIONS_NOTE = "Pollinations · ~4 req/min per IP"
+
     data class Entry(
         val id: String,
         val title: String,
         val note: String,
         /** Upstream base URL for this free model (Kilo vs Pollinations). */
         val baseUrl: String = KILO_BASE_URL,
+        val contextTokens: Long? = null,
+        val supportsThinking: Boolean = true,
+        val supportsTools: Boolean = true,
+        val supportsImages: Boolean = false,
     )
 
     val curated: List<Entry> = listOf(
-        Entry(DEFAULT_ID, "Auto Free", "Kilo · rotates free models · ~200 req/h · no key"),
-        Entry(POLLINATIONS_ID, "Pollinations Fast", "Pollinations · ~4 req/min · no key", POLLINATIONS_BASE_URL),
-        Entry("nvidia/nemotron-3.5-super-vl:free", "Nemotron 3.5 Super VL", "Kilo free · tools"),
-        Entry("nvidia/nemotron-3-ultra-550b-a55b:free", "Nemotron 3 Ultra", "Kilo free · tools"),
-        Entry("nvidia/nemotron-3.5-lightning:free", "Nemotron 3.5 Lightning", "Kilo free · tools"),
-        Entry("google/gemma-4-31b-it:free", "Gemma 4 31B", "Kilo free · tools"),
-        Entry("google/gemma-4-26b-a4b-it:free", "Gemma 4 26B", "Kilo free · tools"),
-        Entry("cohere/north-mini-code:free", "North Mini Code", "Kilo free · coding"),
-        Entry("recursive/flint-v1.0:free", "Flint", "Kilo free · coding"),
-        Entry("reflection/beam-free", "Beam Free", "Kilo free"),
-        Entry("dots-studio/dots-3-note-preview:free", "Dots3 Note", "Kilo free"),
-        Entry("stealth/glyph-cluster", "Glyph Cluster", "Kilo free"),
-        Entry("thinkingmachines/inkling:free", "Inkling", "Kilo free"),
-        Entry("thinkingmachines/inkling-small:free", "Inkling Small", "Kilo free"),
-        Entry("poolside/laguna-s-2.1:free", "Laguna S 2.1", "Kilo free · coding"),
-        Entry("poolside/laguna-xs-2.1:free", "Laguna XS 2.1", "Kilo free · coding"),
+        Entry(DEFAULT_ID, "kilo-auto/free", KILO_NOTE, contextTokens = 256_000L, supportsThinking = true, supportsTools = true),
+        Entry(POLLINATIONS_ID, "openai-fast", POLLINATIONS_NOTE, POLLINATIONS_BASE_URL, contextTokens = 16_000L, supportsThinking = false, supportsTools = false),
+        Entry("nvidia/nemotron-3.5-super-vl:free", "nvidia/nemotron-3.5-super-vl:free", KILO_NOTE, contextTokens = 256_000L, supportsThinking = true, supportsTools = true, supportsImages = true),
+        Entry("nvidia/nemotron-3-ultra-550b-a55b:free", "nvidia/nemotron-3-ultra-550b-a55b:free", KILO_NOTE, contextTokens = 256_000L, supportsThinking = true, supportsTools = true),
+        Entry("nvidia/nemotron-3.5-lightning:free", "nvidia/nemotron-3.5-lightning:free", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("google/gemma-4-31b-it:free", "google/gemma-4-31b-it:free", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("google/gemma-4-26b-a4b-it:free", "google/gemma-4-26b-a4b-it:free", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("cohere/north-mini-code:free", "cohere/north-mini-code:free", KILO_NOTE, contextTokens = 256_000L, supportsThinking = true, supportsTools = true),
+        Entry("recursive/flint-v1.0:free", "recursive/flint-v1.0:free", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("reflection/beam-free", "reflection/beam-free", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("dots-studio/dots-3-note-preview:free", "dots-studio/dots-3-note-preview:free", KILO_NOTE, contextTokens = 512_000L, supportsThinking = true, supportsTools = true, supportsImages = true),
+        Entry("stealth/glyph-cluster", "stealth/glyph-cluster", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("thinkingmachines/inkling:free", "thinkingmachines/inkling:free", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("thinkingmachines/inkling-small:free", "thinkingmachines/inkling-small:free", KILO_NOTE, contextTokens = 64_000L, supportsThinking = true, supportsTools = true),
+        Entry("poolside/laguna-s-2.1:free", "poolside/laguna-s-2.1:free", KILO_NOTE, contextTokens = 128_000L, supportsThinking = true, supportsTools = true),
+        Entry("poolside/laguna-xs-2.1:free", "poolside/laguna-xs-2.1:free", KILO_NOTE, contextTokens = 64_000L, supportsThinking = true, supportsTools = true),
+        Entry("inclusionai/ling-3.1-flash-1019-free", "inclusionai/ling-3.1-flash-1019-free", KILO_NOTE, contextTokens = 1_000_000L, supportsThinking = true, supportsTools = true),
     )
 
     fun asDiscovered(): List<DiscoveredModel> =
         curated.map { entry ->
             DiscoveredModel(
                 id = entry.id,
-                // Keep the primary line short; note stays secondary in the picker UI.
                 displayName = entry.title,
                 isFree = true,
+                note = entry.note,
+                contextTokens = entry.contextTokens,
+                supportsThinking = entry.supportsThinking,
+                supportsTools = entry.supportsTools,
+                supportsImages = entry.supportsImages,
             )
         }
 
@@ -90,6 +102,26 @@ object FreeModelCatalog {
         curated.firstOrNull { it.id == modelId }?.baseUrl ?: KILO_BASE_URL
 
     /** Prefer live free rows when present; otherwise curated offline list. */
+    private fun enrich(model: DiscoveredModel): DiscoveredModel {
+        val match = curated.firstOrNull { it.id.equals(model.id, ignoreCase = true) }
+        val isPollinations = model.id.equals(POLLINATIONS_ID, ignoreCase = true)
+        return model.copy(
+            isFree = true,
+            note = model.note
+                ?: match?.note
+                ?: if (isPollinations) POLLINATIONS_NOTE else KILO_NOTE,
+            contextTokens = model.contextTokens ?: match?.contextTokens,
+            supportsThinking = model.supportsThinking ?: match?.supportsThinking,
+            supportsTools = model.supportsTools ?: match?.supportsTools ?: true,
+            supportsImages = model.supportsImages ?: match?.supportsImages,
+            displayName = if (model.displayName == model.id || model.displayName.isBlank()) {
+                match?.title ?: model.id
+            } else {
+                model.displayName
+            },
+        )
+    }
+
     fun mergeLive(live: List<DiscoveredModel>): List<DiscoveredModel> {
         val freeLive = live
             .filter { model ->
@@ -98,12 +130,10 @@ object FreeModelCatalog {
                     model.id.endsWith(":free", ignoreCase = true) ||
                     model.id.contains("/free", ignoreCase = true)
             }
-            .map { it.copy(isFree = true) }
+            .map { enrich(it) }
             .distinctBy { it.id }
         if (freeLive.isEmpty()) return asDiscovered()
-        // Keep Pollinations offline fallback visible even when Kilo returns a full list.
         val pollinations = asDiscovered().first { it.id == POLLINATIONS_ID }
-        // Prefer Auto Free first for a clear default.
         val ordered = freeLive.sortedWith(
             compareByDescending<DiscoveredModel> { it.id == DEFAULT_ID }
                 .thenBy { it.displayName.lowercase() },

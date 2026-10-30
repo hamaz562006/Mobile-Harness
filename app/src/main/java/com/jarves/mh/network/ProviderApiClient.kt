@@ -12,7 +12,17 @@ import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-data class DiscoveredModel(val id: String, val displayName: String = id, val isFree: Boolean = false)
+data class DiscoveredModel(
+    val id: String,
+    val displayName: String = id,
+    val isFree: Boolean = false,
+    /** Secondary line e.g. rate limit / pool note (no product brand filler). */
+    val note: String? = null,
+    val contextTokens: Long? = null,
+    val supportsThinking: Boolean? = null,
+    val supportsTools: Boolean? = null,
+    val supportsImages: Boolean? = null,
+)
 
 sealed interface ModelDiscoveryResult {
     data class Success(val models: List<DiscoveredModel>, val endpoint: String) : ModelDiscoveryResult
@@ -344,7 +354,44 @@ object ModelResponseParser {
                                         it.optString(field, "0").toDoubleOrNull() == 0.0
                                     }
                                 } == true
-                            add(DiscoveredModel(id, label, free))
+                            val ctx = sequenceOf(
+                                item.optLong("context_length", 0L),
+                                item.optLong("max_context_length", 0L),
+                                item.optJSONObject("architecture")?.optLong("context_length", 0L) ?: 0L,
+                            ).firstOrNull { it > 0L }
+                            val params = item.optJSONArray("supported_parameters")
+                            var tools: Boolean? = null
+                            var thinking: Boolean? = null
+                            var images: Boolean? = null
+                            if (params != null) {
+                                val names = buildSet {
+                                    for (i in 0 until params.length()) {
+                                        params.optString(i)?.takeIf { it.isNotBlank() }?.let { add(it.lowercase()) }
+                                    }
+                                }
+                                tools = "tools" in names || "tool_choice" in names || "functions" in names
+                                thinking = "reasoning" in names || "thinking" in names || "include_reasoning" in names
+                                images = "image" in names || "vision" in names || "image_url" in names
+                            }
+                            if (item.has("supports_tools")) tools = item.optBoolean("supports_tools")
+                            if (item.has("supports_reasoning") || item.has("reasoning")) {
+                                thinking = item.optBoolean("supports_reasoning", item.optBoolean("reasoning", false))
+                            }
+                            val modality = item.optString("modality", item.optJSONObject("architecture")?.optString("modality").orEmpty())
+                            if (modality.contains("image", ignoreCase = true) || modality.contains("vision", ignoreCase = true)) {
+                                images = true
+                            }
+                            add(
+                                DiscoveredModel(
+                                    id = id,
+                                    displayName = label,
+                                    isFree = free,
+                                    contextTokens = ctx,
+                                    supportsThinking = thinking,
+                                    supportsTools = tools,
+                                    supportsImages = images,
+                                ),
+                            )
                         }
                     }
                 }

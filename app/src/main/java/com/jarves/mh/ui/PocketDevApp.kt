@@ -3305,37 +3305,11 @@ private fun ProviderCredentialsStep(
                                     .padding(vertical = 14.dp, horizontal = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Column(Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            option.id,
-                                            modifier = Modifier.weight(1f, fill = false),
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.sp,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                        if (option.isFree) {
-                                            Text(
-                                                stringResource(R.string.provider_free),
-                                                color = Color(0xFF58C99C),
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                            )
-                                        }
-                                    }
-                                    if (option.displayName.isNotBlank() &&
-                                        !option.displayName.equals(option.id, ignoreCase = true)
-                                    ) {
-                                        Text(
-                                            option.displayName,
-                                            fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                    }
-                                }
+                                ModelPickerDetails(
+                                    model = option,
+                                    showCurrent = model == option.id,
+                                    modifier = Modifier.weight(1f),
+                                )
                                 Box(
                                     Modifier.size(20.dp).border(
                                         if (model == option.id) 2.dp else 1.dp,
