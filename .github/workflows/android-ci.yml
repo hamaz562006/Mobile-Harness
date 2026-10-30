@@ -82,16 +82,16 @@ jobs:
           echo "Failed to install NDK after retries"
           exit 1
 
-      # Online APK embeds Core runtime (~69MB), not Antigravity.
-      # prepareBundledAgentAssets → assets/runtime/pocketdev-core-*.tar.zst
-      - name: Download Online runtime assets (Core)
+      # Online Edition (README): Core/Python/Android download when needed.
+      # Shared asset matches upstream Online APK packaging (~89MB).
+      - name: Download Online shared runtime asset
         run: |
           set -euo pipefail
           BASE="https://github.com/techjarves/Mobile-Harness/releases/download/runtime-2026.09.4"
           mkdir -p dist/runtime-bundles
           cd dist/runtime-bundles
-          FILE="pocketdev-core-arm64-2026.09.5.tar.zst"
-          SHA="df0cf7251c74f82d424231e3804114a4ca66b16130eea9abab11e220dc7ac012"
+          FILE="pocketdev-agy-arm64-2026.09.1.tar.zst"
+          SHA="a659ab9188956fc4721ca86fb21b5118e0e489f47a5e02ae6b4f2fb423659d78"
           echo "Downloading $FILE ..."
           curl -fL --retry 5 --retry-delay 5 -o "$FILE" "$BASE/$FILE"
           echo "$SHA  $FILE" | sha256sum -c -
@@ -103,12 +103,16 @@ jobs:
       - name: Report APK size
         run: |
           set -euo pipefail
-          echo "Built Online debug APK(s):"
           ls -lh app/build/outputs/apk/online/debug/*.apk
           size=$(stat -c%s app/build/outputs/apk/online/debug/*.apk | head -n1)
           echo "APK bytes=$size"
-          if [ "$size" -lt 60000000 ]; then
-            echo "ERROR: Online APK is only $size bytes — Core runtime asset likely missing"
+          # Must not embed Core (~72MB); Online should land near upstream ~85–95MB debug.
+          if [ "$size" -gt 110000000 ]; then
+            echo "ERROR: Online APK is $size bytes — Core may have been embedded by mistake"
+            exit 1
+          fi
+          if [ "$size" -lt 40000000 ]; then
+            echo "ERROR: Online APK is only $size bytes — shared asset missing"
             exit 1
           fi
 
