@@ -81,6 +81,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -1155,6 +1159,19 @@ private fun ReliabilitySettingsPanel() {
     var notificationGranted by remember { mutableStateOf(notificationsAllowed()) }
     var batteryGranted by remember { mutableStateOf(batteryUnrestricted()) }
 
+    // Re-read system permission state when returning from system settings / onboarding.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notificationGranted = notificationsAllowed()
+                batteryGranted = batteryUnrestricted()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         notificationGranted = notificationsAllowed()
     }
@@ -1170,7 +1187,7 @@ private fun ReliabilitySettingsPanel() {
             title = stringResource(R.string.bg_step_notifications),
             subtitle = stringResource(R.string.bg_notifications_desc),
             granted = notificationGranted,
-            actionLabel = stringResource(if (notificationGranted) R.string.bg_status_granted else R.string.bg_notifications_allow),
+            actionLabel = stringResource(if (notificationGranted) R.string.bg_notifications_settings else R.string.bg_notifications_allow),
             onAction = {
                 if (notificationGranted) {
                     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -1254,7 +1271,17 @@ private fun ReliabilityRow(
     onAction: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            if (granted) {
+                Text(
+                    stringResource(R.string.bg_status_granted),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2E9D72),
+                )
+            }
+        }
         Spacer(Modifier.height(2.dp))
         Text(subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))

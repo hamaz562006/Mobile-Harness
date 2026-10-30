@@ -2418,6 +2418,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 provider = profile.copy(hasSecret = vault.contains(profile.kind.name)),
                 activeApiKeyName = vault.list(profile.kind.name).firstOrNull(ApiKeyInfo::isActive)?.name,
+                // Status is per active provider; clear until the user re-tests this kind.
+                apiPingStatus = ApiPingStatus.IDLE,
+                apiPingMessage = null,
             )
         }
     }
@@ -2920,21 +2923,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             testClaudeSubscription(profile)
             return
         }
-        if (profile.baseUrl.isBlank() || profile.model.isBlank()) return
+        if (profile.kind != ProviderKind.FREE_MODELS &&
+            (profile.baseUrl.isBlank() || profile.model.isBlank())
+        ) {
+            return
+        }
         if (_state.value.apiPingStatus == ApiPingStatus.PINGING) return
         _state.update { it.copy(apiPingStatus = ApiPingStatus.PINGING, apiPingMessage = str(R.string.vm_ping_sending)) }
         viewModelScope.launch {
+            // Use validateProvider so FREE_MODELS and agent-specific rules match Test connection.
             val key = vault.get(profile.kind.name).orEmpty()
-            val result = providerApi.validate(
-                profile.baseUrl,
-                profile.model,
-                key,
-                providerProtocolForAgent(profile, _state.value.agentKind),
-                emptyList(),
-                profile.openRouterProviderOrder,
-                profile.openRouterAllowFallbacks,
-            )
-            when (result) {
+            when (val result = validateProvider(profile, key, emptyList())) {
                 is ConnectionValidation.Success -> _state.update {
                     it.copy(apiPingStatus = ApiPingStatus.OK, apiPingMessage = str(R.string.vm_ping_success))
                 }

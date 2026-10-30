@@ -1156,6 +1156,8 @@ fun AgentScreen(
                                             status = selectedProviderVerifiedMessage
                                             statusOk = true
                                         }
+                                        // Keep top Online/Attention pill in sync with Test connection.
+                                        onPing()
                                     }
                                     is ConnectionValidation.Failure -> {
                                         if (activeKeyId != null) {
