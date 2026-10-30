@@ -33,7 +33,8 @@ val runtimeBundleDir = rootProject.layout.projectDirectory.dir("dist/runtime-bun
 val generatedRuntimeAssets = layout.buildDirectory.dir("generated/runtime-assets")
 
 val prepareBundledAgentAssets = tasks.register<Sync>("prepareBundledAgentAssets") {
-    from(runtimeBundleDir.file("pocketdev-agy-arm64-2026.09.1.tar.zst"))
+    // Online APK ships the Core runtime inside the package (not Antigravity).
+    from(runtimeBundleDir.file("pocketdev-core-arm64-2026.09.5.tar.zst"))
     into(generatedRuntimeAssets.map { it.dir("shared/runtime") })
 }
 

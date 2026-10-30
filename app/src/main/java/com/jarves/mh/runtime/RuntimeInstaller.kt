@@ -177,7 +177,8 @@ class RuntimeInstaller(private val context: Context) {
             onProgress(RuntimeInstallProgress(str(R.string.rt_install_preparing_runtime), 0.03f))
             val archive = obtainRuntimeBundle(
                 CORE_BUNDLE,
-                preferEmbedded = BuildConfig.OFFLINE_RUNTIME_BUNDLES,
+                // Core is packaged in the Online APK (shared assets).
+                preferEmbedded = true,
                 from = 0.03f,
                 to = 0.25f,
                 onProgress,
@@ -595,7 +596,8 @@ class RuntimeInstaller(private val context: Context) {
             from = fraction,
             to = 0.995f,
             onProgress = onProgress,
-            forceEmbedded = true,
+            // Antigravity: version-pinned online download (not embedded in Online APK).
+            forceEmbedded = false,
         )
         verifyGuest(proot, "$AGY_GUEST_PATH --version", str(R.string.rt_install_verify_failed, "Antigravity CLI"))
         agyMarker.writeText(AGY_VERSION)
