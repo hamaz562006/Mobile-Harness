@@ -37,43 +37,47 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      # Gradle auto-download of this NDK sometimes gets a corrupt ZIP on GitHub runners.
-      # Install it explicitly with retries so configure does not fail on ZipException.
+      # Pin matches app/build.gradle.kts ndkVersion = 28.2.13676358 (r28c).
+      # Do not use `yes | sdkmanager` under pipefail: sdkmanager succeeds then
+      # `yes` gets SIGPIPE and the step is wrongly treated as failed.
       - name: Install NDK 28.2.13676358
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}
         run: |
-          set -euo pipefail
-          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Android/Sdk}}"
+          set -eu
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          NDK_DIR="$SDK_ROOT/ndk/28.2.13676358"
           echo "SDK_ROOT=$SDK_ROOT"
-          # Locate sdkmanager on the runner image
-          SM=$(find "$SDK_ROOT" -type f -name sdkmanager 2>/dev/null | head -n 1 || true)
+          if [ -f "$NDK_DIR/source.properties" ]; then
+            echo "NDK already present"
+            exit 0
+          fi
+          SM=$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager 2>/dev/null | head -n 1 || true)
           if [ -z "$SM" ]; then
-            # Fallback: install cmdline-tools if missing
-            mkdir -p "$SDK_ROOT/cmdline-tools"
-            curl -fsSL -o /tmp/cmdtools.zip \
-              https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-            unzip -q /tmp/cmdtools.zip -d "$SDK_ROOT/cmdline-tools"
-            mv "$SDK_ROOT/cmdline-tools/cmdline-tools" "$SDK_ROOT/cmdline-tools/latest"
-            SM="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+            echo "sdkmanager not found under $SDK_ROOT"
+            ls -la "$SDK_ROOT" || true
+            exit 1
           fi
           echo "sdkmanager=$SM"
-          yes | "$SM" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
-          for attempt in 1 2 3 4 5; do
+          # Accept licenses without pipefail noise
+          set +e
+          yes 2>/dev/null | "$SM" --sdk_root="$SDK_ROOT" --licenses >/tmp/sdk-licenses.log 2>&1
+          set -e
+          for attempt in 1 2 3; do
             echo "NDK install attempt $attempt"
-            if yes | "$SM" --sdk_root="$SDK_ROOT" "ndk;28.2.13676358"; then
-              # Verify the install is a real directory with source.properties
-              if [ -f "$SDK_ROOT/ndk/28.2.13676358/source.properties" ]; then
-                echo "NDK install OK"
-                exit 0
-              fi
-              echo "NDK folder incomplete; removing and retrying"
-              rm -rf "$SDK_ROOT/ndk/28.2.13676358"
-            else
-              echo "sdkmanager failed; cleaning partial NDK and retrying"
-              rm -rf "$SDK_ROOT/ndk/28.2.13676358"
+            set +e
+            yes 2>/dev/null | "$SM" --sdk_root="$SDK_ROOT" "ndk;28.2.13676358" >/tmp/sdk-ndk.log 2>&1
+            sm_rc=$?
+            set -e
+            # Success is determined by the installed tree, not sdkmanager exit code
+            # (yes often exits 141 / broken pipe after sdkmanager closes stdin).
+            if [ -f "$NDK_DIR/source.properties" ]; then
+              echo "NDK install OK (sdkmanager exit=$sm_rc)"
+              tail -n 5 /tmp/sdk-ndk.log || true
+              exit 0
             fi
-            sleep $((attempt * 3))
+            echo "NDK not ready yet (sdkmanager exit=$sm_rc); log tail:"
+            tail -n 30 /tmp/sdk-ndk.log || true
+            rm -rf "$NDK_DIR"
+            sleep $((attempt * 5))
           done
           echo "Failed to install NDK after retries"
           exit 1
