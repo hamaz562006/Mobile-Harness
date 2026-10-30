@@ -387,4 +387,10 @@
     <string name="diagnostics_inactive_stopped">Inactive processes stopped</string>
     <string name="diagnostics_cache_busy">Wait for active work to finish before clearing output</string>
     <string name="diagnostics_cache_cleared">Disposable runtime output cleared</string>
+
+    <string name="agent_provider_help">Tap any provider below to switch. Your current settings are saved automatically so you can come back later.</string>
+    <string name="agent_provider_configured_count">%1$d providers configured for this agent</string>
+    <string name="agent_provider_saved_badge">Saved</string>
+    <string name="agent_provider_active_badge">Active</string>
+    <string name="agent_provider_switch_hint">Select another row to add or edit a different provider. Active: %1$s</string>
 </resources>

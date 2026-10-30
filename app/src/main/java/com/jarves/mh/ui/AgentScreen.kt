@@ -173,6 +173,7 @@ internal fun formatAntigravityModelTier(id: String): String = when {
 @Composable
 fun AgentScreen(
     state: AppUiState,
+    configuredProviderKinds: Set<ProviderKind> = emptySet(),
     onSaveProvider: (ProviderProfile, String) -> Unit,
     onStashProvider: (ProviderProfile, String) -> Unit = onSaveProvider,
     onLoadProviderKind: (ProviderKind) -> ProviderProfile = { kind ->
@@ -1013,6 +1014,7 @@ fun AgentScreen(
                     AgentProviderCard(
                         onTest = onPing,
                         state = state,
+                        configuredProviderKinds = configuredProviderKinds,
                         selectedKind = selectedKind,
                         baseUrl = baseUrl,
                         model = model,
@@ -1540,6 +1542,7 @@ private fun AgentAntigravityCard(
 private fun AgentProviderCard(
     onTest: () -> Unit = {},
     state: AppUiState,
+    configuredProviderKinds: Set<ProviderKind> = emptySet(),
     selectedKind: ProviderKind,
     baseUrl: String,
     model: String,
@@ -1595,6 +1598,29 @@ private fun AgentProviderCard(
             Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
         ) {
             Text(stringResource(R.string.agent_provider_title), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(R.string.agent_provider_help),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 16.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(
+                    R.string.agent_provider_configured_count,
+                    (configuredProviderKinds + selectedKind + setOf(ProviderKind.FREE_MODELS)).size,
+                ),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.agent_provider_switch_hint, stringResource(selectedKind.titleRes())),
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Spacer(Modifier.height(12.dp))
 
             PremiumSummaryRow(
@@ -1628,7 +1654,40 @@ private fun AgentProviderCard(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Column(Modifier.weight(1f)) {
-                                        Text(stringResource(kind.titleRes()), fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(stringResource(kind.titleRes()), fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                                            val isConfigured = kind in configuredProviderKinds || kind == selectedKind ||
+                                                (kind == ProviderKind.FREE_MODELS)
+                                            if (kind == selectedKind) {
+                                                Spacer(Modifier.width(8.dp))
+                                                Surface(
+                                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                    shape = RoundedCornerShape(6.dp),
+                                                ) {
+                                                    Text(
+                                                        stringResource(R.string.agent_provider_active_badge),
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                    )
+                                                }
+                                            } else if (isConfigured) {
+                                                Spacer(Modifier.width(8.dp))
+                                                Surface(
+                                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                                                    shape = RoundedCornerShape(6.dp),
+                                                ) {
+                                                    Text(
+                                                        stringResource(R.string.agent_provider_saved_badge),
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = MaterialTheme.colorScheme.secondary,
+                                                    )
+                                                }
+                                            }
+                                        }
                                         Text(stringResource(kind.subtitleRes()), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                                     }
                                     AgentSelectionDot(selectedKind == kind)

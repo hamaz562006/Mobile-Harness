@@ -66,6 +66,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -1198,6 +1199,44 @@ private fun ReliabilitySettingsPanel() {
                 runCatching { batteryLauncher.launch(intent) }
             },
         )
+        var taskProtectionEnabled by remember {
+            mutableStateOf(
+                context.getSharedPreferences("pocket_preferences", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("task_protection_enabled", true),
+            )
+        }
+        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.bg_step_task_protection), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        stringResource(R.string.bg_protection_desc),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = taskProtectionEnabled,
+                    onCheckedChange = { enabled ->
+                        taskProtectionEnabled = enabled
+                        context.getSharedPreferences("pocket_preferences", android.content.Context.MODE_PRIVATE)
+                            .edit()
+                            .putBoolean("task_protection_enabled", enabled)
+                            .apply()
+                    },
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.bg_protection_privacy),
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Text(
             stringResource(R.string.bg_setup_footer),
             fontSize = 11.sp,

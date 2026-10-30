@@ -2022,6 +2022,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return preferences.loadKindProfile(_state.value.agentKind, kind, vault)
     }
 
+    fun configuredProviderKinds(): Set<ProviderKind> {
+        val agent = _state.value.agentKind
+        val stored = preferences.configuredProviderKinds(agent).toMutableSet()
+        // Active provider and any kind with a saved secret count as configured.
+        stored.add(_state.value.provider.kind)
+        ProviderKind.entries.forEach { kind ->
+            if (vault.contains(kind.name)) stored.add(kind)
+        }
+        return stored
+    }
+
     fun getSavedApiKey(kind: ProviderKind): String = vault.get(kind.name).orEmpty()
 
     fun getSavedApiKeys(kind: ProviderKind): List<ApiKeyInfo> = vault.list(kind.name)

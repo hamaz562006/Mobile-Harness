@@ -34,6 +34,11 @@ class AppPreferences(private val context: Context) {
         get() = preferences.getBoolean("background_setup_complete", false)
         set(value) { preferences.edit().putBoolean("background_setup_complete", value).apply() }
 
+    /** Keep CPU awake while a visible coding task runs (PARTIAL_WAKE_LOCK, auto-released). */
+    var taskProtectionEnabled: Boolean
+        get() = preferences.getBoolean("task_protection_enabled", true)
+        set(value) { preferences.edit().putBoolean("task_protection_enabled", value).apply() }
+
     var initialLanguageSelected: Boolean
         get() = preferences.getBoolean("initial_language_selected", onboardingComplete || runtimeSetupComplete)
         set(value) { preferences.edit().putBoolean("initial_language_selected", value).apply() }

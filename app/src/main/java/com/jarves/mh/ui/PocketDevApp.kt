@@ -1009,6 +1009,10 @@ private fun BackgroundTaskSetupScreen(
                                 }
                                 else -> {
                                     taskProtectionConfirmed = true
+                                    context.getSharedPreferences("pocket_preferences", android.content.Context.MODE_PRIVATE)
+                                        .edit()
+                                        .putBoolean("task_protection_enabled", true)
+                                        .apply()
                                     onContinue()
                                 }
                             }
@@ -2515,6 +2519,7 @@ private fun RootScreenHost(
                 )
                 RootScreen.AGENT -> AgentScreen(
                     state = state,
+                    configuredProviderKinds = viewModel.configuredProviderKinds(),
                     onSaveProvider = { profile, key ->
                         viewModel.updateProvider(profile, key)
                     },

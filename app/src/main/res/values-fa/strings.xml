@@ -388,4 +388,10 @@
     <string name="diagnostics_inactive_stopped">فرایندهای غیرفعال متوقف شدند</string>
     <string name="diagnostics_cache_busy">قبل از پاک کردن خروجی، صبر کنید کار فعال تمام شود</string>
     <string name="diagnostics_cache_cleared">خروجی موقت رانتایم پاک شد</string>
+
+    <string name="agent_provider_help">برای تعویض، روی هر پروایدر زیر بزنید. تنظیمات فعلی خودکار ذخیره می‌شود تا بعداً برگردید.</string>
+    <string name="agent_provider_configured_count">%1$d پروایدر برای این ایجنت پیکربندی شده</string>
+    <string name="agent_provider_saved_badge">ذخیره‌شده</string>
+    <string name="agent_provider_active_badge">فعال</string>
+    <string name="agent_provider_switch_hint">برای افزودن یا ویرایش پروایدر دیگر یک ردیف دیگر را انتخاب کنید. فعال: %1$s</string>
 </resources>
