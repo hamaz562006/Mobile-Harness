@@ -95,10 +95,54 @@ private fun appTypography(useVazirmatn: Boolean): Typography {
     )
 }
 
+/**
+ * Accent colors inspired by coding-agent brand hues.
+ * Drives MaterialTheme.primary; more appearance options can hang off this later.
+ */
+enum class AccentColor(
+    val id: String,
+    val dark: Color,
+    val light: Color,
+) {
+    /** App default — current Pocket orange */
+    DEFAULT("default", Color(0xFFFF6B2C), Color(0xFFD85A20)),
+    /** Claude / Anthropic warm terracotta */
+    CLAUDE("claude", Color(0xFFD97757), Color(0xFFC45C3E)),
+    /** DeepSeek blue */
+    DEEPSEEK("deepseek", Color(0xFF4C8DFF), Color(0xFF3366CC)),
+    /** Antigravity / Google green */
+    ANTIGRAVITY("antigravity", Color(0xFF34A853), Color(0xFF1B8A5A)),
+    ;
+
+    companion object {
+        fun fromId(value: String?): AccentColor =
+            entries.firstOrNull {
+                it.id.equals(value, ignoreCase = true) || it.name.equals(value, ignoreCase = true)
+            } ?: DEFAULT
+    }
+}
+
 enum class AppThemeMode { SYSTEM, DARK, LIGHT }
 
+private fun darkSchemeFor(accent: Color) = DarkColors.copy(
+    primary = accent,
+    primaryContainer = accent.copy(alpha = 0.28f),
+    onPrimaryContainer = Color(0xFFFFDDCC),
+)
+
+private fun lightSchemeFor(accent: Color) = LightColors.copy(
+    primary = accent,
+    primaryContainer = accent.copy(alpha = 0.18f),
+    onPrimary = Color(0xFFFFFFFF),
+    onPrimaryContainer = Color(0xFF1A1A1A),
+)
+
 @Composable
-fun PocketTheme(themeMode: AppThemeMode = AppThemeMode.SYSTEM, content: @Composable () -> Unit) {
+fun PocketTheme(
+    themeMode: AppThemeMode = AppThemeMode.SYSTEM,
+    accentColor: AccentColor = AccentColor.DEFAULT,
+    content: @Composable () -> Unit,
+) {
     val isDark = when (themeMode) {
         AppThemeMode.DARK -> true
         AppThemeMode.LIGHT -> false
@@ -106,6 +150,7 @@ fun PocketTheme(themeMode: AppThemeMode = AppThemeMode.SYSTEM, content: @Composa
     }
     val languageCode = AppStrings.languageCode(LocalContext.current)
     val useVazirmatn = languageCode.equals("fa", ignoreCase = true)
+    val accent = if (isDark) accentColor.dark else accentColor.light
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -118,7 +163,7 @@ fun PocketTheme(themeMode: AppThemeMode = AppThemeMode.SYSTEM, content: @Composa
     }
 
     MaterialTheme(
-        colorScheme = if (isDark) DarkColors else LightColors,
+        colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = appTypography(useVazirmatn),
         content = content,
     )

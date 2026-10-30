@@ -109,6 +109,11 @@ class AppPreferences(private val context: Context) {
         get() = preferences.getString("theme_mode", "dark") ?: "dark"
         set(value) { preferences.edit().putString("theme_mode", value).apply() }
 
+    /** Accent palette id — see AccentColor.id (default / claude / deepseek / antigravity). */
+    var accentColor: String
+        get() = preferences.getString("accent_color", "default") ?: "default"
+        set(value) { preferences.edit().putString("accent_color", value).apply() }
+
     var languageCode: String
         get() = preferences.getString("language_code", "system") ?: "system"
         set(value) { preferences.edit().putString("language_code", value).apply() }
