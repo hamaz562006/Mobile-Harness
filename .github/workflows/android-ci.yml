@@ -92,12 +92,13 @@ jobs:
           ls -lh app/build/outputs/apk/online/debug/*.apk
           size=$(stat -c%s app/build/outputs/apk/online/debug/*.apk | head -n1)
           echo "APK bytes=$size"
-          # Fail if a runtime/agent tar was accidentally packaged (~40MB+).
-          if [ "$size" -gt 35000000 ]; then
-            echo "ERROR: Online APK is $size bytes — embedded runtime/agent bundle suspected"
+          # Online must not embed Core/agent runtime archives (download on demand).
+          if unzip -l app/build/outputs/apk/online/debug/*.apk | grep -E '\.tar\.zst$'; then
+            echo "ERROR: Online APK contains a .tar.zst runtime/agent bundle"
             unzip -l app/build/outputs/apk/online/debug/*.apk | grep -E 'assets/runtime|\.tar\.zst' || true
             exit 1
           fi
+          echo "OK: no embedded runtime/agent .tar.zst"
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
