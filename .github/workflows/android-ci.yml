@@ -37,6 +37,47 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      # Gradle auto-download of this NDK sometimes gets a corrupt ZIP on GitHub runners.
+      # Install it explicitly with retries so configure does not fail on ZipException.
+      - name: Install NDK 28.2.13676358
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Android/Sdk}}"
+          echo "SDK_ROOT=$SDK_ROOT"
+          # Locate sdkmanager on the runner image
+          SM=$(find "$SDK_ROOT" -type f -name sdkmanager 2>/dev/null | head -n 1 || true)
+          if [ -z "$SM" ]; then
+            # Fallback: install cmdline-tools if missing
+            mkdir -p "$SDK_ROOT/cmdline-tools"
+            curl -fsSL -o /tmp/cmdtools.zip \
+              https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q /tmp/cmdtools.zip -d "$SDK_ROOT/cmdline-tools"
+            mv "$SDK_ROOT/cmdline-tools/cmdline-tools" "$SDK_ROOT/cmdline-tools/latest"
+            SM="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          echo "sdkmanager=$SM"
+          yes | "$SM" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
+          for attempt in 1 2 3 4 5; do
+            echo "NDK install attempt $attempt"
+            if yes | "$SM" --sdk_root="$SDK_ROOT" "ndk;28.2.13676358"; then
+              # Verify the install is a real directory with source.properties
+              if [ -f "$SDK_ROOT/ndk/28.2.13676358/source.properties" ]; then
+                echo "NDK install OK"
+                exit 0
+              fi
+              echo "NDK folder incomplete; removing and retrying"
+              rm -rf "$SDK_ROOT/ndk/28.2.13676358"
+            else
+              echo "sdkmanager failed; cleaning partial NDK and retrying"
+              rm -rf "$SDK_ROOT/ndk/28.2.13676358"
+            fi
+            sleep $((attempt * 3))
+          done
+          echo "Failed to install NDK after retries"
+          exit 1
+
       - name: Unit tests and online debug APK
         run: ./gradlew :app:testOnlineDebugUnitTest :app:assembleOnlineDebug --stacktrace
 
