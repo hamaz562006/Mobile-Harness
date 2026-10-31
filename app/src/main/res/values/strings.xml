@@ -403,7 +403,7 @@
     <string name="fallback_title">Fallbacks</string>
     <string name="fallback_subtitle">Default for Harness</string>
     <string name="fallback_automatic">Automatic fallbacks</string>
-    <string name="fallback_help">Your selected model runs first. These models are tried next, in order.</string>
+    <string name="fallback_help">Shared across all agents. Your selected model runs first; these backup models are tried next, in order.</string>
     <string name="fallback_none">No backup models added.</string>
     <string name="fallback_add_model">Add model (%1$d/%2$d)</string>
     <string name="fallback_retries">Retries before switching</string>

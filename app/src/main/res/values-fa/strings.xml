@@ -404,7 +404,7 @@
     <string name="fallback_title">Fallbackها</string>
     <string name="fallback_subtitle">Default for Harness</string>
     <string name="fallback_automatic">Fallback خودکار</string>
-    <string name="fallback_help">ابتدا مدل انتخاب‌شده اجرا می‌شود. این مدل‌ها به ترتیب بعدی امتحان می‌شوند.</string>
+    <string name="fallback_help">مشترک برای همهٔ ایجنت‌ها. ابتدا مدل انتخاب‌شده؛ بعد این مدل‌های پشتیبان به ترتیب.</string>
     <string name="fallback_none">مدل پشتیبان اضافه نشده است.</string>
     <string name="fallback_add_model">افزودن مدل (%1$d/%2$d)</string>
     <string name="fallback_retries">تلاش مجدد قبل از تعویض</string>

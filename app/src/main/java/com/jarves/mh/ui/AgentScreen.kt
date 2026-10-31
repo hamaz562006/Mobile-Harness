@@ -1082,8 +1082,6 @@ fun AgentScreen(
                             showModels = true
                         },
                         onDiscover = ::discoverModels,
-                        fallbackPolicy = state.fallbackPolicy,
-                        onSaveFallbackPolicy = onSaveFallbackPolicy,
                         onValidate = {
                             scope.launch {
                                 isValidating = true
@@ -1142,6 +1140,30 @@ fun AgentScreen(
                             }
                         },
                     )
+                }
+            }
+
+            // ── Shared: Fallbacks (agent-independent harness routing) ──
+            item {
+                if (viewedAgentInstalled && viewedAgent == state.agentKind) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                            FallbackEditorSection(
+                                policy = state.fallbackPolicy,
+                                configuredProviders = configuredProviderKinds.ifEmpty {
+                                    setOf(selectedKind)
+                                },
+                                currentProvider = selectedKind,
+                                currentModels = models,
+                                onSave = onSaveFallbackPolicy,
+                            )
+                        }
+                    }
                 }
             }
 
@@ -1546,8 +1568,6 @@ private fun AgentProviderCard(
     onOpenModelSheet: () -> Unit,
     onDiscover: () -> Unit,
     onValidate: () -> Unit,
-    fallbackPolicy: com.jarves.mh.model.FallbackPolicy = com.jarves.mh.model.FallbackPolicy(),
-    onSaveFallbackPolicy: (com.jarves.mh.model.FallbackPolicy) -> Unit = {},
 ) {
     val visibleKinds = remember(state.agentKind) { providersForAgent(state.agentKind) }
     var connectionExpanded by rememberSaveable(selectedKind) { mutableStateOf(false) }
@@ -1813,17 +1833,6 @@ private fun AgentProviderCard(
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-
-            Spacer(Modifier.height(12.dp))
-            FallbackEditorSection(
-                policy = fallbackPolicy,
-                configuredProviders = configuredProviderKinds.ifEmpty { setOf(selectedKind) },
-                currentProvider = selectedKind,
-                currentModels = models,
-                onSave = onSaveFallbackPolicy,
-            )
-            Spacer(Modifier.height(8.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
             PremiumSummaryRow(
