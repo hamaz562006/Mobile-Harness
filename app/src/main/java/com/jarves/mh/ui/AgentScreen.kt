@@ -1166,15 +1166,45 @@ fun AgentScreen(
                 if (viewedAgentInstalled && viewedAgent == state.agentKind && nineRouter != null) {
                     LaunchedEffect(nineRouter) { nineRouter.refresh() }
                     val nrState by nineRouter.state.collectAsState()
-                    NineRouterCard(
-                        state = nrState,
-                        busy = nrState.busy,
-                        onInstall = onNineRouterInstall,
-                        onInstallRuntime = onNineRouterInstallRuntime,
-                        onStart = onNineRouterStart,
-                        onStop = onNineRouterStop,
-                        onConnect = { onNineRouterConnect { _, _ -> } },
-                    )
+                    var specialExpanded by rememberSaveable { mutableStateOf(false) }
+                    val specialSubtitle = when (nrState.phase) {
+                        NineRouterPhase.NEED_RUNTIME -> stringResource(R.string.nine_router_need_runtime)
+                        NineRouterPhase.INSTALLING -> stringResource(R.string.nine_router_install)
+                        NineRouterPhase.RUNNING -> stringResource(R.string.nine_router_section_subtitle)
+                        else -> nrState.detail.ifBlank { stringResource(R.string.nine_router_section_subtitle) }
+                    }
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                            PremiumSummaryRow(
+                                icon = Icons.Default.SmartToy,
+                                title = stringResource(R.string.special_providers_title),
+                                subtitle = specialSubtitle,
+                                expanded = specialExpanded,
+                                onClick = { specialExpanded = !specialExpanded },
+                            )
+                            AnimatedVisibility(specialExpanded) {
+                                Column(
+                                    Modifier.padding(bottom = 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    NineRouterCard(
+                                        state = nrState,
+                                        busy = nrState.busy,
+                                        onInstall = onNineRouterInstall,
+                                        onInstallRuntime = onNineRouterInstallRuntime,
+                                        onStart = onNineRouterStart,
+                                        onStop = onNineRouterStop,
+                                        onConnect = { onNineRouterConnect { _, _ -> } },
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1191,7 +1221,9 @@ fun AgentScreen(
                             FallbackEditorSection(
                                 policy = state.fallbackPolicy,
                                 configuredProviders = run {
-                                    val allowed = providersForAgent(state.agentKind).toSet()
+                                    val catalogAllowed = providersForAgent(state.agentKind).toSet()
+                                    val nineLinked = ProviderKind.NINE_ROUTER in configuredProviderKinds
+                                    val allowed = if (nineLinked) catalogAllowed + ProviderKind.NINE_ROUTER else catalogAllowed
                                     val configured = (configuredProviderKinds + selectedKind + setOf(ProviderKind.FREE_MODELS))
                                         .filter { it in allowed }
                                         .toSet()
@@ -1609,7 +1641,12 @@ private fun AgentProviderCard(
     onDiscover: () -> Unit,
     onValidate: () -> Unit,
 ) {
-    val visibleKinds = remember(state.agentKind) { providersForAgent(state.agentKind) }
+    val nineLinked = ProviderKind.NINE_ROUTER in configuredProviderKinds ||
+        selectedKind == ProviderKind.NINE_ROUTER
+    val visibleKinds = remember(state.agentKind, nineLinked) {
+        val base = providersForAgent(state.agentKind)
+        if (nineLinked && ProviderKind.NINE_ROUTER !in base) base + ProviderKind.NINE_ROUTER else base
+    }
     var connectionExpanded by rememberSaveable(selectedKind) { mutableStateOf(false) }
     // Keep this state across provider changes so selecting Custom API can
     // immediately reveal its required setup instead of resetting on recomposition.
@@ -2327,7 +2364,7 @@ private fun NineRouterCard(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(stringResource(R.string.nine_router_section_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(R.string.nine_router_section_title), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             Text(
                 stringResource(R.string.nine_router_section_subtitle),
                 fontSize = 12.sp,
