@@ -28,13 +28,6 @@ internal class LocalFormatGateway(
     private val fallbackRetries: Int = 3,
     private val fallbackChain: List<FallbackUpstream> = emptyList(),
 ) : AutoCloseable {
-
-    data class FallbackUpstream(
-        val baseUrl: String,
-        val model: String,
-        val apiKey: String,
-        val label: String = model,
-    )
     private val running = AtomicBoolean(true)
     private val server = ServerSocket(0, 8, InetAddress.getByName("127.0.0.1"))
     val url: String = "http://127.0.0.1:${server.localPort}"

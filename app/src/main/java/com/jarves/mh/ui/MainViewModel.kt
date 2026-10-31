@@ -2026,7 +2026,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun resolveFallbackUpstream(
         target: com.jarves.mh.model.FallbackTarget,
-    ): com.jarves.mh.runtime.LocalFormatGateway.FallbackUpstream? {
+    ): com.jarves.mh.runtime.FallbackUpstream? {
         val kind = runCatching { ProviderKind.valueOf(target.providerId) }.getOrNull() ?: return null
         val model = target.model.trim()
         if (model.isBlank()) return null
@@ -2043,7 +2043,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             else -> vault.get(kind.name).orEmpty()
         }
         if (kind != ProviderKind.FREE_MODELS && key.isBlank()) return null
-        return com.jarves.mh.runtime.LocalFormatGateway.FallbackUpstream(
+        return com.jarves.mh.runtime.FallbackUpstream(
             baseUrl = baseUrl,
             model = model,
             apiKey = key,

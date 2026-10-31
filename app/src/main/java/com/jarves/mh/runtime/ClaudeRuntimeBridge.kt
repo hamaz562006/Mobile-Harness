@@ -71,7 +71,7 @@ class ClaudeRuntimeBridge(
     private val secretFor: (ProviderProfile) -> String?,
     private val changeControl: SharedChangeControl,
     private val fallbackPolicy: () -> com.jarves.mh.model.FallbackPolicy = { com.jarves.mh.model.FallbackPolicy() },
-    private val resolveFallbackUpstream: (com.jarves.mh.model.FallbackTarget) -> LocalFormatGateway.FallbackUpstream? = { null },
+    private val resolveFallbackUpstream: (com.jarves.mh.model.FallbackTarget) -> FallbackUpstream? = { null },
 ) : RuntimeBridge {
     private val installer = RuntimeInstaller(context)
     private val checkpoints = changeControl.checkpoints
