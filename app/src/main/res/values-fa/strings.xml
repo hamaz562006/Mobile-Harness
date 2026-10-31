@@ -423,4 +423,17 @@
     <string name="fallback_subtitle_active">فعال · %1$d مدل پشتیبان</string>
     <string name="fallback_pick_hint">مدل‌های پروایدرهایی که در Agent تنظیم کرده‌اید.</string>
     <string name="fallback_pick_empty">مدلی نیست. ابتدا یک پروایدر تنظیم کنید.</string>
+
+    <string name="provider_title_nine_router">9Router</string>
+    <string name="provider_subtitle_nine_router">روتر محلی OpenAI-compatible · پورت 20128</string>
+    <string name="nine_router_section_title">9Router</string>
+    <string name="nine_router_section_subtitle">نصب و اجرای روتر محلی مدل‌ها</string>
+    <string name="nine_router_need_runtime">ابتدا Linux runtime را نصب کنید.</string>
+    <string name="nine_router_install">نصب 9Router</string>
+    <string name="nine_router_start">شروع</string>
+    <string name="nine_router_stop">توقف</string>
+    <string name="nine_router_add_provider">افزودن به پروایدرها</string>
+    <string name="nine_router_refresh_provider">تازه‌سازی اتصال پروایدر</string>
+    <string name="nine_router_help">پس از نصب و Start، با «افزودن به پروایدرها» به‌صورت خودکار به عنوان OpenAI-compatible (http://127.0.0.1:20128/v1) اضافه می‌شود. مدل‌های بالادستی را در داشبورد 9Router وصل کنید. تا ۲۰ کلید API برای هر پروایدر با چرخش پشتیبانی می‌شود.</string>
+
 </resources>

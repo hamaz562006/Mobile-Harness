@@ -51,6 +51,15 @@ enum class ProviderKind(
         fixedProtocol = true,
     ),
     CUSTOM("Custom API", "Anthropic-compatible endpoint", ProviderProtocol.ANTHROPIC_GATEWAY, "", "", true),
+    /** Local 9Router gateway (OpenAI-compatible) — install/start from Agent → AI provider. */
+    NINE_ROUTER(
+        "9Router",
+        "Local OpenAI-compatible router · 127.0.0.1:20128",
+        ProviderProtocol.OPENAI_CHAT,
+        "http://127.0.0.1:20128/v1",
+        "kr/claude-sonnet-4.5",
+        false,
+    ),
 }
 
 /**
@@ -100,6 +109,7 @@ val DEEPSEEK_HARNESS_PROVIDERS: Set<ProviderKind> = setOf(
     ProviderKind.OPENCODE_ZEN,
     ProviderKind.NVIDIA_NIM,
     ProviderKind.CUSTOM,
+    ProviderKind.NINE_ROUTER,
 )
 
 val DSH_PROTOCOL_PROVIDERS: Set<ProviderKind> = setOf(
@@ -111,7 +121,7 @@ val DSH_PROTOCOL_PROVIDERS: Set<ProviderKind> = setOf(
 
 fun defaultDshApiForProvider(kind: ProviderKind): String = when (kind) {
     ProviderKind.OPENCODE_ZEN -> "openai-responses"
-    ProviderKind.NVIDIA_NIM, ProviderKind.FREE_MODELS -> "openai-completions"
+    ProviderKind.NVIDIA_NIM, ProviderKind.FREE_MODELS, ProviderKind.NINE_ROUTER -> "openai-completions"
     else -> "anthropic-messages"
 }
 

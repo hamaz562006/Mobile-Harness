@@ -14,6 +14,8 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 class ApiKeyVault(context: Context) {
+    companion object { const val MAX_KEYS = 20 }
+
     private val preferences = context.getSharedPreferences("pocket_secrets", Context.MODE_PRIVATE)
     private val alias = "pocket-provider-key"
 
@@ -33,6 +35,7 @@ class ApiKeyVault(context: Context) {
     fun add(providerId: String, name: String, secret: String): ApiKeyInfo {
         require(secret.isNotBlank()) { "API key cannot be empty" }
         val entries = ensurePool(providerId).toMutableList()
+        require(entries.size < MAX_KEYS) { "At most $MAX_KEYS API keys per provider." }
         val entry = ApiKeyInfo(
             id = UUID.randomUUID().toString(),
             name = name.trim().ifBlank { "API key ${entries.size + 1}" }.take(60),

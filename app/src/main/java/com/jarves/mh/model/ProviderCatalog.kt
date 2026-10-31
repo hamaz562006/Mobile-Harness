@@ -18,23 +18,25 @@ object ProviderCatalog {
     fun providersFor(agent: AgentKind): List<ProviderKind> = when (agent) {
         AgentKind.CLAUDE_CODE -> buildList {
             add(ProviderKind.FREE_MODELS)
+            add(ProviderKind.NINE_ROUTER)
             ProviderKind.entries.forEach { kind ->
-                if (kind != ProviderKind.FREE_MODELS && kind != ProviderKind.OPENCODE_ZEN) add(kind)
+                if (kind != ProviderKind.FREE_MODELS && kind != ProviderKind.NINE_ROUTER && kind != ProviderKind.OPENCODE_ZEN) add(kind)
             }
         }
         AgentKind.DEEPSEEK_HARNESS -> buildList {
             add(ProviderKind.FREE_MODELS)
+            add(ProviderKind.NINE_ROUTER)
             ProviderKind.entries.forEach { kind ->
-                if (kind != ProviderKind.FREE_MODELS && kind in DEEPSEEK_HARNESS_PROVIDERS) add(kind)
+                if (kind != ProviderKind.FREE_MODELS && kind != ProviderKind.NINE_ROUTER && kind in DEEPSEEK_HARNESS_PROVIDERS) add(kind)
             }
         }
         // Shared Free models + optional API providers; Google OAuth stays a parallel auth path in UI.
         AgentKind.ANTIGRAVITY -> buildList {
             add(ProviderKind.FREE_MODELS)
-            // Same shared API providers as Claude, minus subscription-only Claude login if desired —
-            // Free models first; user can add more later via the shared provider card.
+            add(ProviderKind.NINE_ROUTER)
             ProviderKind.entries.forEach { kind ->
                 if (kind != ProviderKind.FREE_MODELS &&
+                    kind != ProviderKind.NINE_ROUTER &&
                     kind != ProviderKind.OPENCODE_ZEN &&
                     kind != ProviderKind.CLAUDE
                 ) {

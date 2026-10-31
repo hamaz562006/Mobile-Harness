@@ -422,4 +422,17 @@
     <string name="fallback_subtitle_active">On · %1$d backup model(s)</string>
     <string name="fallback_pick_hint">Models from providers you have set up in Agent.</string>
     <string name="fallback_pick_empty">No models available. Configure a provider first.</string>
+
+    <string name="provider_title_nine_router">9Router</string>
+    <string name="provider_subtitle_nine_router">Local OpenAI-compatible router · port 20128</string>
+    <string name="nine_router_section_title">9Router</string>
+    <string name="nine_router_section_subtitle">Install and run the local model router</string>
+    <string name="nine_router_need_runtime">Install the Linux runtime first.</string>
+    <string name="nine_router_install">Install 9Router</string>
+    <string name="nine_router_start">Start</string>
+    <string name="nine_router_stop">Stop</string>
+    <string name="nine_router_add_provider">Add to providers</string>
+    <string name="nine_router_refresh_provider">Refresh provider link</string>
+    <string name="nine_router_help">After install + Start, Add to providers auto-creates an OpenAI-compatible provider at http://127.0.0.1:20128/v1. Connect upstream models in the 9Router dashboard. Up to 20 API keys per provider with rotation.</string>
+
 </resources>

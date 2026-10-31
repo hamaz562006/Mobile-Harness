@@ -77,6 +77,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -100,6 +101,9 @@ import com.jarves.mh.data.ApiKeyInfo
 import com.jarves.mh.model.AgentKind
 import com.jarves.mh.model.DSH_PROTOCOL_PROVIDERS
 import com.jarves.mh.model.ProviderKind
+import com.jarves.mh.router.NineRouterManager
+import com.jarves.mh.router.NineRouterPhase
+import com.jarves.mh.router.NineRouterState
 import com.jarves.mh.model.ProviderProfile
 import com.jarves.mh.model.defaultDshApiForProvider
 import com.jarves.mh.model.inferredDshApiForUrl
@@ -198,6 +202,11 @@ fun AgentScreen(
     onRefreshAntigravityModels: () -> Unit = {},
     onSetAntigravityModel: (String) -> Unit = {},
     onSetAntigravityEffort: (String) -> Unit = {},
+    nineRouter: NineRouterManager? = null,
+    onNineRouterInstall: () -> Unit = {},
+    onNineRouterStart: () -> Unit = {},
+    onNineRouterStop: () -> Unit = {},
+    onNineRouterConnect: (((Boolean, String?) -> Unit) -> Unit) = {},
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -1146,6 +1155,21 @@ fun AgentScreen(
                                 isValidating = false
                             }
                         },
+                    )
+                }
+            }
+
+            // ── Shared: 9Router local gateway ──
+            item {
+                if (viewedAgentInstalled && viewedAgent == state.agentKind && nineRouter != null) {
+                    val nrState by nineRouter.state.collectAsState()
+                    NineRouterCard(
+                        state = nrState,
+                        busy = nrState.busy,
+                        onInstall = onNineRouterInstall,
+                        onStart = onNineRouterStart,
+                        onStop = onNineRouterStop,
+                        onConnect = { onNineRouterConnect { _, _ -> } },
                     )
                 }
             }
@@ -2279,4 +2303,84 @@ private fun defaultModelsForProvider(kind: ProviderKind, context: android.conten
     else -> if (kind.defaultModel.isNotBlank()) listOf(
         DiscoveredModel(kind.defaultModel, context.getString(R.string.md_model_default, context.getString(kind.titleRes()), kind.defaultModel))
     ) else emptyList()
+}
+
+
+@Composable
+private fun NineRouterCard(
+    state: NineRouterState,
+    busy: Boolean,
+    onInstall: () -> Unit,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    onConnect: () -> Unit,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.nine_router_section_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(
+                stringResource(R.string.nine_router_section_subtitle),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            val statusLine = buildString {
+                append(state.phase.name)
+                state.installedVersion?.let { append(" · v"); append(it) }
+                if (state.detail.isNotBlank()) { append(" · "); append(state.detail) }
+            }
+            Text(statusLine, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            state.error?.let {
+                Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.error, maxLines = 6)
+            }
+            state.notice?.let {
+                Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, maxLines = 4)
+            }
+            Text(
+                stringResource(R.string.nine_router_help),
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 15.sp,
+            )
+            when (state.phase) {
+                NineRouterPhase.NEED_RUNTIME -> {
+                    Text(stringResource(R.string.nine_router_need_runtime), fontSize = 13.sp)
+                }
+                NineRouterPhase.INSTALL, NineRouterPhase.ERROR -> {
+                    Button(onClick = onInstall, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.nine_router_install))
+                    }
+                }
+                NineRouterPhase.READY -> {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        Button(onClick = onStart, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_start))
+                        }
+                        OutlinedButton(onClick = onConnect, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_add_provider))
+                        }
+                    }
+                }
+                NineRouterPhase.RUNNING -> {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = onStop, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_stop))
+                        }
+                        Button(onClick = onConnect, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_add_provider))
+                        }
+                    }
+                }
+                else -> {
+                    if (busy) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                }
+            }
+        }
+    }
 }

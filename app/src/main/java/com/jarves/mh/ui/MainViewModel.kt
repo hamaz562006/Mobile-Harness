@@ -52,6 +52,7 @@ import com.jarves.mh.network.ConnectionValidation
 import com.jarves.mh.network.ModelDiscoveryResult
 import com.jarves.mh.network.ProviderApiClient
 import com.jarves.mh.network.GitHubRepository
+import com.jarves.mh.router.NineRouterManager
 import com.jarves.mh.runtime.ClaudeRuntimeBridge
 import com.jarves.mh.runtime.DshRuntimeBridge
 import com.jarves.mh.runtime.AgentRegistry
@@ -435,6 +436,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         resolveFallbackUpstream = { target -> resolveFallbackUpstream(target) },
     )
     private val installer = RuntimeInstaller(application)
+    val nineRouter = NineRouterManager(application)
     private val antigravityRuntime = AntigravityRuntimeBridge(
         application,
         model = { _state.value.antigravityModel },
@@ -2131,6 +2133,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 activeApiKeyName = keys.firstOrNull(ApiKeyInfo::isActive)?.name,
                 provider = current.provider.copy(hasSecret = keys.isNotEmpty()),
             )
+        }
+    }
+
+
+    fun nineRouterInstall() = nineRouter.install()
+    fun nineRouterStart() = nineRouter.start()
+    fun nineRouterStop() = nineRouter.stop()
+    fun nineRouterConnectProvider(onResult: (Boolean, String?) -> Unit) {
+        nineRouter.connectProvider { ok, err ->
+            if (ok) {
+                val key = nineRouter.lastIntegrationKey.orEmpty()
+                if (key.isNotBlank()) {
+                    addApiKey(ProviderKind.NINE_ROUTER, "1code-harness", key)
+                    val profile = ProviderProfile(
+                        kind = ProviderKind.NINE_ROUTER,
+                        baseUrl = NineRouterManager.API,
+                        model = ProviderKind.NINE_ROUTER.defaultModel,
+                    )
+                    stashProvider(profile, key)
+                }
+            }
+            onResult(ok, err)
         }
     }
 

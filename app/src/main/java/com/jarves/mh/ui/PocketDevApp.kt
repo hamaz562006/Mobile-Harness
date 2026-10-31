@@ -2553,6 +2553,11 @@ private fun RootScreenHost(
                     onRefreshAntigravityModels = viewModel::refreshAntigravityModels,
                     onSetAntigravityModel = viewModel::setAntigravityModel,
                     onSetAntigravityEffort = viewModel::setAntigravityEffort,
+                    nineRouter = viewModel.nineRouter,
+                    onNineRouterInstall = viewModel::nineRouterInstall,
+                    onNineRouterStart = viewModel::nineRouterStart,
+                    onNineRouterStop = viewModel::nineRouterStop,
+                    onNineRouterConnect = viewModel::nineRouterConnectProvider,
                 )
                 RootScreen.SETTINGS -> SettingsScreen(
                     state = state,

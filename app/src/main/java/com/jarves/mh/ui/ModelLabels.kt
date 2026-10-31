@@ -28,6 +28,7 @@ fun ProviderKind.titleRes(): Int = when (this) {
     ProviderKind.NVIDIA_NIM -> R.string.provider_title_nvidia
     ProviderKind.FREE_MODELS -> R.string.provider_title_free_models
     ProviderKind.CUSTOM -> R.string.provider_title_custom
+    ProviderKind.NINE_ROUTER -> R.string.provider_title_nine_router
 }
 
 @StringRes
@@ -40,6 +41,7 @@ fun ProviderKind.subtitleRes(): Int = when (this) {
     ProviderKind.OPENCODE_ZEN -> R.string.provider_subtitle_opencode
     ProviderKind.NVIDIA_NIM -> R.string.provider_subtitle_nvidia
     ProviderKind.FREE_MODELS -> R.string.provider_subtitle_free_models
+    ProviderKind.NINE_ROUTER -> R.string.provider_subtitle_nine_router
 }
 
 @StringRes

@@ -26,7 +26,7 @@ object FallbackChain {
     }
 
     fun openAiCompatible(kind: ProviderKind, dshApi: String = ""): Boolean {
-        if (kind == ProviderKind.FREE_MODELS) return true
+        if (kind == ProviderKind.FREE_MODELS || kind == ProviderKind.NINE_ROUTER) return true
         if (kind == ProviderKind.NVIDIA_NIM) return true
         val api = dshApi.ifBlank {
             when (kind) {
