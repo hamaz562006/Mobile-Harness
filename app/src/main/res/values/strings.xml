@@ -409,8 +409,8 @@
     <string name="fallback_retries">Retries before switching</string>
     <string name="fallback_retries_value">%1$d retries</string>
     <string name="fallback_policy_note">Quota exhausted: switch immediately. Temporary failures: retry first. A partial response is kept for review.</string>
-    <string name="fallback_show_privacy">Privacy & routing</string>
-    <string name="fallback_hide_privacy">Hide privacy & routing</string>
+    <string name="fallback_show_privacy">Privacy &amp; routing</string>
+    <string name="fallback_hide_privacy">Hide privacy &amp; routing</string>
     <string name="fallback_privacy_off">No default chain is enabled. Connected-account and subagent settings still apply. Data retention follows each provider's policy; this setting does not guarantee ZDR.</string>
     <string name="fallback_privacy_on">Only your selected connection and the models in this chain are used for automatic switching. Data retention follows each provider's policy; this setting does not guarantee ZDR.</string>
     <string name="fallback_same_provider">Stay within selected provider</string>
