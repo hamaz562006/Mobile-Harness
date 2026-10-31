@@ -28,8 +28,20 @@ object ProviderCatalog {
                 if (kind != ProviderKind.FREE_MODELS && kind in DEEPSEEK_HARNESS_PROVIDERS) add(kind)
             }
         }
-        // Antigravity authenticates with Google only — no API provider list.
-        AgentKind.ANTIGRAVITY -> emptyList()
+        // Shared Free models + optional API providers; Google OAuth stays a parallel auth path in UI.
+        AgentKind.ANTIGRAVITY -> buildList {
+            add(ProviderKind.FREE_MODELS)
+            // Same shared API providers as Claude, minus subscription-only Claude login if desired —
+            // Free models first; user can add more later via the shared provider card.
+            ProviderKind.entries.forEach { kind ->
+                if (kind != ProviderKind.FREE_MODELS &&
+                    kind != ProviderKind.OPENCODE_ZEN &&
+                    kind != ProviderKind.CLAUDE
+                ) {
+                    add(kind)
+                }
+            }
+        }
     }
 
     fun supports(agent: AgentKind, kind: ProviderKind): Boolean =

@@ -448,7 +448,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         changeControl = agentPlatform.changeControl,
     )
     private val agentRegistry = AgentRegistry.builtIns(claudeRuntime, dshRuntime, antigravityRuntime)
-    private fun activeRuntime(): com.jarves.mh.runtime.RuntimeBridge = agentRegistry.require(_state.value.agentKind).runtime
+    private fun activeRuntime(): com.jarves.mh.runtime.RuntimeBridge {
+        val agent = _state.value.agentKind
+        val provider = _state.value.provider
+        // Shared feature path: Free models (and other OpenAI-compatible providers) work for every
+        // agent — including Antigravity — via Claude/DSH drivers that host LocalFormatGateway + Fallbacks.
+        // Antigravity's Google OAuth path stays on AntigravityRuntimeBridge when not using those providers.
+        val sharedApi = provider.kind == ProviderKind.FREE_MODELS ||
+            com.jarves.mh.runtime.FallbackChain.openAiCompatible(provider.kind, provider.dshApi)
+        if (agent == AgentKind.ANTIGRAVITY && sharedApi) {
+            val installed = _state.value.installedAgentVersions
+            return when {
+                installed.containsKey(AgentKind.CLAUDE_CODE) -> claudeRuntime
+                installed.containsKey(AgentKind.DEEPSEEK_HARNESS) -> dshRuntime
+                else -> claudeRuntime
+            }
+        }
+        return agentRegistry.require(agent).runtime
+    }
     private val providerApi = ProviderApiClient(application)
     private fun appUpdater(): AppUpdater = AppUpdater(
         getApplication(),

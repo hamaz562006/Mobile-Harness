@@ -959,11 +959,9 @@ fun AgentScreen(
                 }
             }
 
-            // ── 2. Primary Configuration Card (Antigravity OR Provider) ──
+            // ── 2a. Antigravity Google account (parallel auth; Free models uses shared provider card below) ──
             item {
-                if (!viewedAgentInstalled || viewedAgent != state.agentKind) {
-                    // Installation/selection guidance is shown directly below the tabs.
-                } else if (state.agentKind == AgentKind.ANTIGRAVITY) {
+                if (viewedAgentInstalled && viewedAgent == state.agentKind && state.agentKind == AgentKind.ANTIGRAVITY) {
                     AgentAntigravityCard(
                         state = state,
                         code = antigravityCode,
@@ -976,7 +974,14 @@ fun AgentScreen(
                         onSetEffort = onSetAntigravityEffort,
                         onTest = onPing,
                     )
-                } else {
+                }
+            }
+
+            // ── 2b. Shared providers (Free models + API keys) for every agent including Antigravity ──
+            item {
+                if (!viewedAgentInstalled || viewedAgent != state.agentKind) {
+                    // Installation/selection guidance is shown directly below the tabs.
+                } else if (providersForAgent(state.agentKind).isNotEmpty()) {
                     AgentProviderCard(
                         onTest = onPing,
                         state = state,
@@ -1155,8 +1160,13 @@ fun AgentScreen(
                         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                             FallbackEditorSection(
                                 policy = state.fallbackPolicy,
-                                configuredProviders = configuredProviderKinds.ifEmpty {
-                                    setOf(selectedKind)
+                                configuredProviders = run {
+                                    val allowed = providersForAgent(state.agentKind).toSet()
+                                    val configured = (configuredProviderKinds + selectedKind + setOf(ProviderKind.FREE_MODELS))
+                                        .filter { it in allowed }
+                                        .toSet()
+                                    configured.ifEmpty { setOf(ProviderKind.FREE_MODELS).filter { it in allowed }.toSet() }
+                                        .ifEmpty { allowed }
                                 },
                                 currentProvider = selectedKind,
                                 currentModels = models,

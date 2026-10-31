@@ -175,7 +175,13 @@ private suspend fun stopAfterTerminalResult(process: Process) {
     }
 }
 
+/**
+ * Native Google OAuth path for Antigravity CLI.
+ * Shared Free models / OpenAI-compatible providers are handled by [MainViewModel.activeRuntime]
+ * routing to Claude/DSH drivers so Fallbacks stay one shared feature.
+ */
 class AntigravityRuntimeBridge(
+
     private val context: Context,
     private val model: () -> String,
     private val effort: () -> String,
