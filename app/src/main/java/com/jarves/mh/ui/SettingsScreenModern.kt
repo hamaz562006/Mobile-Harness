@@ -552,15 +552,6 @@ fun SettingsScreen(
                 }
             }
 
-            if (BuildConfig.DEBUG) {
-                item {
-                    DebugUpdateChannelSection(
-                        initialUrl = initialDebugUpdateManifestUrl,
-                        onSave = onSetDebugUpdateManifestUrl,
-                        onClear = onClearDebugUpdateManifestUrl,
-                    )
-                }
-            }
 
             item {
                 Surface(
@@ -1142,69 +1133,6 @@ private fun RuntimeInfoRow(label: String, value: String) {
         Text(value, fontWeight = FontWeight.Medium, fontSize = 13.sp)
     }
 }
-
-@Composable
-private fun DebugUpdateChannelSection(
-    initialUrl: String,
-    onSave: (String) -> Unit,
-    onClear: () -> Unit,
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    var url by rememberSaveable(initialUrl) { mutableStateOf(initialUrl) }
-    val isOverridden = initialUrl.isNotBlank()
-    SettingsAccordion(
-        title = stringResource(R.string.st_update_channel),
-        subtitle = if (isOverridden) stringResource(R.string.st_update_channel_overridden) else stringResource(R.string.st_update_channel_default),
-        icon = Icons.Default.Tune,
-        expanded = expanded,
-        onClick = { expanded = !expanded },
-    ) {
-        Text(
-            stringResource(R.string.st_update_channel_help),
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = url,
-            onValueChange = { url = it },
-            label = { Text(stringResource(R.string.st_manifest_url)) },
-            placeholder = { Text("https://your-tunnel.example/mobile-harness-update.json") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(8.dp))
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Button(
-                onClick = { onSave(url) },
-                enabled = url.startsWith("https://"),
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(if (isOverridden) stringResource(R.string.st_replace) else stringResource(R.string.st_use_and_check))
-            }
-            OutlinedButton(
-                onClick = onClear,
-                enabled = isOverridden,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.st_reset))
-            }
-        }
-        if (isOverridden) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                stringResource(R.string.st_current_url, initialUrl),
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
 
 @Composable
 private fun ReliabilitySettingsPanel() {
