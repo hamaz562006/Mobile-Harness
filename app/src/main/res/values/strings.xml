@@ -401,7 +401,7 @@
     <string name="accent_antigravity">Antigravity</string>
     <string name="accent_orange">Orange</string>
     <string name="fallback_title">Fallbacks</string>
-    <string name="fallback_subtitle">Default for chats</string>
+    <string name="fallback_subtitle">Default for Harness</string>
     <string name="fallback_automatic">Automatic fallbacks</string>
     <string name="fallback_help">Your selected model runs first. These models are tried next, in order.</string>
     <string name="fallback_none">No backup models added.</string>
@@ -419,4 +419,7 @@
     <string name="fallback_pick_title">Add backup model</string>
     <string name="fallback_pick_provider">Provider</string>
     <string name="fallback_pick_model">Model</string>
+    <string name="fallback_subtitle_active">On · %1$d backup model(s)</string>
+    <string name="fallback_pick_hint">Models from providers you have set up in Agent.</string>
+    <string name="fallback_pick_empty">No models available. Configure a provider first.</string>
 </resources>

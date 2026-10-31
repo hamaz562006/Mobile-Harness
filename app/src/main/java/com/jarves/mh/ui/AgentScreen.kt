@@ -1818,8 +1818,9 @@ private fun AgentProviderCard(
             Spacer(Modifier.height(12.dp))
             FallbackEditorSection(
                 policy = fallbackPolicy,
-                availableProviders = visibleKinds,
-                discoveredModels = models,
+                configuredProviders = configuredProviderKinds.ifEmpty { setOf(selectedKind) },
+                currentProvider = selectedKind,
+                currentModels = models,
                 onSave = onSaveFallbackPolicy,
             )
             Spacer(Modifier.height(8.dp))

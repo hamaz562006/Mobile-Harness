@@ -402,7 +402,7 @@
     <string name="accent_antigravity">آنتی‌گراویتی</string>
     <string name="accent_orange">نارنجی</string>
     <string name="fallback_title">Fallbackها</string>
-    <string name="fallback_subtitle">پیش‌فرض برای چت‌ها</string>
+    <string name="fallback_subtitle">Default for Harness</string>
     <string name="fallback_automatic">Fallback خودکار</string>
     <string name="fallback_help">ابتدا مدل انتخاب‌شده اجرا می‌شود. این مدل‌ها به ترتیب بعدی امتحان می‌شوند.</string>
     <string name="fallback_none">مدل پشتیبان اضافه نشده است.</string>
@@ -420,4 +420,7 @@
     <string name="fallback_pick_title">افزودن مدل پشتیبان</string>
     <string name="fallback_pick_provider">پروایدر</string>
     <string name="fallback_pick_model">مدل</string>
+    <string name="fallback_subtitle_active">فعال · %1$d مدل پشتیبان</string>
+    <string name="fallback_pick_hint">مدل‌های پروایدرهایی که در Agent تنظیم کرده‌اید.</string>
+    <string name="fallback_pick_empty">مدلی نیست. ابتدا یک پروایدر تنظیم کنید.</string>
 </resources>
