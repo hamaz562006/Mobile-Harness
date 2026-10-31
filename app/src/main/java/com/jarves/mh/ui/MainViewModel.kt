@@ -424,6 +424,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         application,
         secretFor = { profile -> vault.get(profile.kind.name) },
         changeControl = agentPlatform.changeControl,
+        fallbackPolicy = { _state.value.fallbackPolicy },
+        resolveFallbackUpstream = { target -> resolveFallbackUpstream(target) },
     )
     private val dshRuntime = DshRuntimeBridge(
         application,
@@ -2016,6 +2018,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val next = if (policy.valid()) policy else com.jarves.mh.model.FallbackPolicy()
         preferences.fallbackPolicyJson = com.jarves.mh.model.FallbackPolicy.encode(next)
         _state.update { it.copy(fallbackPolicy = next) }
+    }
+
+    /**
+     * Resolve a Fallbacks target to an upstream the local format gateway can call.
+     * Free models stay keyless; other providers need a saved API key.
+     */
+    private fun resolveFallbackUpstream(
+        target: com.jarves.mh.model.FallbackTarget,
+    ): com.jarves.mh.runtime.LocalFormatGateway.FallbackUpstream? {
+        val kind = runCatching { ProviderKind.valueOf(target.providerId) }.getOrNull() ?: return null
+        val model = target.model.trim()
+        if (model.isBlank()) return null
+        val baseUrl = when (kind) {
+            ProviderKind.FREE_MODELS -> com.jarves.mh.model.FreeModelCatalog.baseUrlFor(model)
+            else -> {
+                val stored = loadProviderKind(kind)
+                stored.baseUrl.ifBlank { kind.defaultBaseUrl }
+            }
+        }.trim().trimEnd('/')
+        if (baseUrl.isBlank()) return null
+        val key = when (kind) {
+            ProviderKind.FREE_MODELS -> vault.get(kind.name).orEmpty().ifBlank { "keyless" }
+            else -> vault.get(kind.name).orEmpty()
+        }
+        if (kind != ProviderKind.FREE_MODELS && key.isBlank()) return null
+        return com.jarves.mh.runtime.LocalFormatGateway.FallbackUpstream(
+            baseUrl = baseUrl,
+            model = model,
+            apiKey = key,
+            label = "${kind.name}/$model",
+        )
     }
 
     fun setLanguage(code: String) {

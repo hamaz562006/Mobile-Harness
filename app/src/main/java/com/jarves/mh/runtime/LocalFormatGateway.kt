@@ -15,11 +15,26 @@ import java.util.concurrent.atomic.AtomicBoolean
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Small loopback-only Anthropic-to-OpenAI compatibility bridge for Claude Code. */
+/**
+ * Small loopback-only Anthropic-to-OpenAI compatibility bridge for Claude Code.
+ *
+ * When [fallbackEnabled] and [fallbackChain] are set, upstream quota/rate-limit/5xx
+ * errors walk the backup models in order (with retries for temporary failures).
+ */
 internal class LocalFormatGateway(
     private val profile: ProviderProfile,
     private val apiKey: String,
+    private val fallbackEnabled: Boolean = false,
+    private val fallbackRetries: Int = 3,
+    private val fallbackChain: List<FallbackUpstream> = emptyList(),
 ) : AutoCloseable {
+
+    data class FallbackUpstream(
+        val baseUrl: String,
+        val model: String,
+        val apiKey: String,
+        val label: String = model,
+    )
     private val running = AtomicBoolean(true)
     private val server = ServerSocket(0, 8, InetAddress.getByName("127.0.0.1"))
     val url: String = "http://127.0.0.1:${server.localPort}"
@@ -175,7 +190,52 @@ internal class LocalFormatGateway(
     }
 
     private fun callProvider(body: JSONObject): Pair<Int, String> {
-        val endpoint = profile.baseUrl.trimEnd('/') + "/chat/completions"
+        val primary = FallbackUpstream(
+            baseUrl = profile.baseUrl,
+            model = profile.model,
+            apiKey = apiKey,
+            label = profile.model,
+        )
+        val chain = buildList {
+            add(primary)
+            if (fallbackEnabled) {
+                fallbackChain.forEach { candidate ->
+                    if (candidate.baseUrl.isNotBlank() && candidate.model.isNotBlank() &&
+                        (candidate.baseUrl != primary.baseUrl || candidate.model != primary.model)
+                    ) {
+                        add(candidate)
+                    }
+                }
+            }
+        }
+        var last: Pair<Int, String> = 502 to errorJson("api_error", "No upstream attempted")
+        for ((index, upstream) in chain.withIndex()) {
+            val attempts = if (fallbackEnabled) (fallbackRetries + 1).coerceIn(1, 6) else 1
+            var attempt = 0
+            while (attempt < attempts) {
+                attempt++
+                val requestBody = JSONObject(body.toString()).put("model", normalizeModel(upstream.model))
+                last = callUpstreamOnce(upstream, requestBody)
+                val code = last.first
+                if (code in 200..299) {
+                    if (index > 0) {
+                        Log.i(TAG, "Fallback succeeded with ${upstream.label} after primary failure")
+                    }
+                    return last
+                }
+                val quota = isQuotaExhausted(code, last.second)
+                val temporary = isTemporaryFailure(code, last.second)
+                Log.w(TAG, "Upstream ${upstream.label} failed code=$code attempt=$attempt/$attempts quota=$quota temp=$temporary")
+                if (quota) break // switch immediately to next model
+                if (!temporary) break // non-retryable
+                // temporary: retry same upstream before switching
+            }
+        }
+        return last
+    }
+
+    private fun callUpstreamOnce(upstream: FallbackUpstream, body: JSONObject): Pair<Int, String> {
+        val endpoint = upstream.baseUrl.trimEnd('/') + "/chat/completions"
         if (!com.jarves.mh.network.LocalNetwork.isPlainHttpAllowed(endpoint)) {
             return 400 to errorJson("invalid_request_error", "Plain http:// is only allowed for local network addresses")
         }
@@ -186,15 +246,35 @@ internal class LocalFormatGateway(
             connection.readTimeout = 180_000
             connection.doOutput = true
             connection.setRequestProperty("Content-Type", "application/json")
-            connection.setRequestProperty("Authorization", "Bearer $apiKey")
+            val key = upstream.apiKey.trim()
+            if (key.isNotBlank() && !key.equals("keyless", ignoreCase = true)) {
+                connection.setRequestProperty("Authorization", "Bearer $key")
+            }
             connection.outputStream.use { it.write(body.toString().toByteArray()) }
             val code = connection.responseCode
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
-            code to stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            code to text
         } finally {
             connection.disconnect()
         }
     }
+
+    private fun isQuotaExhausted(code: Int, body: String): Boolean {
+        if (code == 402) return true
+        if (code != 429) return false
+        val lower = body.lowercase()
+        return listOf("quota", "insufficient", "billing", "credit", "balance", "limit exceeded", "rate limit exceeded")
+            .any { it in lower }
+    }
+
+    private fun isTemporaryFailure(code: Int, body: String): Boolean {
+        if (code in setOf(408, 425, 429, 500, 502, 503, 504, 529)) return true
+        val lower = body.lowercase()
+        return listOf("timeout", "temporarily", "overloaded", "try again", "unavailable", "capacity")
+            .any { it in lower }
+    }
+
 
     private fun writeStream(output: BufferedOutputStream, message: JSONObject) {
         val headers = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n"
@@ -281,6 +361,7 @@ internal class LocalFormatGateway(
     }
 
     private companion object {
+        private const val TAG = "LocalFormatGateway"
         const val MAX_REQUEST_BYTES = 8 * 1024 * 1024
         const val SOCKET_TIMEOUT_MS = 30_000
     }

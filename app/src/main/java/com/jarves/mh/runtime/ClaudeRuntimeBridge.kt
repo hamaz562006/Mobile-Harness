@@ -70,6 +70,8 @@ class ClaudeRuntimeBridge(
     private val context: Context,
     private val secretFor: (ProviderProfile) -> String?,
     private val changeControl: SharedChangeControl,
+    private val fallbackPolicy: () -> com.jarves.mh.model.FallbackPolicy = { com.jarves.mh.model.FallbackPolicy() },
+    private val resolveFallbackUpstream: (com.jarves.mh.model.FallbackTarget) -> LocalFormatGateway.FallbackUpstream? = { null },
 ) : RuntimeBridge {
     private val installer = RuntimeInstaller(context)
     private val checkpoints = changeControl.checkpoints
@@ -148,7 +150,27 @@ class ClaudeRuntimeBridge(
             formatGateway = if (provider.kind.protocol in setOf(
                     com.jarves.mh.model.ProviderProtocol.OPENAI_CHAT,
                     com.jarves.mh.model.ProviderProtocol.OPENAI_RESPONSES,
-                )) LocalFormatGateway(provider, secret).start() else null
+                )) {
+                    val policy = fallbackPolicy()
+                    val chain = if (policy.enabled && policy.valid()) {
+                        policy.targets.mapNotNull { target ->
+                            if (policy.sameProviderOnly && target.providerId != provider.kind.name) {
+                                null
+                            } else {
+                                resolveFallbackUpstream(target)
+                            }
+                        }
+                    } else {
+                        emptyList()
+                    }
+                    LocalFormatGateway(
+                        profile = provider,
+                        apiKey = secret,
+                        fallbackEnabled = policy.enabled && policy.valid() && chain.isNotEmpty(),
+                        fallbackRetries = policy.retries,
+                        fallbackChain = chain,
+                    ).start()
+                } else null
             openRouterGateway = if (
                 provider.kind == ProviderKind.LLM_ROUTER && provider.openRouterProviders.isNotEmpty()
             ) OpenRouterRoutingGateway(provider, secret).start() else null
