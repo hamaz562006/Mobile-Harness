@@ -232,7 +232,7 @@ fun SettingsScreen(
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding).imePadding(),
-            contentPadding = PaddingValues(horizontal = 18.dp, top = 10.dp, bottom = 28.dp),
+            contentPadding = PaddingValues(start = 18.dp, top = 10.dp, end = 18.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
 

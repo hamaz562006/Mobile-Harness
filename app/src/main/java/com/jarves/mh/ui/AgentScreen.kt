@@ -804,7 +804,7 @@ fun AgentScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .imePadding(),
-            contentPadding = PaddingValues(horizontal = 16.dp, top = 10.dp, bottom = 28.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // ── 1. Compact 3-Way Segmented Engine Selector ──
