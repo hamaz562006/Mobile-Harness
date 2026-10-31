@@ -380,7 +380,8 @@ class AgentProviderPresetTest {
         assertTrue(ProviderKind.DEEPSEEK in DEEPSEEK_HARNESS_PROVIDERS)
         assertTrue(ProviderKind.NVIDIA_NIM in DEEPSEEK_HARNESS_PROVIDERS)
         assertTrue(ProviderKind.FREE_MODELS in DEEPSEEK_HARNESS_PROVIDERS)
-        assertEquals(8, DEEPSEEK_HARNESS_PROVIDERS.size)
+        assertTrue(ProviderKind.NINE_ROUTER in DEEPSEEK_HARNESS_PROVIDERS)
+        assertEquals(9, DEEPSEEK_HARNESS_PROVIDERS.size)
     }
 
     @Test
