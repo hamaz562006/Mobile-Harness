@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -124,7 +125,7 @@ import com.jarves.mh.ui.theme.AccentColor
 import com.jarves.mh.ui.theme.AppThemeMode
 import kotlinx.coroutines.launch
 
-private enum class SettingsSection { APPEARANCE, LANGUAGE, RELIABILITY, TOOLS, RUNTIME, DIAGNOSTICS, UPDATE_CHANNEL }
+private enum class SettingsSection { APPEARANCE, LANGUAGE, RELIABILITY, TOOLS, RUNTIME, DIAGNOSTICS }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -191,6 +192,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 modifier = Modifier.padding(top = 8.dp),
@@ -230,7 +232,7 @@ fun SettingsScreen(
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding).imePadding(),
-            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
+            contentPadding = PaddingValues(horizontal = 18.dp, top = 10.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
 

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -733,6 +734,7 @@ fun AgentScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 modifier = Modifier.padding(top = 4.dp),
@@ -802,7 +804,7 @@ fun AgentScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .imePadding(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, top = 10.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // ── 1. Compact 3-Way Segmented Engine Selector ──
