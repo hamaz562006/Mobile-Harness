@@ -427,6 +427,7 @@
     <string name="provider_subtitle_nine_router">Local OpenAI-compatible router · port 20128</string>
     <string name="nine_router_section_title">9Router</string>
     <string name="nine_router_section_subtitle">Install and run the local model router</string>
+    <string name="nine_router_install_runtime">Install Linux runtime</string>
     <string name="nine_router_need_runtime">Install the Linux runtime first.</string>
     <string name="nine_router_install">Install 9Router</string>
     <string name="nine_router_start">Start</string>

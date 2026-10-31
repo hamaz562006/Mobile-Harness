@@ -2266,6 +2266,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (setupCompletionHandled) return
                 setupCompletionHandled = true
                 preferences.runtimeSetupComplete = true
+                nineRouter.refresh()
                 viewModelScope.launch {
                     val (installedStacks, installedAgents) = withContext(Dispatchers.IO) {
                         installer.installedStacks() to installer.installedAgentVersions()

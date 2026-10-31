@@ -71,6 +71,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -204,6 +205,7 @@ fun AgentScreen(
     onSetAntigravityEffort: (String) -> Unit = {},
     nineRouter: NineRouterManager? = null,
     onNineRouterInstall: () -> Unit = {},
+    onNineRouterInstallRuntime: () -> Unit = {},
     onNineRouterStart: () -> Unit = {},
     onNineRouterStop: () -> Unit = {},
     onNineRouterConnect: (((Boolean, String?) -> Unit) -> Unit) = {},
@@ -1162,11 +1164,13 @@ fun AgentScreen(
             // ── Shared: 9Router local gateway ──
             item {
                 if (viewedAgentInstalled && viewedAgent == state.agentKind && nineRouter != null) {
+                    LaunchedEffect(nineRouter) { nineRouter.refresh() }
                     val nrState by nineRouter.state.collectAsState()
                     NineRouterCard(
                         state = nrState,
                         busy = nrState.busy,
                         onInstall = onNineRouterInstall,
+                        onInstallRuntime = onNineRouterInstallRuntime,
                         onStart = onNineRouterStart,
                         onStop = onNineRouterStop,
                         onConnect = { onNineRouterConnect { _, _ -> } },
@@ -2311,6 +2315,7 @@ private fun NineRouterCard(
     state: NineRouterState,
     busy: Boolean,
     onInstall: () -> Unit,
+    onInstallRuntime: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onConnect: () -> Unit,
@@ -2349,6 +2354,13 @@ private fun NineRouterCard(
             when (state.phase) {
                 NineRouterPhase.NEED_RUNTIME -> {
                     Text(stringResource(R.string.nine_router_need_runtime), fontSize = 13.sp)
+                    Button(
+                        onClick = onInstallRuntime,
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.nine_router_install_runtime))
+                    }
                 }
                 NineRouterPhase.INSTALL, NineRouterPhase.ERROR -> {
                     Button(onClick = onInstall, enabled = !busy, modifier = Modifier.fillMaxWidth()) {

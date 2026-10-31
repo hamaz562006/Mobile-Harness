@@ -2555,6 +2555,7 @@ private fun RootScreenHost(
                     onSetAntigravityEffort = viewModel::setAntigravityEffort,
                     nineRouter = viewModel.nineRouter,
                     onNineRouterInstall = viewModel::nineRouterInstall,
+                    onNineRouterInstallRuntime = viewModel::startRuntimeSetup,
                     onNineRouterStart = viewModel::nineRouterStart,
                     onNineRouterStop = viewModel::nineRouterStop,
                     onNineRouterConnect = viewModel::nineRouterConnectProvider,
