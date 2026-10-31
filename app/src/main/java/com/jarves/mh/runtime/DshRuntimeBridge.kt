@@ -46,6 +46,8 @@ class DshRuntimeBridge(
     private val context: Context,
     private val secretFor: (ProviderProfile) -> String?,
     private val changeControl: SharedChangeControl,
+    private val fallbackPolicy: () -> com.jarves.mh.model.FallbackPolicy = { com.jarves.mh.model.FallbackPolicy() },
+    private val resolveFallbackUpstream: (com.jarves.mh.model.FallbackTarget) -> FallbackUpstream? = { null },
 ) : RuntimeBridge {
     private val installer = RuntimeInstaller(context)
     private val checkpoints = changeControl.checkpoints
@@ -89,6 +91,7 @@ class DshRuntimeBridge(
         }
 
         var openRouterGateway: OpenRouterRoutingGateway? = null
+        var formatGateway: LocalFormatGateway? = null
         runCatching {
             RuntimeTaskController.stopAction = {
                 userStopRequested = true
@@ -114,10 +117,29 @@ class DshRuntimeBridge(
             openRouterGateway = if (
                 provider.kind == ProviderKind.LLM_ROUTER && provider.openRouterProviders.isNotEmpty()
             ) OpenRouterRoutingGateway(provider, secret).start() else null
-            val route = if (openRouterGateway != null && baseRoute.custom != null) {
-                baseRoute.copy(custom = baseRoute.custom.copy(baseUrl = openRouterGateway!!.url))
-            } else {
-                baseRoute
+            val policy = fallbackPolicy()
+            val (fallbackOn, chain) = FallbackChain.build(provider, policy, resolveFallbackUpstream)
+            // Shared Fallbacks: any OpenAI-compatible DSH route (Free models, NIM, custom openai-*)
+            // goes through LocalFormatGateway so the same chain works for every agent.
+            if (
+                openRouterGateway == null &&
+                baseRoute.custom != null &&
+                FallbackChain.openAiCompatible(provider.kind, provider.dshApi)
+            ) {
+                formatGateway = LocalFormatGateway(
+                    profile = provider,
+                    apiKey = secret,
+                    fallbackEnabled = fallbackOn,
+                    fallbackRetries = policy.retries,
+                    fallbackChain = chain,
+                ).start()
+            }
+            val route = when {
+                openRouterGateway != null && baseRoute.custom != null ->
+                    baseRoute.copy(custom = baseRoute.custom.copy(baseUrl = openRouterGateway!!.url))
+                formatGateway != null && baseRoute.custom != null ->
+                    baseRoute.copy(custom = baseRoute.custom.copy(baseUrl = formatGateway!!.url + "/v1"))
+                else -> baseRoute
             }
             writeDshSettings(installed.rootfs, route, provider)
             val environment = linkedMapOf(
@@ -195,6 +217,7 @@ class DshRuntimeBridge(
             }
         }
         openRouterGateway?.close()
+        formatGateway?.close()
         activeProcess = null
         activeSessionId = null
         RuntimeTaskController.stopAction = null

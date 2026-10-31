@@ -152,21 +152,11 @@ class ClaudeRuntimeBridge(
                     com.jarves.mh.model.ProviderProtocol.OPENAI_RESPONSES,
                 )) {
                     val policy = fallbackPolicy()
-                    val chain = if (policy.enabled && policy.valid()) {
-                        policy.targets.mapNotNull { target ->
-                            if (policy.sameProviderOnly && target.providerId != provider.kind.name) {
-                                null
-                            } else {
-                                resolveFallbackUpstream(target)
-                            }
-                        }
-                    } else {
-                        emptyList()
-                    }
+                    val (on, chain) = FallbackChain.build(provider, policy, resolveFallbackUpstream)
                     LocalFormatGateway(
                         profile = provider,
                         apiKey = secret,
-                        fallbackEnabled = policy.enabled && policy.valid() && chain.isNotEmpty(),
+                        fallbackEnabled = on,
                         fallbackRetries = policy.retries,
                         fallbackChain = chain,
                     ).start()

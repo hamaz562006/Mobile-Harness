@@ -431,6 +431,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         application,
         secretFor = { profile -> vault.get(profile.kind.name) },
         changeControl = agentPlatform.changeControl,
+        fallbackPolicy = { _state.value.fallbackPolicy },
+        resolveFallbackUpstream = { target -> resolveFallbackUpstream(target) },
     )
     private val installer = RuntimeInstaller(application)
     private val antigravityRuntime = AntigravityRuntimeBridge(

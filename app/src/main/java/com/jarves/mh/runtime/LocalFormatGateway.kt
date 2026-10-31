@@ -78,22 +78,36 @@ internal class LocalFormatGateway(
             writeJson(output, 200, JSONObject().put("input_tokens", approximate).toString())
             return
         }
-        if (!path.endsWith("/messages")) {
-            writeJson(output, 404, errorJson("not_found", "Unsupported gateway endpoint"))
-            return
-        }
-        runCatching {
-            val anthropic = JSONObject(bodyBytes.decodeToString())
-            val upstream = callProvider(toOpenAi(anthropic))
-            if (upstream.first !in 200..299) {
-                Log.w("FormatGateway", "Provider returned HTTP ${upstream.first}: ${providerError(upstream.second)}")
-                writeJson(output, upstream.first, errorJson("api_error", providerError(upstream.second)))
-            } else {
-                val translated = fromOpenAi(JSONObject(upstream.second), anthropic.optString("model", profile.model))
-                if (anthropic.optBoolean("stream", false)) writeStream(output, translated) else writeJson(output, 200, translated.toString())
+        val bodyText = bodyBytes.decodeToString()
+        when {
+            path.endsWith("/messages") -> runCatching {
+                val anthropic = JSONObject(bodyText)
+                val upstream = callProvider(toOpenAi(anthropic))
+                if (upstream.first !in 200..299) {
+                    Log.w(TAG, "Provider returned HTTP ${upstream.first}: ${providerError(upstream.second)}")
+                    writeJson(output, upstream.first, errorJson("api_error", providerError(upstream.second)))
+                } else {
+                    val translated = fromOpenAi(JSONObject(upstream.second), anthropic.optString("model", profile.model))
+                    if (anthropic.optBoolean("stream", false)) writeStream(output, translated) else writeJson(output, 200, translated.toString())
+                }
+            }.onFailure { error ->
+                writeJson(output, 502, errorJson("api_error", error.message ?: "Provider request failed"))
             }
-        }.onFailure { error ->
-            writeJson(output, 502, errorJson("api_error", error.message ?: "Provider request failed"))
+            path.endsWith("/chat/completions") || path.endsWith("/completions") -> runCatching {
+                // OpenAI-compatible clients (e.g. DeepSeek Harness free models) speak
+                // chat/completions directly; still walk the shared Fallbacks chain.
+                val openAi = JSONObject(bodyText)
+                val upstream = callProvider(openAi)
+                if (upstream.first !in 200..299) {
+                    Log.w(TAG, "Provider returned HTTP ${upstream.first}: ${providerError(upstream.second)}")
+                    writeJson(output, upstream.first, errorJson("api_error", providerError(upstream.second)))
+                } else {
+                    writeJson(output, 200, upstream.second)
+                }
+            }.onFailure { error ->
+                writeJson(output, 502, errorJson("api_error", error.message ?: "Provider request failed"))
+            }
+            else -> writeJson(output, 404, errorJson("not_found", "Unsupported gateway endpoint"))
         }
     }
 
