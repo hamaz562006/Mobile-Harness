@@ -21,7 +21,7 @@ import com.jarves.mh.R
 import com.jarves.mh.ui.AppStrings
 
 /** @deprecated Use MaterialTheme.colorScheme.primary — kept as purple fallback only. */
-val PocketOrange = Color(0xFF7C4DFF)
+val PocketOrange = Color(0xFFB39DDB)
 val PocketBlue = Color(0xFF4C8DFF)
 val PocketGreen = Color(0xFF2ECC71)
 val PocketBackground = Color(0xFF0B0F14)
@@ -30,7 +30,7 @@ val PocketSurfaceVariant = Color(0xFF1B222D)
 val PocketOutline = Color(0xFF2A3340)
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF7C4DFF),
+    primary = Color(0xFFB39DDB),
     onPrimary = Color(0xFF241107),
     primaryContainer = Color(0xFF42281D),
     onPrimaryContainer = Color(0xFFFFDDCC),
@@ -49,7 +49,7 @@ private val DarkColors = darkColorScheme(
 )
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF5E35B1),
+    primary = Color(0xFF9575CD),
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFFFE0D2),
     onPrimaryContainer = Color(0xFF451A08),
@@ -106,7 +106,7 @@ enum class AccentColor(
     val light: Color,
 ) {
     /** App default — violet (first install / onboarding) */
-    DEFAULT("default", Color(0xFF7C4DFF), Color(0xFF5E35B1)),
+    DEFAULT("default", Color(0xFFB39DDB), Color(0xFF9575CD)),
     /** Claude / Anthropic warm terracotta */
     CLAUDE("claude", Color(0xFFD97757), Color(0xFFC45C3E)),
     /** DeepSeek blue */

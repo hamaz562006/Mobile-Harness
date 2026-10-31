@@ -179,6 +179,7 @@ fun AgentScreen(
         ProviderProfile(kind, kind.defaultBaseUrl, kind.defaultModel)
     },
     onDiscoverModels: suspend (ProviderProfile, String) -> ModelDiscoveryResult,
+    onSaveFallbackPolicy: (com.jarves.mh.model.FallbackPolicy) -> Unit = {},
     onValidateProvider: suspend (ProviderProfile, String, List<DiscoveredModel>) -> ConnectionValidation,
     onPing: () -> Unit,
     getSavedApiKey: (ProviderKind) -> String,
@@ -716,36 +717,11 @@ fun AgentScreen(
                                     Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Column(Modifier.weight(1f)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            // Model id is the stable primary line (max 1 line).
-                                            Text(
-                                                option.id,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 13.sp,
-                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier.weight(1f, fill = false),
-                                            )
-                                            if (option.isFree) {
-                                                Spacer(Modifier.width(6.dp))
-                                                Text(stringResource(R.string.st_free), color = Color(0xFF58C99C), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-                                        // Optional human label — second line only, never stretch the row.
-                                        if (option.displayName.isNotBlank() &&
-                                            !option.displayName.equals(option.id, ignoreCase = true)
-                                        ) {
-                                            Text(
-                                                option.displayName,
-                                                fontSize = 11.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                            )
-                                        }
-                                    }
+                                    ModelPickerDetails(
+                                        model = option,
+                                        showCurrent = isSelected,
+                                        modifier = Modifier.weight(1f),
+                                    )
                                     AgentSelectionDot(selected = isSelected)
                                 }
                             }
@@ -1106,6 +1082,8 @@ fun AgentScreen(
                             showModels = true
                         },
                         onDiscover = ::discoverModels,
+                        fallbackPolicy = state.fallbackPolicy,
+                        onSaveFallbackPolicy = onSaveFallbackPolicy,
                         onValidate = {
                             scope.launch {
                                 isValidating = true
@@ -1568,6 +1546,8 @@ private fun AgentProviderCard(
     onOpenModelSheet: () -> Unit,
     onDiscover: () -> Unit,
     onValidate: () -> Unit,
+    fallbackPolicy: com.jarves.mh.model.FallbackPolicy = com.jarves.mh.model.FallbackPolicy(),
+    onSaveFallbackPolicy: (com.jarves.mh.model.FallbackPolicy) -> Unit = {},
 ) {
     val visibleKinds = remember(state.agentKind) { providersForAgent(state.agentKind) }
     var connectionExpanded by rememberSaveable(selectedKind) { mutableStateOf(false) }
@@ -1833,6 +1813,16 @@ private fun AgentProviderCard(
                 }
             }
 
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            Spacer(Modifier.height(12.dp))
+            FallbackEditorSection(
+                policy = fallbackPolicy,
+                availableProviders = visibleKinds,
+                discoveredModels = models,
+                onSave = onSaveFallbackPolicy,
+            )
+            Spacer(Modifier.height(8.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
             PremiumSummaryRow(

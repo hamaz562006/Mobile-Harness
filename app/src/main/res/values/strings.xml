@@ -400,4 +400,23 @@
     <string name="accent_deepseek">DeepSeek</string>
     <string name="accent_antigravity">Antigravity</string>
     <string name="accent_orange">Orange</string>
+    <string name="fallback_title">Fallbacks</string>
+    <string name="fallback_subtitle">Default for chats</string>
+    <string name="fallback_automatic">Automatic fallbacks</string>
+    <string name="fallback_help">Your selected model runs first. These models are tried next, in order.</string>
+    <string name="fallback_none">No backup models added.</string>
+    <string name="fallback_add_model">Add model (%1$d/%2$d)</string>
+    <string name="fallback_retries">Retries before switching</string>
+    <string name="fallback_retries_value">%1$d retries</string>
+    <string name="fallback_policy_note">Quota exhausted: switch immediately. Temporary failures: retry first. A partial response is kept for review.</string>
+    <string name="fallback_show_privacy">Privacy & routing</string>
+    <string name="fallback_hide_privacy">Hide privacy & routing</string>
+    <string name="fallback_privacy_off">No default chain is enabled. Connected-account and subagent settings still apply. Data retention follows each provider's policy; this setting does not guarantee ZDR.</string>
+    <string name="fallback_privacy_on">Only your selected connection and the models in this chain are used for automatic switching. Data retention follows each provider's policy; this setting does not guarantee ZDR.</string>
+    <string name="fallback_same_provider">Stay within selected provider</string>
+    <string name="fallback_save">Save fallbacks</string>
+    <string name="fallback_remove">Remove</string>
+    <string name="fallback_pick_title">Add backup model</string>
+    <string name="fallback_pick_provider">Provider</string>
+    <string name="fallback_pick_model">Model</string>
 </resources>

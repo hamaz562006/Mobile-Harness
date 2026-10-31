@@ -295,6 +295,7 @@ data class AppUiState(
     val activeApiKeyName: String? = null,
     val themeMode: com.jarves.mh.ui.theme.AppThemeMode = com.jarves.mh.ui.theme.AppThemeMode.DARK,
     val accentColor: com.jarves.mh.ui.theme.AccentColor = com.jarves.mh.ui.theme.AccentColor.DEFAULT,
+    val fallbackPolicy: com.jarves.mh.model.FallbackPolicy = com.jarves.mh.model.FallbackPolicy(),
     val languageCode: String = "system",
     val apiPingStatus: ApiPingStatus = ApiPingStatus.IDLE,
     val apiPingMessage: String? = null,
@@ -512,6 +513,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             themeMode = runCatching { com.jarves.mh.ui.theme.AppThemeMode.valueOf(preferences.themeMode.uppercase()) }
                 .getOrDefault(com.jarves.mh.ui.theme.AppThemeMode.DARK),
             accentColor = com.jarves.mh.ui.theme.AccentColor.fromId(preferences.accentColor),
+            fallbackPolicy = com.jarves.mh.model.FallbackPolicy.decode(preferences.fallbackPolicyJson),
             languageCode = preferences.languageCode,
             projects = preferences.loadProjects(),
             githubAuthStatus = GitHubAuthStatus.DISCONNECTED,
@@ -2008,6 +2010,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setAccentColor(accent: com.jarves.mh.ui.theme.AccentColor) {
         preferences.accentColor = accent.id
         _state.update { it.copy(accentColor = accent) }
+    }
+
+    fun setFallbackPolicy(policy: com.jarves.mh.model.FallbackPolicy) {
+        val next = if (policy.valid()) policy else com.jarves.mh.model.FallbackPolicy()
+        preferences.fallbackPolicyJson = com.jarves.mh.model.FallbackPolicy.encode(next)
+        _state.update { it.copy(fallbackPolicy = next) }
     }
 
     fun setLanguage(code: String) {

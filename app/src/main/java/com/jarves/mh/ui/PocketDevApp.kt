@@ -2525,6 +2525,7 @@ private fun RootScreenHost(
                     onStashProvider = viewModel::stashProvider,
                     onLoadProviderKind = viewModel::loadProviderKind,
                     onDiscoverModels = viewModel::discoverModels,
+                    onSaveFallbackPolicy = viewModel::setFallbackPolicy,
                     onValidateProvider = viewModel::validateProvider,
                     onPing = viewModel::pingApi,
                     getSavedApiKey = viewModel::getSavedApiKey,

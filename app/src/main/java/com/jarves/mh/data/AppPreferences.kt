@@ -114,6 +114,10 @@ class AppPreferences(private val context: Context) {
         get() = preferences.getString("accent_color", "default") ?: "default"
         set(value) { preferences.edit().putString("accent_color", value).apply() }
 
+    var fallbackPolicyJson: String
+        get() = preferences.getString("fallback_policy_json", "") ?: ""
+        set(value) { preferences.edit().putString("fallback_policy_json", value).apply() }
+
     var languageCode: String
         get() = preferences.getString("language_code", "system") ?: "system"
         set(value) { preferences.edit().putString("language_code", value).apply() }

@@ -401,4 +401,23 @@
     <string name="accent_deepseek">دیپ‌سیک</string>
     <string name="accent_antigravity">آنتی‌گراویتی</string>
     <string name="accent_orange">نارنجی</string>
+    <string name="fallback_title">Fallbackها</string>
+    <string name="fallback_subtitle">پیش‌فرض برای چت‌ها</string>
+    <string name="fallback_automatic">Fallback خودکار</string>
+    <string name="fallback_help">ابتدا مدل انتخاب‌شده اجرا می‌شود. این مدل‌ها به ترتیب بعدی امتحان می‌شوند.</string>
+    <string name="fallback_none">مدل پشتیبان اضافه نشده است.</string>
+    <string name="fallback_add_model">افزودن مدل (%1$d/%2$d)</string>
+    <string name="fallback_retries">تلاش مجدد قبل از تعویض</string>
+    <string name="fallback_retries_value">%1$d تلاش</string>
+    <string name="fallback_policy_note">اتمام سهمیه: فوری تعویض. خطای موقت: ابتدا تلاش مجدد. پاسخ ناقص برای بررسی نگه داشته می‌شود.</string>
+    <string name="fallback_show_privacy">حریم خصوصی و مسیریابی</string>
+    <string name="fallback_hide_privacy">پنهان کردن حریم خصوصی و مسیریابی</string>
+    <string name="fallback_privacy_off">زنجیرهٔ پیش‌فرض فعال نیست. تنظیمات حساب و ساب‌ایجنت همچنان اعمال می‌شود. نگهداری داده تابع سیاست هر پروایدر است؛ این تنظیم تضمین ZDR نمی‌دهد.</string>
+    <string name="fallback_privacy_on">فقط اتصال انتخاب‌شده و مدل‌های این زنجیره برای تعویض خودکار استفاده می‌شوند. نگهداری داده تابع سیاست هر پروایدر است؛ این تنظیم تضمین ZDR نمی‌دهد.</string>
+    <string name="fallback_same_provider">فقط در همان پروایدر بمان</string>
+    <string name="fallback_save">ذخیره Fallbackها</string>
+    <string name="fallback_remove">حذف</string>
+    <string name="fallback_pick_title">افزودن مدل پشتیبان</string>
+    <string name="fallback_pick_provider">پروایدر</string>
+    <string name="fallback_pick_model">مدل</string>
 </resources>
