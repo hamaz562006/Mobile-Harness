@@ -3053,6 +3053,7 @@ private fun providerTitleResource(provider: ProviderKind): Int = when (provider)
     ProviderKind.OPENCODE_ZEN -> R.string.provider_title_opencode
     ProviderKind.NVIDIA_NIM -> R.string.provider_title_nvidia
     ProviderKind.FREE_MODELS -> R.string.provider_title_free_models
+    ProviderKind.NINE_ROUTER -> R.string.provider_title_nine_router
     ProviderKind.CUSTOM -> R.string.provider_title_custom
 }
 
@@ -3066,6 +3067,7 @@ private fun providerSubtitleResource(provider: ProviderKind): Int = when (provid
     ProviderKind.OPENCODE_ZEN -> R.string.provider_subtitle_opencode
     ProviderKind.NVIDIA_NIM -> R.string.provider_subtitle_nvidia
     ProviderKind.FREE_MODELS -> R.string.provider_subtitle_free_models
+    ProviderKind.NINE_ROUTER -> R.string.provider_subtitle_nine_router
 }
 
 @Composable
@@ -3083,6 +3085,7 @@ private fun ProviderChoiceRow(
         ProviderKind.OPENCODE_ZEN -> Color(0xFF22C55E)
         ProviderKind.NVIDIA_NIM -> Color(0xFF76B900)
         ProviderKind.FREE_MODELS -> Color(0xFF10B981)
+        ProviderKind.NINE_ROUTER -> Color(0xFF0EA5E9)
         ProviderKind.CUSTOM -> MaterialTheme.colorScheme.primary
     }
     val mark = when (provider) {
@@ -3094,6 +3097,7 @@ private fun ProviderChoiceRow(
         ProviderKind.OPENCODE_ZEN -> "Z"
         ProviderKind.NVIDIA_NIM -> "NV"
         ProviderKind.FREE_MODELS -> "FR"
+        ProviderKind.NINE_ROUTER -> "9R"
         ProviderKind.CUSTOM -> "<>"
     }
 
