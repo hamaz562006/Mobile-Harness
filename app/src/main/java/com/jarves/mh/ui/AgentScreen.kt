@@ -210,6 +210,8 @@ fun AgentScreen(
     onNineRouterStart: () -> Unit = {},
     onNineRouterStop: () -> Unit = {},
     onNineRouterConnect: (((Boolean, String?) -> Unit) -> Unit) = {},
+    onNineRouterOpenDashboard: () -> Unit = {},
+    onNineRouterCheckUpdates: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
