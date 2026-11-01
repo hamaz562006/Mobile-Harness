@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.jarves.mh.runtime.RuntimeInstaller
 import java.io.File
+import java.security.SecureRandom
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.TimeUnit
@@ -169,6 +170,7 @@ class NineRouterManager(context: Context) {
             check(System.currentTimeMillis() < deadline) { "9Router startup timed out." }
             delay(300)
         }
+        ensureAuthFiles(hostData)
         mutable.update { it.copy(notice = "9Router is running on port $PORT.") }
     }
 
@@ -208,12 +210,26 @@ class NineRouterManager(context: Context) {
                     delay(300)
                 }
             }
-            val deadlineAuth = System.currentTimeMillis() + 20_000
+            // 9Router only writes machine-id / cli-secret on first token use.
+            // Pre-create them in the same format so control API works without
+            // requiring a manual dashboard open first.
+            ensureAuthFiles(hostData)
+            // Nudge the server so it loads DATA_DIR (best-effort).
+            runCatching {
+                val c = java.net.URL("http://127.0.0.1:$PORT/").openConnection() as java.net.HttpURLConnection
+                c.connectTimeout = 3_000
+                c.readTimeout = 3_000
+                c.requestMethod = "GET"
+                c.responseCode
+                c.disconnect()
+            }
+            val deadlineAuth = System.currentTimeMillis() + 45_000
             val machineFile = File(hostData, "machine-id")
             val secretFile = File(hostData, "auth/cli-secret")
             while (!(machineFile.isFile && secretFile.isFile && machineFile.length() > 0L && secretFile.length() > 0L)) {
                 check(System.currentTimeMillis() < deadlineAuth) {
-                    "9Router auth files not ready. Open the dashboard once, then try Add to providers again."
+                    val listing = hostData.walkTopDown().maxDepth(3).map { it.relativeTo(hostData).path }.take(30).joinToString(", ")
+                    "9Router auth files not ready under DATA_DIR. Found: [$listing]"
                 }
                 delay(400)
             }
@@ -260,6 +276,31 @@ class NineRouterManager(context: Context) {
         hostMarker.writeText(latest)
         stage.deleteRecursively()
         mutable.update { it.copy(notice = "9Router updated to v$latest.", installedVersion = latest) }
+    }
+
+
+    /**
+     * Mirrors upstream loadRawMachineId / loadCliSecret: hex files under DATA_DIR.
+     * machine-id = 16 random bytes hex; auth/cli-secret = 32 random bytes hex.
+     * Creating them ourselves lets Add to providers work without opening the dashboard first.
+     */
+    private fun ensureAuthFiles(dataDir: File) {
+        dataDir.mkdirs()
+        val machine = File(dataDir, "machine-id")
+        val secretDir = File(dataDir, "auth")
+        secretDir.mkdirs()
+        val secret = File(secretDir, "cli-secret")
+        val rng = SecureRandom()
+        if (!machine.isFile || machine.length() == 0L) {
+            val bytes = ByteArray(16)
+            rng.nextBytes(bytes)
+            machine.writeText(bytes.joinToString("") { "%02x".format(it) })
+        }
+        if (!secret.isFile || secret.length() == 0L) {
+            val bytes = ByteArray(32)
+            rng.nextBytes(bytes)
+            secret.writeText(bytes.joinToString("") { "%02x".format(it) })
+        }
     }
 
     private fun work(

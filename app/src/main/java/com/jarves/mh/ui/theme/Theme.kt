@@ -151,8 +151,8 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    val languageCode = AppStrings.languageCode(LocalContext.current)
-    val useVazirmatn = languageCode.equals("fa", ignoreCase = true)
+    // Always use Vazirmatn: covers Persian + Latin UI cleanly (user expectation).
+    val useVazirmatn = true
     val accent = if (isDark) accentColor.dark else accentColor.light
 
     val view = LocalView.current
