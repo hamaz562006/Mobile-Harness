@@ -62,6 +62,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -1200,6 +1201,8 @@ fun AgentScreen(
                                         onStart = onNineRouterStart,
                                         onStop = onNineRouterStop,
                                         onConnect = { onNineRouterConnect { _, _ -> } },
+                                        onOpenDashboard = onNineRouterOpenDashboard,
+                                        onCheckUpdates = onNineRouterCheckUpdates,
                                     )
                                 }
                             }
@@ -2356,6 +2359,8 @@ private fun NineRouterCard(
     onStart: () -> Unit,
     onStop: () -> Unit,
     onConnect: () -> Unit,
+    onOpenDashboard: () -> Unit,
+    onCheckUpdates: () -> Unit,
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -2401,7 +2406,26 @@ private fun NineRouterCard(
                 }
                 NineRouterPhase.INSTALL, NineRouterPhase.ERROR -> {
                     Button(onClick = onInstall, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.nine_router_install))
+                        Text(
+                            if (state.phase == NineRouterPhase.ERROR)
+                                stringResource(R.string.nine_router_error_retry)
+                            else
+                                stringResource(R.string.nine_router_install)
+                        )
+                    }
+                    // If we already have a version, still offer Start / dashboard / updates
+                    if (!state.installedVersion.isNullOrBlank()) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                            Button(onClick = onStart, enabled = !busy, modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.nine_router_start))
+                            }
+                            OutlinedButton(onClick = onOpenDashboard, enabled = !busy, modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.nine_router_open_dashboard))
+                            }
+                        }
+                        TextButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.nine_router_check_updates))
+                        }
                     }
                 }
                 NineRouterPhase.READY -> {
@@ -2411,6 +2435,14 @@ private fun NineRouterCard(
                         }
                         OutlinedButton(onClick = onConnect, enabled = !busy, modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.nine_router_add_provider))
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = onOpenDashboard, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_open_dashboard))
+                        }
+                        TextButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_check_updates))
                         }
                     }
                 }
@@ -2423,13 +2455,22 @@ private fun NineRouterCard(
                             Text(stringResource(R.string.nine_router_add_provider))
                         }
                     }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = onOpenDashboard, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_open_dashboard))
+                        }
+                        TextButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.nine_router_check_updates))
+                        }
+                    }
                 }
                 else -> {
                     if (busy) {
-                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
         }
     }
 }
+

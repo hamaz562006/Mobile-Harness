@@ -228,6 +228,40 @@ class NineRouterManager(context: Context) {
         }
     }
 
+
+    fun checkForUpdates(onDone: (Boolean, String?) -> Unit = { _, _ -> }) = work(NineRouterPhase.INSTALLING, onDone) {
+        check(installer.isInstalled()) { "Install the Linux runtime first." }
+        val current = hostMarker.takeIf { it.isFile }?.readText()?.trim()
+        check(!current.isNullOrBlank()) { "Install 9Router first." }
+        mutable.update { it.copy(detail = "Checking npm registry…") }
+        val latest = NineRouterRelease.latest()
+        if (!NineRouterRelease.newer(latest, current)) {
+            mutable.update { it.copy(notice = "9Router is up to date (v$current).") }
+            return@work
+        }
+        mutable.update { it.copy(detail = "Updating 9Router $current → $latest …") }
+        NineRouterRelease.validate(latest)
+        val stage = File(hostRoot, ".stage").also {
+            if (it.exists()) it.deleteRecursively()
+            it.mkdirs()
+        }
+        val installCmd =
+            "mkdir -p $guestRoot/.stage && " +
+                "cd $guestRoot/.stage && " +
+                "npm install --prefix . --ignore-scripts --omit=optional --no-audit --no-fund " +
+                "9router@$latest sql.js@${NineRouterRelease.SQL_JS} && " +
+                "test -f node_modules/9router/app/custom-server.js"
+        val result = runGuest(installCmd, timeoutSec = 900)
+        check(result.first == 0) { "9Router update failed:\n${result.second.takeLast(1500)}" }
+        val modules = File(hostRoot, "node_modules")
+        if (modules.exists()) modules.deleteRecursively()
+        check(File(stage, "node_modules").renameTo(modules)) { "Could not activate 9Router modules." }
+        File(stage, "package.json").takeIf { it.isFile }?.copyTo(File(hostRoot, "package.json"), overwrite = true)
+        hostMarker.writeText(latest)
+        stage.deleteRecursively()
+        mutable.update { it.copy(notice = "9Router updated to v$latest.", installedVersion = latest) }
+    }
+
     private fun work(
         phase: NineRouterPhase,
         onDone: (Boolean, String?) -> Unit,
@@ -246,8 +280,18 @@ class NineRouterManager(context: Context) {
             } catch (e: Exception) {
                 Log.e(TAG, "9Router action failed", e)
                 mutable.update {
+                    // Prefer keeping a useful phase: if binary is present keep READY, else ERROR
                     val base = refreshState()
-                    base.copy(error = e.message ?: "9Router action failed", notice = null)
+                    val failPhase = when {
+                        base.phase == NineRouterPhase.RUNNING || base.phase == NineRouterPhase.READY -> base.phase
+                        base.phase == NineRouterPhase.NEED_RUNTIME -> NineRouterPhase.NEED_RUNTIME
+                        else -> NineRouterPhase.ERROR
+                    }
+                    base.copy(
+                        phase = failPhase,
+                        error = e.message ?: "9Router action failed",
+                        notice = null,
+                    )
                 }
                 onDone(false, e.message)
             } finally {
@@ -285,6 +329,7 @@ class NineRouterManager(context: Context) {
     companion object {
         const val PORT = 20128
         const val API = "http://127.0.0.1:$PORT/v1"
+        const val DASHBOARD = "http://127.0.0.1:$PORT"
         private const val TAG = "NineRouter"
     }
 }

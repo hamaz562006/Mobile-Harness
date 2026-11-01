@@ -2138,6 +2138,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
 
     fun nineRouterInstall() = nineRouter.install()
+    fun nineRouterCheckUpdates() = nineRouter.checkForUpdates()
+
     fun nineRouterStart() = nineRouter.start()
     fun nineRouterStop() = nineRouter.stop()
     fun nineRouterConnectProvider(onResult: (Boolean, String?) -> Unit) {

@@ -2455,6 +2455,7 @@ private fun RootScreenHost(
     viewModel: MainViewModel,
     projectsListState: LazyListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() },
 ) {
+    val context = LocalContext.current
     var screen by rememberSaveable { mutableStateOf(RootScreen.PROJECTS) }
     var showQuickTerminal by rememberSaveable { mutableStateOf(false) }
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -2559,6 +2560,12 @@ private fun RootScreenHost(
                     onNineRouterStart = viewModel::nineRouterStart,
                     onNineRouterStop = viewModel::nineRouterStop,
                     onNineRouterConnect = viewModel::nineRouterConnectProvider,
+                    onNineRouterOpenDashboard = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(com.jarves.mh.router.NineRouterManager.DASHBOARD))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                    },
+                    onNineRouterCheckUpdates = viewModel::nineRouterCheckUpdates,
                 )
                 RootScreen.SETTINGS -> SettingsScreen(
                     state = state,
