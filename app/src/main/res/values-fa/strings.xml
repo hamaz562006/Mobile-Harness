@@ -434,13 +434,13 @@
     <string name="nine_router_install">نصب 9Router</string>
     <string name="nine_router_start">شروع</string>
     <string name="nine_router_stop">توقف</string>
-    <string name="nine_router_add_provider">افزودن به پروایدرها</string>
+    <string name="nine_router_add_provider">افزودن پروایدر</string>
     <string name="nine_router_refresh_provider">تازه‌سازی اتصال پروایدر</string>
     <string name="nine_router_help">پس از نصب و Start، با «افزودن به پروایدرها» به‌صورت خودکار به عنوان OpenAI-compatible (http://127.0.0.1:20128/v1) اضافه می‌شود. مدل‌های بالادستی را در داشبورد 9Router وصل کنید. تا ۲۰ کلید API برای هر پروایدر با چرخش پشتیبانی می‌شود.</string>
 
 
-    <string name="nine_router_open_dashboard">باز کردن داشبورد</string>
-    <string name="nine_router_check_updates">بررسی به‌روزرسانی</string>
+    <string name="nine_router_open_dashboard">داشبورد</string>
+    <string name="nine_router_check_updates">به‌روزرسانی</string>
     <string name="nine_router_updating">در حال به‌روزرسانی 9Router…</string>
     <string name="nine_router_up_to_date">9Router به‌روز است</string>
     <string name="nine_router_update_available">به‌روزرسانی موجود: %1$s</string>

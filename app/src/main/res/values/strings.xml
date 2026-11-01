@@ -433,13 +433,13 @@
     <string name="nine_router_install">Install 9Router</string>
     <string name="nine_router_start">Start</string>
     <string name="nine_router_stop">Stop</string>
-    <string name="nine_router_add_provider">Add to providers</string>
+    <string name="nine_router_add_provider">Add provider</string>
     <string name="nine_router_refresh_provider">Refresh provider link</string>
     <string name="nine_router_help">After install + Start, Add to providers auto-creates an OpenAI-compatible provider at http://127.0.0.1:20128/v1. Connect upstream models in the 9Router dashboard. Up to 20 API keys per provider with rotation.</string>
 
 
-    <string name="nine_router_open_dashboard">Open dashboard</string>
-    <string name="nine_router_check_updates">Check for updates</string>
+    <string name="nine_router_open_dashboard">Dashboard</string>
+    <string name="nine_router_check_updates">Check updates</string>
     <string name="nine_router_updating">Updating 9Router…</string>
     <string name="nine_router_up_to_date">9Router is up to date</string>
     <string name="nine_router_update_available">Update available: %1$s</string>
