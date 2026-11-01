@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.jarves.mh.runtime.RuntimeInstaller
 import java.io.File
-import java.security.SecureRandom
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.URL
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
@@ -170,7 +170,8 @@ class NineRouterManager(context: Context) {
             check(System.currentTimeMillis() < deadline) { "9Router startup timed out." }
             delay(300)
         }
-        ensureAuthFiles(hostData)
+        ensurePreferredDataDir()
+        nudgeServerInit()
         mutable.update { it.copy(notice = "9Router is running on port $PORT.") }
     }
 
@@ -210,30 +211,40 @@ class NineRouterManager(context: Context) {
                     delay(300)
                 }
             }
-            // 9Router only writes machine-id / cli-secret on first token use.
-            // Pre-create them in the same format so control API works without
-            // requiring a manual dashboard open first.
-            ensureAuthFiles(hostData)
-            // Nudge the server so it loads DATA_DIR (best-effort).
-            runCatching {
-                val c = java.net.URL("http://127.0.0.1:$PORT/").openConnection() as java.net.HttpURLConnection
-                c.connectTimeout = 3_000
-                c.readTimeout = 3_000
-                c.requestMethod = "GET"
-                c.responseCode
-                c.disconnect()
-            }
-            val deadlineAuth = System.currentTimeMillis() + 45_000
-            val machineFile = File(hostData, "machine-id")
-            val secretFile = File(hostData, "auth/cli-secret")
-            while (!(machineFile.isFile && secretFile.isFile && machineFile.length() > 0L && secretFile.length() > 0L)) {
+            ensurePreferredDataDir()
+            nudgeServerInit()
+            val deadlineAuth = System.currentTimeMillis() + 60_000
+            var dataDir: File? = null
+            while (dataDir == null) {
+                dataDir = resolveAuthDataDir()
+                if (dataDir != null) break
                 check(System.currentTimeMillis() < deadlineAuth) {
-                    val listing = hostData.walkTopDown().maxDepth(3).map { it.relativeTo(hostData).path }.take(30).joinToString(", ")
-                    "9Router auth files not ready under DATA_DIR. Found: [$listing]"
+                    val probed = authDataDirCandidates().joinToString("; ") { d ->
+                        val kids = d.listFiles()?.map { it.name }?.joinToString(",") ?: "missing"
+                        "${d.absolutePath}[$kids]"
+                    }
+                    "9Router auth files not ready. Probed: $probed"
                 }
-                delay(400)
+                nudgeServerInit()
+                delay(500)
             }
-            val key = NineRouterControl(hostData).integrationKey()
+            val resolved = dataDir!!
+            // Try control API; on 401 try other candidate dirs (server may have switched DATA_DIR)
+            var key: String? = null
+            var lastErr: Exception? = null
+            val dirsToTry = listOf(resolved) + authDataDirCandidates().filter { it != resolved && hasAuthFiles(it) }
+            for (dir in dirsToTry) {
+                try {
+                    key = NineRouterControl(dir).integrationKey()
+                    break
+                } catch (e: Exception) {
+                    lastErr = e
+                    Log.w(TAG, "9Router control failed for ${dir.absolutePath}: ${e.message}")
+                }
+            }
+            check(key != null) {
+                lastErr?.message ?: "9Router control failed for all DATA_DIR candidates"
+            }
             lastIntegrationKey = key
             mutable.update {
                 it.copy(
@@ -279,29 +290,68 @@ class NineRouterManager(context: Context) {
     }
 
 
+
     /**
-     * Mirrors upstream loadRawMachineId / loadCliSecret: hex files under DATA_DIR.
-     * machine-id = 16 random bytes hex; auth/cli-secret = 32 random bytes hex.
-     * Creating them ourselves lets Add to providers work without opening the dashboard first.
+     * 9Router resolves DATA_DIR at module load:
+     *   env DATA_DIR if set and writable, else ~/.9router (/root/.9router with HOME=/root).
+     * Auth files (machine-id, auth/cli-secret) live under whichever dir the process actually used.
+     * Probe both host paths and pick the one that has complete auth files.
      */
-    private fun ensureAuthFiles(dataDir: File) {
-        dataDir.mkdirs()
-        val machine = File(dataDir, "machine-id")
-        val secretDir = File(dataDir, "auth")
-        secretDir.mkdirs()
-        val secret = File(secretDir, "cli-secret")
-        val rng = SecureRandom()
-        if (!machine.isFile || machine.length() == 0L) {
-            val bytes = ByteArray(16)
-            rng.nextBytes(bytes)
-            machine.writeText(bytes.joinToString("") { "%02x".format(it) })
+    private fun authDataDirCandidates(): List<File> {
+        val rootfs = installer.installedRuntime().rootfs
+        return listOf(
+            hostData, // /root/9router/data (our DATA_DIR env)
+            File(rootfs, "root/.9router"), // upstream default ~/.9router
+            File(rootfs, "root/9router/data"),
+        ).distinctBy { it.absolutePath }
+    }
+
+    private fun hasAuthFiles(dir: File): Boolean {
+        val machine = File(dir, "machine-id")
+        val secret = File(dir, "auth/cli-secret")
+        return machine.isFile && machine.length() > 0L && secret.isFile && secret.length() > 0L
+    }
+
+    private fun resolveAuthDataDir(): File? =
+        authDataDirCandidates().firstOrNull { hasAuthFiles(it) }
+
+    /** Ensure preferred DATA_DIR exists so env DATA_DIR=/root/9router/data is writable. */
+    private fun ensurePreferredDataDir() {
+        hostData.mkdirs()
+        File(hostData, "auth").mkdirs()
+    }
+
+    /**
+     * Hit a public endpoint so 9Router initializes and writes machine-id / cli-secret
+     * under its effective DATA_DIR (may be ~/.9router if DATA_DIR failed).
+     */
+    private fun nudgeServerInit() {
+        runCatching {
+            val c = URL("http://127.0.0.1:$PORT/api/health").openConnection() as java.net.HttpURLConnection
+            c.connectTimeout = 3_000
+            c.readTimeout = 3_000
+            c.requestMethod = "GET"
+            c.responseCode
+            c.disconnect()
         }
-        if (!secret.isFile || secret.length() == 0L) {
-            val bytes = ByteArray(32)
-            rng.nextBytes(bytes)
-            secret.writeText(bytes.joinToString("") { "%02x".format(it) })
+        runCatching {
+            val c = URL("http://127.0.0.1:$PORT/api/init").openConnection() as java.net.HttpURLConnection
+            c.connectTimeout = 3_000
+            c.readTimeout = 3_000
+            c.requestMethod = "GET"
+            c.responseCode
+            c.disconnect()
+        }
+        runCatching {
+            val c = URL("http://127.0.0.1:$PORT/").openConnection() as java.net.HttpURLConnection
+            c.connectTimeout = 3_000
+            c.readTimeout = 3_000
+            c.requestMethod = "GET"
+            c.responseCode
+            c.disconnect()
         }
     }
+
 
     private fun work(
         phase: NineRouterPhase,
