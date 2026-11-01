@@ -6,28 +6,26 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
-import java.security.SecureRandom
-import java.util.UUID
 
 /**
  * Talks to the running 9Router control API on 127.0.0.1:[PORT]
  * to create/reuse the integration API key (OpenAI-compatible /v1).
+ *
+ * CLI token must match 9Router's getConsistentMachineId("9r-cli-auth"):
+ * sha256(machineId + "9r-cli-auth" + cliSecret).hex.take(16)
+ * using the same files 9Router wrote under DATA_DIR.
  */
 class NineRouterControl(private val dataDir: File) {
-    private fun persisted(file: File, create: () -> String): String {
-        file.parentFile?.mkdirs()
-        if (!file.isFile || file.length() == 0L) {
-            file.writeText(create())
-        }
-        return file.readText().trim().also { check(it.isNotEmpty()) { "9Router control credentials unavailable." } }
-    }
-
     private fun token(): String {
-        val machine = persisted(File(dataDir, "machine-id")) { UUID.randomUUID().toString() }
-        val secret = persisted(File(dataDir, "auth/cli-secret")) {
-            ByteArray(32).also { SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
+        val machineFile = File(dataDir, "machine-id")
+        val secretFile = File(dataDir, "auth/cli-secret")
+        check(machineFile.isFile && machineFile.length() > 0L) {
+            "9Router auth not ready (machine-id). Start 9Router and try again."
         }
-        return cliToken(machine, secret)
+        check(secretFile.isFile && secretFile.length() > 0L) {
+            "9Router auth not ready (cli-secret). Start 9Router and try again."
+        }
+        return cliToken(machineFile.readText().trim(), secretFile.readText().trim())
     }
 
     fun request(method: String, path: String, body: JSONObject? = null): JSONObject {
