@@ -2,11 +2,13 @@ package com.jarves.mh.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -67,10 +69,20 @@ private val LightColors = lightColorScheme(
     outlineVariant = Color(0xFFD8DEE4),
 )
 
-private val VazirmatnFamily = FontFamily(
+/**
+ * Vazirmatn for Persian UI. Map common weights (incl. SemiBold used across the app)
+ * so Compose does not fall back to the system font when weight is missing.
+ */
+val VazirmatnFamily = FontFamily(
+    Font(R.font.vazirmatn_regular, FontWeight.W400),
     Font(R.font.vazirmatn_regular, FontWeight.Normal),
+    Font(R.font.vazirmatn_medium, FontWeight.W500),
     Font(R.font.vazirmatn_medium, FontWeight.Medium),
+    Font(R.font.vazirmatn_medium, FontWeight.SemiBold),
+    Font(R.font.vazirmatn_medium, FontWeight.W600),
+    Font(R.font.vazirmatn_bold, FontWeight.W700),
     Font(R.font.vazirmatn_bold, FontWeight.Bold),
+    Font(R.font.vazirmatn_bold, FontWeight.ExtraBold),
 )
 
 private fun appTypography(useVazirmatn: Boolean): Typography {
@@ -152,9 +164,17 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    // Vazirmatn only when app language is Persian (fa)
-    val useVazirmatn = languageCode.equals("fa", ignoreCase = true)
+    // Prefer explicit arg; also accept prefs in case a caller forgets to pass state.
+    val context = LocalContext.current
+    val prefsLang = AppStrings.languageCode(context)
+    val resolvedLang = when {
+        languageCode.equals("fa", ignoreCase = true) -> "fa"
+        prefsLang.equals("fa", ignoreCase = true) -> "fa"
+        else -> languageCode
+    }
+    val useVazirmatn = resolvedLang.equals("fa", ignoreCase = true)
     val accent = if (isDark) accentColor.dark else accentColor.light
+    val typography = appTypography(useVazirmatn)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -168,7 +188,19 @@ fun PocketTheme(
 
     MaterialTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
-        typography = appTypography(useVazirmatn),
-        content = content,
-    )
+        typography = typography,
+    ) {
+        // Material3 Text defaults to LocalTextStyle; force bodyLarge (with Vazirmatn)
+        // so bare Text(fontSize=…) calls still use the Persian font family.
+        val defaultStyle = if (useVazirmatn) {
+            typography.bodyLarge.copy(fontFamily = VazirmatnFamily)
+        } else {
+            typography.bodyLarge
+        }
+        CompositionLocalProvider(
+            LocalTextStyle provides defaultStyle,
+        ) {
+            content()
+        }
+    }
 }
