@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.jarves.mh.runtime.RuntimeInstaller
 import java.io.File
+import java.util.UUID
 import java.security.SecureRandom
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -138,76 +139,38 @@ class NineRouterManager(context: Context) {
     }
 
     fun start(onDone: (Boolean, String?) -> Unit = { _, _ -> }) = work(NineRouterPhase.STARTING, onDone) {
-        if (process?.isAlive == true) return@work
-        check(!portOpen()) { "Port $PORT is already in use." }
-        startInternal()
+        startServer()
         mutable.update { it.copy(notice = "9Router is running on port $PORT.") }
     }
 
     fun stop(onDone: (Boolean, String?) -> Unit = { _, _ -> }) = work(NineRouterPhase.STOPPING, onDone) {
-        stopInternal()
+        stopServer()
     }
 
+    /**
+     * Match AndroidHarness: ensure server is up, then create/reuse integration API key
+     * via x-9r-cli-token derived from DATA_DIR machine-id + auth/cli-secret.
+     */
     fun connectProvider(onDone: (Boolean, String?) -> Unit = { _, _ -> }) {
         work(NineRouterPhase.CONNECTING, onDone) {
-            // Auth files must exist BEFORE the Node process loads dashboardGuard
-            // (CLI token is cached in-memory on first read). Seed files, then
-            // restart if the process was already up without them.
-            // Check BEFORE seeding — if process was already up without files,
-            // in-memory CLI token cache will not see new files until restart.
-            val hadAuthBefore = hasAuthFiles(hostData)
-            ensureAuthFiles(hostData)
-            val running = process?.isAlive == true || portOpen()
-            if (!running) {
-                startInternal()
-            } else if (!hadAuthBefore) {
-                stopInternal()
-                ensureAuthFiles(hostData)
-                startInternal()
+            // Auth files must exist before Node loads dashboardGuard (token is cached once).
+            ensureAuthFiles()
+            if (process?.isAlive != true || !portOpen()) {
+                startServer()
             }
-            nudgeServerInit()
-
-            var key: String? = null
-            var lastErr: Exception? = null
-            val tryDirs = {
-                val resolved = resolveAuthDataDir()
-                (listOfNotNull(resolved) + authDataDirCandidates()).distinctBy { it.absolutePath }
-                    .filter { hasAuthFiles(it) }
+            val key = try {
+                NineRouterControl(hostData).integrationKey()
+            } catch (e: Exception) {
+                // Stale in-memory CLI token (server started before files matched) →
+                // stop, rewrite credentials like AndroidHarness first run, start clean.
+                Log.w(TAG, "9Router control failed (${e.message}); rewriting auth and restarting")
+                stopServer()
+                File(hostData, "machine-id").delete()
+                File(hostData, "auth/cli-secret").delete()
+                ensureAuthFiles()
+                startServer()
+                NineRouterControl(hostData).integrationKey()
             }
-
-            fun attempt(): Boolean {
-                for (dir in tryDirs()) {
-                    try {
-                        key = NineRouterControl(dir).integrationKey()
-                        return true
-                    } catch (e: Exception) {
-                        lastErr = e
-                        Log.w(TAG, "9Router control failed for ${dir.absolutePath}: ${e.message}")
-                    }
-                }
-                return false
-            }
-
-            if (!attempt()) {
-                // 401 / stale in-memory token: full restart with seeded auth files.
-                Log.w(TAG, "9Router key fetch failed; restarting with seeded auth files")
-                stopInternal()
-                ensureAuthFiles(hostData)
-                startInternal()
-                nudgeServerInit()
-                if (!attempt()) {
-                    check(false) {
-                        val probed = authDataDirCandidates().joinToString("; ") { d ->
-                            val kids = d.listFiles()?.map { it.name }?.joinToString(",") ?: "missing"
-                            val m = File(d, "machine-id").let { if (it.isFile) "machine-id=${it.length()}" else "no-machine-id" }
-                            val s = File(d, "auth/cli-secret").let { if (it.isFile) "secret=${it.length()}" else "no-secret" }
-                            "${d.name}[$kids;$m;$s]"
-                        }
-                        "${lastErr?.message ?: "9Router control failed"} | $probed"
-                    }
-                }
-            }
-
             lastIntegrationKey = key
             mutable.update {
                 it.copy(
@@ -218,7 +181,7 @@ class NineRouterManager(context: Context) {
         }
     }
 
-    fun checkForUpdates(onDone: (Boolean, String?) -> Unit = { _, _ -> }) = work(NineRouterPhase.INSTALLING, onDone) {
+    fun checkForUpdates    fun checkForUpdates(onDone: (Boolean, String?) -> Unit = { _, _ -> }) = work(NineRouterPhase.INSTALLING, onDone) {
         check(installer.isInstalled()) { "Install the Linux runtime first." }
         val current = hostMarker.takeIf { it.isFile }?.readText()?.trim()
         check(!current.isNullOrBlank()) { "Install 9Router first." }
@@ -254,98 +217,62 @@ class NineRouterManager(context: Context) {
 
 
 
+
     /**
-     * 9Router DATA_DIR = env DATA_DIR if writable, else ~/.9router.
-     * Auth is sha256(machine-id + "9r-cli-auth" + cli-secret).hex.take(16).
-     * Upstream only writes those files lazily on first getConsistentMachineId —
-     * public /api/health does NOT trigger that, so we seed the files ourselves
-     * under the same path we pass as DATA_DIR, then restart so the process loads them.
+     * AndroidHarness seeds machine-id (UUID) + auth/cli-secret under DATA_DIR before control calls.
+     * 9Router token = sha256(machineId + "9r-cli-auth" + cliSecret).hex.take(16) (see decolua/9router machineId.js).
+     * DATA_DIR for proot guest is /root/9router/data → host rootfs/root/9router/data.
      */
-    private fun authDataDirCandidates(): List<File> {
-        val rootfs = installer.installedRuntime().rootfs
-        return listOf(
-            hostData,
-            File(rootfs, "root/.9router"),
-            File(rootfs, "root/9router/data"),
-        ).distinctBy { it.absolutePath }
-    }
-
-    private fun hasAuthFiles(dir: File): Boolean {
-        val machine = File(dir, "machine-id")
-        val secret = File(dir, "auth/cli-secret")
-        return machine.isFile && machine.length() > 0L && secret.isFile && secret.length() > 0L
-    }
-
-    private fun resolveAuthDataDir(): File? =
-        authDataDirCandidates().firstOrNull { hasAuthFiles(it) }
-
-    /** Seed machine-id + auth/cli-secret (upstream format) under preferred DATA_DIR. */
-    private fun ensureAuthFiles(dir: File = hostData) {
-        dir.mkdirs()
-        val secretDir = File(dir, "auth")
+    private fun ensureAuthFiles() {
+        hostData.mkdirs()
+        val machine = File(hostData, "machine-id")
+        val secretDir = File(hostData, "auth")
         secretDir.mkdirs()
-        val machine = File(dir, "machine-id")
         val secret = File(secretDir, "cli-secret")
-        val rng = SecureRandom()
+        // Match AndroidHarness: UUID machine-id, 32-byte hex secret. Rewrite if missing/empty.
         if (!machine.isFile || machine.length() == 0L) {
-            val bytes = ByteArray(16)
-            rng.nextBytes(bytes)
-            machine.writeText(bytes.joinToString("") { "%02x".format(it) })
+            machine.writeText(UUID.randomUUID().toString())
         }
         if (!secret.isFile || secret.length() == 0L) {
             val bytes = ByteArray(32)
-            rng.nextBytes(bytes)
+            SecureRandom().nextBytes(bytes)
             secret.writeText(bytes.joinToString("") { "%02x".format(it) })
         }
     }
 
-    private fun ensurePreferredDataDir() {
-        ensureAuthFiles(hostData)
-        // Mirror into default ~/.9router in case env DATA_DIR is ignored.
-        runCatching {
-            val rootfs = installer.installedRuntime().rootfs
-            ensureAuthFiles(File(rootfs, "root/.9router"))
-        }
-    }
-
-    private fun nudgeServerInit() {
-        for (path in listOf("/api/health", "/api/init", "/api/version", "/")) {
-            runCatching {
-                val c = java.net.URL("http://127.0.0.1:$PORT$path").openConnection() as java.net.HttpURLConnection
-                c.connectTimeout = 3_000
-                c.readTimeout = 3_000
-                c.requestMethod = "GET"
-                c.responseCode
-                c.disconnect()
-            }
-        }
-    }
-
-    /** Stop tracked process and wait for port to free. */
-    private suspend fun stopInternal() {
+    /** Stop tracked process and wait until port 20128 is free (orphan-safe). */
+    private suspend fun stopServer() {
         val child = process
         process = null
         if (child != null) {
             child.destroy()
             if (!child.waitFor(5, TimeUnit.SECONDS)) child.destroyForcibly()
-            child.waitFor(3, TimeUnit.SECONDS)
+            runCatching { child.waitFor(3, TimeUnit.SECONDS) }
         }
-        val deadline = System.currentTimeMillis() + 15_000
+        val deadline = System.currentTimeMillis() + 20_000
         while (portOpen() && System.currentTimeMillis() < deadline) {
-            delay(200)
+            delay(250)
+        }
+        check(!portOpen()) {
+            "Port $PORT is still in use after stop. Force-close any old 9Router and try again."
         }
     }
 
-    private suspend fun startInternal() {
+    private suspend fun startServer() {
         check(hostServer.isFile) { "Install 9Router first." }
-        ensureAuthFiles(hostData)
-        hostData.mkdirs()
+        if (process?.isAlive == true && portOpen()) return
+        if (portOpen()) {
+            // Orphan holds the port — cannot safely attach; require stop first.
+            stopServer()
+        }
+        ensureAuthFiles()
         val env = mapOf(
             "PORT" to "$PORT",
             "HOSTNAME" to "127.0.0.1",
             "NODE_ENV" to "production",
             "NEXT_TELEMETRY_DISABLED" to "1",
             "NODE_PATH" to "$guestRoot/node_modules",
+            // Guest path inside proot (same layout AndroidHarness uses under its rootfs).
             "DATA_DIR" to guestData,
             "HOME" to "/root",
         )
@@ -370,11 +297,9 @@ class NineRouterManager(context: Context) {
             check(System.currentTimeMillis() < deadline) { "9Router startup timed out." }
             delay(300)
         }
-        nudgeServerInit()
-        // Give module init a moment to read machine-id / cli-secret into memory.
-        delay(500)
+        // Let dashboardGuard load machine-id/cli-secret into its in-memory cache.
+        delay(800)
     }
-
 
     private fun work(
         phase: NineRouterPhase,

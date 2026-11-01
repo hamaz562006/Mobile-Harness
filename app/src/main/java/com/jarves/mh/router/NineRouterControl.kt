@@ -6,28 +6,30 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.security.SecureRandom
+import java.util.UUID
 
 /**
- * Talks to the local 9Router control API (http://127.0.0.1:20128).
- *
- * CLI token must match 9Router's getConsistentMachineId("9r-cli-auth"):
- * sha256(machineId + "9r-cli-auth" + cliSecret).hex.take(16)
- * using the same files 9Router wrote under its effective DATA_DIR.
- *
- * Upstream default DATA_DIR is ~/.9router when env DATA_DIR is unset/unwritable;
- * we may also set DATA_DIR=/root/9router/data. Always resolve from real files.
+ * Same private local credentials and JSON protocol as 9Router / AndroidHarness.
+ * Token = sha256(machineId + "9r-cli-auth" + cliSecret).hex.take(16)
+ * machine-id is a UUID string (AndroidHarness); cli-secret is 32 random bytes hex.
  */
-class NineRouterControl(private val dataDir: File) {
-    fun token(): String {
-        val machineFile = File(dataDir, "machine-id")
-        val secretFile = File(dataDir, "auth/cli-secret")
-        check(machineFile.isFile && machineFile.length() > 0L) {
-            "9Router auth not ready (machine-id in ${dataDir.absolutePath}). Start 9Router and try again."
+class NineRouterControl(private val data: File) {
+    private fun token(): String {
+        fun persisted(file: File, create: () -> String): String {
+            file.parentFile?.mkdirs()
+            if (!file.exists() || file.length() == 0L) {
+                file.writeText(create())
+            }
+            return file.readText().trim().also {
+                check(it.isNotEmpty()) { "9Router control credentials are unavailable." }
+            }
         }
-        check(secretFile.isFile && secretFile.length() > 0L) {
-            "9Router auth not ready (cli-secret in ${dataDir.absolutePath}). Start 9Router and try again."
+        val machine = persisted(File(data, "machine-id")) { UUID.randomUUID().toString() }
+        val secret = persisted(File(data, "auth/cli-secret")) {
+            ByteArray(32).also { SecureRandom().nextBytes(it) }.joinToString("") { b -> "%02x".format(b) }
         }
-        return cliToken(machineFile.readText().trim(), secretFile.readText().trim())
+        return cliToken(machine, secret)
     }
 
     fun request(method: String, path: String, body: JSONObject? = null): JSONObject {
@@ -47,12 +49,12 @@ class NineRouterControl(private val dataDir: File) {
         val stream = if (code in 200..299) connection.inputStream else connection.errorStream
         val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
         check(code in 200..299) {
-            "9Router control failed (HTTP $code) dataDir=${dataDir.absolutePath}. Start 9Router and try again."
+            "9Router control failed (HTTP $code). Start 9Router and try again."
         }
         return if (text.isBlank()) JSONObject() else JSONObject(text)
     }
 
-    /** Creates or reuses the app integration key named [KEY_NAME]. */
+    /** Creates or reuses the app integration key (same idea as AndroidHarness KEY_NAME). */
     fun integrationKey(): String {
         val keys = request("GET", "/api/keys").optJSONArray("keys") ?: JSONArray()
         for (i in 0 until keys.length()) {
@@ -63,16 +65,15 @@ class NineRouterControl(private val dataDir: File) {
             }
         }
         val created = request("POST", "/api/keys", JSONObject().put("name", KEY_NAME))
-        // Upstream may return { key } or { apiKey: { key } }
         val key = created.optString("key").ifBlank {
             created.optJSONObject("apiKey")?.optString("key").orEmpty()
         }
         return key.takeIf { it.isNotBlank() }
-            ?: error("9Router did not return an API key: $created")
+            ?: error("9Router did not return an API key.")
     }
 
     companion object {
-        const val KEY_NAME = "1code-harness"
+        const val KEY_NAME = "MobileHarness"
         internal fun cliToken(machine: String, secret: String): String =
             MessageDigest.getInstance("SHA-256")
                 .digest((machine + "9r-cli-auth" + secret).toByteArray(Charsets.UTF_8))
