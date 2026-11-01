@@ -24,7 +24,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_test">Test</string>
     <string name="settings_title">Settings</string>
-    <string name="settings_subtitle">Preferences & Configuration</string>
+    <string name="settings_subtitle">Preferences and Configuration</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_language">Language</string>
     <string name="settings_reliability">Reliable execution</string>
@@ -161,7 +161,7 @@
     <string name="runtime_msg_downloading_generic">Downloading %1$s</string>
     <string name="runtime_msg_installing_generic">Installing %1$s</string>
     <string name="theme_toggle">Toggle theme</string>
-    <string name="provider_setup_settings_title">AI Provider & Settings</string>
+    <string name="provider_setup_settings_title">AI Provider and Settings</string>
     <string name="provider_device_title">Your phone is the workspace</string>
     <string name="provider_device_desc">1code harness checks compatibility before downloading the private Linux runtime.</string>
     <string name="provider_memory">Memory</string>
@@ -234,9 +234,9 @@
     <string name="agent_title_claude">Claude Code</string>
     <string name="agent_title_deepseek">DeepSeek Harness</string>
     <string name="agent_title_antigravity">Antigravity CLI</string>
-    <string name="agent_subtitle_claude">Anthropic’s coding agent · broad provider support</string>
+    <string name="agent_subtitle_claude">Anthropic coding agent · broad provider support</string>
     <string name="agent_subtitle_deepseek">Official DeepSeek coding agent · API-key providers</string>
-    <string name="agent_subtitle_antigravity">Google’s official coding agent · Google account</string>
+    <string name="agent_subtitle_antigravity">Google official coding agent · Google account</string>
     <string name="provider_title_nine_router">9Router</string>
     <string name="provider_subtitle_nine_router">Local OpenAI-compatible router · port 20128</string>
     <string name="special_providers_title">Special providers</string>
