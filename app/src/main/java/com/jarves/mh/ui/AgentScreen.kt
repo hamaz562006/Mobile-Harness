@@ -2425,7 +2425,7 @@ private fun NineRouterCard(
                                 Text(stringResource(R.string.nine_router_open_dashboard))
                             }
                         }
-                        TextButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(R.string.nine_router_check_updates))
                         }
                     }
@@ -2443,7 +2443,7 @@ private fun NineRouterCard(
                         OutlinedButton(onClick = onOpenDashboard, enabled = !busy, modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.nine_router_open_dashboard))
                         }
-                        TextButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.weight(1f)) {
+                        OutlinedButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.nine_router_check_updates))
                         }
                     }
@@ -2461,7 +2461,7 @@ private fun NineRouterCard(
                         OutlinedButton(onClick = onOpenDashboard, enabled = !busy, modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.nine_router_open_dashboard))
                         }
-                        TextButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.weight(1f)) {
+                        OutlinedButton(onClick = onCheckUpdates, enabled = !busy, modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.nine_router_check_updates))
                         }
                     }

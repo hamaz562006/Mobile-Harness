@@ -144,6 +144,7 @@ private fun lightSchemeFor(accent: Color) = LightColors.copy(
 fun PocketTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
     accentColor: AccentColor = AccentColor.DEFAULT,
+    languageCode: String = "system",
     content: @Composable () -> Unit,
 ) {
     val isDark = when (themeMode) {
@@ -151,8 +152,8 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    // Always use Vazirmatn: covers Persian + Latin UI cleanly (user expectation).
-    val useVazirmatn = true
+    // Vazirmatn only when app language is Persian (fa)
+    val useVazirmatn = languageCode.equals("fa", ignoreCase = true)
     val accent = if (isDark) accentColor.dark else accentColor.light
 
     val view = LocalView.current
