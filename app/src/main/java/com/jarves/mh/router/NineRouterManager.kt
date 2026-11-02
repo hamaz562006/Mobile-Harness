@@ -181,7 +181,7 @@ class NineRouterManager(context: Context) {
         }
     }
 
-    fun checkForUpdates    fun checkForUpdates(onDone: (Boolean, String?) -> Unit = { _, _ -> }) = work(NineRouterPhase.INSTALLING, onDone) {
+    fun checkForUpdates(onDone: (Boolean, String?) -> Unit = { _, _ -> }) = work(NineRouterPhase.INSTALLING, onDone) {
         check(installer.isInstalled()) { "Install the Linux runtime first." }
         val current = hostMarker.takeIf { it.isFile }?.readText()?.trim()
         check(!current.isNullOrBlank()) { "Install 9Router first." }
