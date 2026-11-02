@@ -38,32 +38,72 @@ fun formatContextLabel(tokens: Long?): String? {
     }
 }
 
+/** Friendly label for common 9Router / OpenAI model id prefixes. */
+fun providerLabelForModel(model: DiscoveredModel): String? {
+    val raw = model.ownedBy?.trim()?.takeIf { it.isNotBlank() }
+    val key = (raw ?: model.id.substringBefore('/', missingDelimiterValue = ""))
+        .trim()
+        .lowercase()
+    if (key.isBlank() || key == model.id.lowercase()) return raw
+    val mapped = when {
+        key == "ocz" || key == "oc" || key.contains("opencode") -> "OpenCode Free / Zen"
+        key == "kr" || key.contains("kiro") -> "Kiro AI"
+        key == "cc" || key.contains("claude") -> "Claude"
+        key == "cx" || key.contains("codex") -> "Codex"
+        key == "gh" || key.contains("github") || key.contains("copilot") -> "GitHub Copilot"
+        key == "cu" || key.contains("cursor") -> "Cursor"
+        key.startsWith("vertex") -> "Vertex AI"
+        key.contains("openrouter") -> "OpenRouter"
+        key.contains("deepseek") -> "DeepSeek"
+        key.contains("groq") -> "Groq"
+        key.contains("google") || key.contains("gemini") -> "Google"
+        key.contains("openai") || key == "openai" -> "OpenAI"
+        key.contains("anthropic") -> "Anthropic"
+        key.contains("meta") || key.contains("llama") -> "Meta"
+        else -> raw ?: key
+    }
+    return mapped
+}
+
 @Composable
 fun ModelPickerDetails(
     model: DiscoveredModel,
     showCurrent: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val provider = providerLabelForModel(model)
     val metaParts = buildList {
         if (showCurrent) add("Current")
+        if (model.isFree) add("Free")
+        provider?.let { add(it) }
         formatContextLabel(model.contextTokens)?.let { add(it) }
     }
     Column(modifier.fillMaxWidth()) {
         Text(
-            text = model.id,
+            text = model.displayName.ifBlank { model.id },
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             color = MaterialTheme.colorScheme.onSurface,
         )
+        if (model.displayName.isNotBlank() && model.displayName != model.id) {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = model.id,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (metaParts.isNotEmpty()) {
             Spacer(Modifier.height(2.dp))
             Text(
                 text = metaParts.joinToString(" · "),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }

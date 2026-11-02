@@ -16,6 +16,8 @@ data class DiscoveredModel(
     val id: String,
     val displayName: String = id,
     val isFree: Boolean = false,
+    /** Upstream provider / owner label when the API reports one (e.g. owned_by). */
+    val ownedBy: String? = null,
     /** Secondary line e.g. rate limit / pool note (no product brand filler). */
     val note: String? = null,
     val contextTokens: Long? = null,
@@ -381,11 +383,22 @@ object ModelResponseParser {
                             if (modality.contains("image", ignoreCase = true) || modality.contains("vision", ignoreCase = true)) {
                                 images = true
                             }
+                            val owned = item.optString("owned_by").ifBlank {
+                                item.optString("ownedBy")
+                            }.ifBlank {
+                                item.optString("provider")
+                            }.ifBlank {
+                                item.optJSONObject("provider")?.optString("name").orEmpty()
+                            }.ifBlank {
+                                // 9Router-style ids: "ocz/big-pickle" → prefix as provider hint
+                                id.substringBefore('/', missingDelimiterValue = "").takeIf { it.isNotBlank() && it != id }.orEmpty()
+                            }.ifBlank { null }
                             add(
                                 DiscoveredModel(
                                     id = id,
                                     displayName = label,
                                     isFree = free,
+                                    ownedBy = owned,
                                     contextTokens = ctx,
                                     supportsThinking = thinking,
                                     supportsTools = tools,
