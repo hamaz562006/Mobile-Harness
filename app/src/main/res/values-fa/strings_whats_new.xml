@@ -1,15 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="whats_new_title">What\'s new</string>
-    <string name="whats_new_version">Version %1$s</string>
-    <string name="whats_new_open_backup">Open Backup &amp; Restore</string>
-    <string name="whats_new_got_it">Got it</string>
-    <!-- Update for every release; shown once after the app is updated. -->
-    <string-array name="whats_new_items">
-        <item>Backup &amp; Restore: save your projects, files, chats and settings into one file. Find it in Settings.</item>
-        <item>Add a password to also save your API keys and logins (GitHub, git, SSH, coding agents).</item>
-        <item>Restoring adds the backup\'s projects next to the ones on your phone, so nothing here is lost.</item>
-        <item>After a reinstall, restore from the setup screen to get everything back.</item>
-        <item>Backups keep running with the screen off and show live progress.</item>
-    </string-array>
+    <string name="whats_new_title">چیزهای جدید</string>
+    <string name="whats_new_version">نسخه %1$s</string>
+    <string name="whats_new_open_backup">پشتیبان‌گیری و بازیابی</string>
+    <string name="whats_new_got_it">متوجه شدم</string>
+    <string name="whats_new_items">پشتیبان‌گیری و بازیابی در تنظیمات · ذخیرهٔ پروژه‌ها، فایل‌ها، گفتگوها و تنظیمات در یک فایل · با رمز، کلید API و ورودها هم ذخیره می‌شوند · بعد از نصب دوباره از صفحهٔ راه‌اندازی قابل بازیابی است</string>
 </resources>

@@ -24,6 +24,11 @@ import com.jarves.mh.ui.LocaleHelper
 import com.jarves.mh.ui.MainViewModel
 import com.jarves.mh.ui.PocketDevApp
 import com.jarves.mh.ui.theme.PocketTheme
+import com.jarves.mh.ui.theme.VazirmatnFamily
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity() {
     private var appliedLanguageCode: String? = null
@@ -59,7 +64,22 @@ class MainActivity : ComponentActivity() {
                 LocalActivityResultRegistryOwner provides this,
             ) {
                 PocketTheme(themeMode = state.themeMode, accentColor = state.accentColor, languageCode = state.languageCode) {
-                    PocketDevApp(vm)
+                    val isFa = state.languageCode.equals("fa", ignoreCase = true) ||
+                        AppStrings.languageCode(localizedContext).equals("fa", ignoreCase = true)
+                    if (isFa) {
+                        CompositionLocalProvider(
+                            LocalTextStyle provides TextStyle(
+                                fontFamily = VazirmatnFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 16.sp,
+                                lineHeight = 24.sp,
+                            ),
+                        ) {
+                            PocketDevApp(vm)
+                        }
+                    } else {
+                        PocketDevApp(vm)
+                    }
                 }
             }
         }

@@ -187,4 +187,5 @@
 <string name="ws_terminal_leave_keep">ادامه در پس‌زمینه</string>
 <string name="ws_terminal_leave_stop">توقف ترمینال</string>
 <string name="ws_terminal_leave_title">ترمینال در حال اجرا است</string>
+    <string name="chat_default_greeting">سلام! بگو چه چیزی می‌خواهی بسازی یا تغییر بدهی.</string>
 </resources>

@@ -187,4 +187,5 @@
     <string name="ws_terminal_leave_body">“%1$s” is still running in the terminal.</string>
     <string name="ws_terminal_leave_stop">Stop and go back</string>
     <string name="ws_terminal_leave_keep">Keep running</string>
+    <string name="chat_default_greeting">Hi! Tell me what you want to build or change.</string>
 </resources>

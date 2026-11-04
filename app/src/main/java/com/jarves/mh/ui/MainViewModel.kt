@@ -327,9 +327,7 @@ data class AppUiState(
     val openedFile: OpenedFileState? = null,
     val projectExportRunning: Boolean = false,
     val projectExportSucceededAtMillis: Long? = null,
-    val messages: List<ChatMessage> = listOf(
-        ChatMessage(fromUser = false, text = "Hi! Tell me what you want to build or change."),
-    ),
+    val messages: List<ChatMessage> = emptyList(),
     val pendingAttachments: List<ChatAttachment> = emptyList(),
     val pendingApproval: ToolRequest? = null,
     val changes: List<ChangeItem> = emptyList(),
@@ -412,6 +410,9 @@ data class AppUiState(
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private fun defaultGreeting(): String =
+        defaultGreeting()
+
     /** Resolves a user-visible string in the language selected in the app. */
     private fun str(@StringRes id: Int, vararg args: Any): String = AppStrings.get(getApplication(), id, *args)
 
@@ -3166,7 +3167,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         val activeChat = chats.first()
         val saved = preferences.loadMessages(project.id, activeChat.id)
-        val msgs = saved.ifEmpty { listOf(ChatMessage(fromUser = false, text = "Hi! Tell me what you want to build or change.")) }
+        val msgs = saved.ifEmpty { listOf(ChatMessage(fromUser = false, text = defaultGreeting())) }
         val androidBuild = loadAndroidBuildRecord(project.id)
         _state.update {
             it.copy(
@@ -3342,7 +3343,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 projects = listOf(project) + it.projects,
                 activeProject = project,
                 workspaceVisible = true,
-                messages = listOf(ChatMessage(fromUser = false, text = "Hi! Tell me what you want to build or change.")),
+                messages = listOf(ChatMessage(fromUser = false, text = defaultGreeting())),
                 liveProcess = emptyList(),
                 liveThinking = false,
                 taskStartedAtMillis = null,
@@ -4130,7 +4131,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 projectChats = chats,
                 activeChatId = chat.id,
-                messages = listOf(ChatMessage(fromUser = false, text = "Hi! Tell me what you want to build or change.")),
+                messages = listOf(ChatMessage(fromUser = false, text = defaultGreeting())),
                 liveProcess = emptyList(),
                 liveThinking = false,
                 taskStartedAtMillis = null,
@@ -4151,7 +4152,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.update {
             it.copy(
                 activeChatId = chat.id,
-                messages = saved.ifEmpty { listOf(ChatMessage(fromUser = false, text = "Hi! Tell me what you want to build or change.")) },
+                messages = saved.ifEmpty { listOf(ChatMessage(fromUser = false, text = defaultGreeting())) },
                 liveProcess = emptyList(),
                 liveThinking = false,
                 taskStartedAtMillis = null,

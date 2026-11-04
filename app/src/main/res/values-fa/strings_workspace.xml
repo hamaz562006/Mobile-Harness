@@ -31,7 +31,7 @@
     <string name="ws_terminal_cursor_left">جابه‌جایی مکان‌نما به چپ</string>
     <string name="ws_terminal_cursor_right">جابه‌جایی مکان‌نما به راست</string>
     <string name="ws_terminal_alt_modifier">تعدیل‌گر Alt</string>
-    <string name="ws_terminal_escape">Escape</string>
+    <string name="ws_terminal_escape">خروج (Esc)</string>
     <string name="ws_terminal_ctrl_modifier">تعدیل‌گر Control؛ برای قطع، C را بزنید</string>
     <string name="ws_md_code_label">کد</string>
     <string name="ws_md_run_in_terminal">اجرا در ترمینال پروژه</string>
