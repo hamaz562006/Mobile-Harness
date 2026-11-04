@@ -27,8 +27,8 @@ val hasUploadSigning = listOf(
 ).all { !it.isNullOrBlank() }
 val runtimeReleaseBaseUrl =
     "https://github.com/techjarves/Mobile-Harness/releases/download/runtime-2026.09.4"
-val appUpdateManifestUrl =
-    "https://github.com/techjarves/Mobile-Harness/releases/latest/download/mobile-harness-update.json"
+// Fork: do not auto-update from techjarves releases. Owner checks upstream periodically.
+val appUpdateManifestUrl = ""
 val runtimeBundleDir = rootProject.layout.projectDirectory.dir("dist/runtime-bundles")
 val generatedRuntimeAssets = layout.buildDirectory.dir("generated/runtime-assets")
 
@@ -41,7 +41,7 @@ val prepareBundledAgentAssets = tasks.register<Sync>("prepareBundledAgentAssets"
 val prepareOfflineRuntimeAssets = tasks.register<Sync>("prepareOfflineRuntimeAssets") {
     from(
         runtimeBundleDir.file("pocketdev-core-arm64-2026.09.5.tar.zst"),
-        runtimeBundleDir.file("pocketdev-claude-arm64-2026.09.1.tar.zst"),
+        runtimeBundleDir.file("pocketdev-claude-arm64-2026.11.1.tar.zst"),
         runtimeBundleDir.file("pocketdev-python-arm64-2026.09.2.tar.zst"),
         runtimeBundleDir.file("pocketdev-android-arm64-2026.09.1.tar.zst"),
         runtimeBundleDir.file("pocketdev-dsh-arm64-2026.09.1.tar.zst"),
@@ -68,6 +68,11 @@ android {
                 storePassword = checkNotNull(uploadStorePassword)
                 keyAlias = checkNotNull(uploadKeyAlias)
                 keyPassword = checkNotNull(uploadKeyPassword)
+                // AGP drops the legacy JAR signature for minSdk >= 24, but some
+                // OEM installers (vivo) reject APKs without it as "missing the
+                // developer certificate". Keep both; the key is unchanged.
+                enableV1Signing = true
+                enableV2Signing = true
             }
         }
     }
@@ -80,8 +85,8 @@ android {
         targetSdk = 36
         // Keep literal defaults so F-Droid's static manifest parser can detect
         // the tagged release. Gradle properties may still override Play builds.
-        versionCode = 10
-        versionName = "1.0.9"
+        versionCode = 11
+        versionName = "1.0.10"
         providers.gradleProperty("appVersionCode").orNull?.toIntOrNull()?.let { versionCode = it }
         providers.gradleProperty("appVersionName").orNull?.let { versionName = it }
 

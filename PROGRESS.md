@@ -48,9 +48,10 @@
 35. ✅ Base URL پروایدر: `http://127.0.0.1:20128/v1` (کلید محلی 9Router؛ نه کلید upstream)
 
 ## همگام‌سازی با upstream و آپدیت اپ
-36. 🔄 همگام‌سازی فورک با `techjarves/Mobile-Harness` تا v1.0.10 با حفظ تمام تغییرات فورک
-37. 🔄 دریافت قابلیت Backup & Restore و What's New از upstream
-38. 🔄 اصلاح `APP_UPDATE_MANIFEST_URL` تا دیالوگ آپدیت خودکار از ریلیز techjarves نیاید (بررسی دوره‌ای دستی توسط مالک فورک)
+36. ✅ همگام‌سازی فورک با `techjarves/Mobile-Harness` تا v1.0.10 با حفظ تمام تغییرات فورک
+37. ✅ دریافت قابلیت Backup & Restore و What's New از upstream
+38. ✅ اصلاح `APP_UPDATE_MANIFEST_URL` (خالی) تا دیالوگ آپدیت خودکار از ریلیز techjarves نیاید — بررسی دوره‌ای دستی توسط مالک فورک
+39. ✅ نسخه اپ `1.0.10` / versionCode `11` هم‌تراز با upstream (بدون تغییر applicationId فورک)
 
 ---
 

@@ -106,7 +106,6 @@ val DEEPSEEK_HARNESS_PROVIDERS: Set<ProviderKind> = setOf(
     ProviderKind.ANTHROPIC,
     ProviderKind.LLM_ROUTER,
     ProviderKind.KIMI,
-    ProviderKind.OPENCODE_ZEN,
     ProviderKind.NVIDIA_NIM,
     ProviderKind.CUSTOM,
     ProviderKind.NINE_ROUTER,
@@ -152,8 +151,13 @@ fun providerProtocolForAgent(profile: ProviderProfile, agent: AgentKind): Provid
     }
 }
 
-/** Provider choices shown for the selected coding agent — see [ProviderCatalog]. */
+/**
+ * Provider choices for the selected coding agent — see [ProviderCatalog].
+ * OpenCode Zen is excluded there (third-party clients blocked upstream).
+ * NINE_ROUTER is special and only appears after link, not in this onboarding list.
+ */
 fun providersForAgent(agent: AgentKind): List<ProviderKind> = ProviderCatalog.providersFor(agent)
+
 
 data class ProviderProfile(
     val kind: ProviderKind,

@@ -14,6 +14,7 @@ class LocaleHelperTest {
     fun appLanguageResolutionFromCode() {
         assertEquals(AppLanguage.ENGLISH, AppLanguage.fromCode("en"))
         assertEquals(AppLanguage.FARSI, AppLanguage.fromCode("fa"))
+        assertEquals("fa", LocaleHelper.getLocale("fa")?.language)
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode("system"))
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode(""))
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromCode(null))

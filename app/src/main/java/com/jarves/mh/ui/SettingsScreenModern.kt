@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
@@ -79,6 +80,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -125,7 +127,7 @@ import com.jarves.mh.ui.theme.AccentColor
 import com.jarves.mh.ui.theme.AppThemeMode
 import kotlinx.coroutines.launch
 
-private enum class SettingsSection { APPEARANCE, LANGUAGE, RELIABILITY, TOOLS, RUNTIME, DIAGNOSTICS }
+private enum class SettingsSection { APPEARANCE, LANGUAGE, RELIABILITY, TOOLS, RUNTIME, DIAGNOSTICS, BACKUP, UPDATE_CHANNEL }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,9 +163,18 @@ fun SettingsScreen(
     onRefreshDiagnostics: () -> Unit = {},
     onStopInactiveProcesses: () -> Unit = {},
     onClearRuntimeCache: () -> Unit = {},
+    showBackupDot: Boolean = false,
+    onBackupOpened: () -> Unit = {},
+    openBackup: Boolean = false,
 ) {
     val context = LocalContext.current
     var expanded by rememberSaveable { mutableStateOf<SettingsSection?>(null) }
+    LaunchedEffect(openBackup) {
+        if (openBackup) {
+            expanded = SettingsSection.BACKUP
+            onBackupOpened()
+        }
+    }
     var terminalCleared by remember { mutableStateOf(false) }
     var showReliabilityHelp by rememberSaveable { mutableStateOf(false) }
     var stackPendingRemoval by remember { mutableStateOf<DevStack?>(null) }
@@ -316,6 +327,25 @@ fun SettingsScreen(
                             }
                         }
                     }
+                }
+            }
+
+            item {
+                SettingsAccordion(
+                    title = stringResource(R.string.backup_title),
+                    subtitle = stringResource(R.string.backup_subtitle),
+                    icon = Icons.Default.Backup,
+                    expanded = expanded == SettingsSection.BACKUP,
+                    onClick = {
+                        toggle(SettingsSection.BACKUP)
+                        onBackupOpened()
+                    },
+                    showDot = showBackupDot,
+                ) {
+                    BackupRestoreSection(
+                        busy = state.isRunning || state.projectTerminalRunning || state.androidBuildRunning ||
+                            state.projectExportRunning || state.agentInstalling != null || state.devStackInstalling != null,
+                    )
                 }
             }
 
@@ -728,6 +758,7 @@ private fun SettingsAccordion(
     icon: ImageVector,
     expanded: Boolean,
     onClick: () -> Unit,
+    showDot: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     Surface(
@@ -746,7 +777,13 @@ private fun SettingsAccordion(
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                        if (showDot) {
+                            Spacer(Modifier.width(6.dp))
+                            Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.error, CircleShape))
+                        }
+                    }
                     Text(subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Icon(
