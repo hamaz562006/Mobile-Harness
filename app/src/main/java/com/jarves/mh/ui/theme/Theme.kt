@@ -93,11 +93,10 @@ val VazirmatnFamily = FontFamily(
 
 private fun appTypography(useVazirmatn: Boolean): Typography {
     if (!useVazirmatn) return Typography()
-    // defaultFontFamily applies to every role; still copy each style so nothing keeps Default.
-    val base = Typography(defaultFontFamily = VazirmatnFamily)
+    // Material3 Typography in our BOM has no defaultFontFamily param — set family on every role.
+    val base = Typography()
     fun TextStyle.withVazir() = copy(fontFamily = VazirmatnFamily)
     return Typography(
-        defaultFontFamily = VazirmatnFamily,
         displayLarge = base.displayLarge.withVazir(),
         displayMedium = base.displayMedium.withVazir(),
         displaySmall = base.displaySmall.withVazir(),
