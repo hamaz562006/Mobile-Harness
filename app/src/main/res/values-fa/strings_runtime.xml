@@ -138,4 +138,6 @@
     <string name="rt_update_version_mismatch">نسخهٔ به‌روزرسانی با manifest هم‌خوان نیست</string>
     <string name="rt_update_signature_mismatch">به‌روزرسانی با کلید امضای اپ نصب‌شده امضا نشده است</string>
     <string name="rt_api_http_public">http:// ساده فقط برای آدرس‌های شبکهٔ محلی مجاز است (مثل 192.168.x.x، 10.x.x.x، Tailscale یا localhost).</string>
+<string name="rt_agy_checking_sign_in">در حال بررسی وضعیت ورود…</string>
+<string name="rt_agy_sign_in_not_kept">ورود ذخیره نشد؛ دوباره وارد شوید</string>
 </resources>

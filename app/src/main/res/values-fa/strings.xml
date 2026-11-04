@@ -445,4 +445,5 @@
     <string name="nine_router_up_to_date">9Router به‌روز است</string>
     <string name="nine_router_update_available">به‌روزرسانی موجود: %1$s</string>
     <string name="nine_router_error_retry">تلاش مجدد نصب</string>
+<string name="provider_skip_setup_later">بعداً در تنظیمات می‌توانید راه‌اندازی را تمام کنید</string>
 </resources>

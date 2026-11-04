@@ -182,4 +182,9 @@
     </plurals>
     <string name="vm_claude_hello">درخواست پاسخ از Claude Code…</string>
     <string name="vm_claude_working">اشتراک Claude کار می‌کند!</string>
+<string name="vm_github_code_copied">کد کپی شد</string>
+<string name="ws_terminal_leave_body">ترمینال هنوز در حال اجراست. می‌خواهید متوقف شود یا در پس‌زمینه ادامه دهد؟</string>
+<string name="ws_terminal_leave_keep">ادامه در پس‌زمینه</string>
+<string name="ws_terminal_leave_stop">توقف ترمینال</string>
+<string name="ws_terminal_leave_title">ترمینال در حال اجرا است</string>
 </resources>
