@@ -63,18 +63,16 @@ class MainActivity : ComponentActivity() {
                 LocalLayoutDirection provides layoutDirection,
                 LocalActivityResultRegistryOwner provides this,
             ) {
-                PocketTheme(themeMode = state.themeMode, accentColor = state.accentColor, languageCode = state.languageCode) {
-                    val isFa = state.languageCode.equals("fa", ignoreCase = true) ||
-                        AppStrings.languageCode(localizedContext).equals("fa", ignoreCase = true)
+                PocketTheme(
+                    themeMode = state.themeMode,
+                    accentColor = state.accentColor,
+                    languageCode = state.languageCode,
+                ) {
+                    // Second layer: guarantee Vazirmatn on first install language screen and after.
+                    val isFa = state.languageCode.equals("fa", ignoreCase = true)
                     if (isFa) {
-                        CompositionLocalProvider(
-                            LocalTextStyle provides TextStyle(
-                                fontFamily = VazirmatnFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 16.sp,
-                                lineHeight = 24.sp,
-                            ),
-                        ) {
+                        val merged = LocalTextStyle.current.merge(TextStyle(fontFamily = VazirmatnFamily))
+                        CompositionLocalProvider(LocalTextStyle provides merged) {
                             PocketDevApp(vm)
                         }
                     } else {

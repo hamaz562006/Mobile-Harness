@@ -17,6 +17,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontLoadingStrategy
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.jarves.mh.R
@@ -74,24 +75,24 @@ private val LightColors = lightColorScheme(
  * Every FontWeight maps to a real file so Compose never substitutes the system font.
  */
 val VazirmatnFamily = FontFamily(
-    Font(R.font.vazirmatn_regular, FontWeight.Thin),
-    Font(R.font.vazirmatn_regular, FontWeight.ExtraLight),
-    Font(R.font.vazirmatn_regular, FontWeight.Light),
-    Font(R.font.vazirmatn_regular, FontWeight.Normal),
-    Font(R.font.vazirmatn_regular, FontWeight.W400),
-    Font(R.font.vazirmatn_medium, FontWeight.Medium),
-    Font(R.font.vazirmatn_medium, FontWeight.W500),
-    Font(R.font.vazirmatn_medium, FontWeight.SemiBold),
-    Font(R.font.vazirmatn_medium, FontWeight.W600),
-    Font(R.font.vazirmatn_bold, FontWeight.Bold),
-    Font(R.font.vazirmatn_bold, FontWeight.W700),
-    Font(R.font.vazirmatn_bold, FontWeight.ExtraBold),
-    Font(R.font.vazirmatn_bold, FontWeight.W800),
-    Font(R.font.vazirmatn_bold, FontWeight.Black),
-    Font(R.font.vazirmatn_bold, FontWeight.W900),
+    Font(R.font.vazirmatn_regular, FontWeight.Thin, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_regular, FontWeight.ExtraLight, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_regular, FontWeight.Light, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_regular, FontWeight.Normal, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_regular, FontWeight.W400, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_medium, FontWeight.Medium, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_medium, FontWeight.W500, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_medium, FontWeight.SemiBold, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_medium, FontWeight.W600, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.Bold, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.W700, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.ExtraBold, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.W800, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.Black, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.W900, loadingStrategy = FontLoadingStrategy.Blocking),
 )
 
-private fun appTypography(useVazirmatn: Boolean): Typography {
+private fun appTypographyprivate fun appTypography(useVazirmatn: Boolean): Typography {
     if (!useVazirmatn) return Typography()
     // Material3 Typography in our BOM has no defaultFontFamily param — set family on every role.
     val base = Typography()
@@ -173,20 +174,9 @@ fun PocketTheme(
     }
     val context = LocalContext.current
     val prefsLang = AppStrings.languageCode(context)
-    val configLang = runCatching {
-        context.resources.configuration.locales.get(0)?.language
-    }.getOrNull().orEmpty()
-    val defaultLang = runCatching { java.util.Locale.getDefault().language }.getOrNull().orEmpty()
-    // Vazirmatn ONLY for Persian: explicit "fa" in app setting (state or prefs).
-    // Not for English. System+device-fa also gets Vazirmatn.
-    val applyVazir = when {
-        languageCode.equals("en", ignoreCase = true) -> false
-        languageCode.equals("fa", ignoreCase = true) -> true
-        prefsLang.equals("fa", ignoreCase = true) -> true
-        languageCode.equals("system", ignoreCase = true) &&
-            (configLang.equals("fa", ignoreCase = true) || defaultLang.equals("fa", ignoreCase = true)) -> true
-        else -> false
-    }
+    // Persian UI language → Vazirmatn on every text role from first frame (incl. onboarding).
+    val applyVazir = languageCode.equals("fa", ignoreCase = true) ||
+        prefsLang.equals("fa", ignoreCase = true)
 
     val accent = if (isDark) accentColor.dark else accentColor.light
     val typography = appTypography(applyVazir)
@@ -205,17 +195,15 @@ fun PocketTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = typography,
     ) {
-        val defaultStyle = if (applyVazir) {
-            TextStyle(
-                fontFamily = VazirmatnFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
+        if (applyVazir) {
+            // Merge so any Text(fontWeight/fontSize) still keeps Vazirmatn family.
+            val base = LocalTextStyle.current.merge(
+                TextStyle(fontFamily = VazirmatnFamily),
             )
+            CompositionLocalProvider(LocalTextStyle provides base) {
+                content()
+            }
         } else {
-            typography.bodyLarge
-        }
-        CompositionLocalProvider(LocalTextStyle provides defaultStyle) {
             content()
         }
     }

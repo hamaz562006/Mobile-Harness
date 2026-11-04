@@ -130,7 +130,7 @@ class AppPreferences(private val context: Context) {
 
     var languageCode: String
         get() = preferences.getString("language_code", "system") ?: "system"
-        set(value) { preferences.edit().putString("language_code", value).apply() }
+        set(value) { preferences.edit().putString("language_code", value).commit() }
 
     var legacySeededCredentialRemoved: Boolean
         get() = preferences.getBoolean("legacy_seeded_credential_removed", false)
