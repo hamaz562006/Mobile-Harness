@@ -70,26 +70,34 @@ private val LightColors = lightColorScheme(
 )
 
 /**
- * Vazirmatn for Persian UI. Map common weights (incl. SemiBold used across the app)
- * so Compose does not fall back to the system font when weight is missing.
+ * Vazirmatn for Persian UI only.
+ * Every FontWeight maps to a real file so Compose never substitutes the system font.
  */
 val VazirmatnFamily = FontFamily(
-    Font(R.font.vazirmatn_regular, FontWeight.W400),
+    Font(R.font.vazirmatn_regular, FontWeight.Thin),
+    Font(R.font.vazirmatn_regular, FontWeight.ExtraLight),
+    Font(R.font.vazirmatn_regular, FontWeight.Light),
     Font(R.font.vazirmatn_regular, FontWeight.Normal),
-    Font(R.font.vazirmatn_medium, FontWeight.W500),
+    Font(R.font.vazirmatn_regular, FontWeight.W400),
     Font(R.font.vazirmatn_medium, FontWeight.Medium),
+    Font(R.font.vazirmatn_medium, FontWeight.W500),
     Font(R.font.vazirmatn_medium, FontWeight.SemiBold),
     Font(R.font.vazirmatn_medium, FontWeight.W600),
-    Font(R.font.vazirmatn_bold, FontWeight.W700),
     Font(R.font.vazirmatn_bold, FontWeight.Bold),
+    Font(R.font.vazirmatn_bold, FontWeight.W700),
     Font(R.font.vazirmatn_bold, FontWeight.ExtraBold),
+    Font(R.font.vazirmatn_bold, FontWeight.W800),
+    Font(R.font.vazirmatn_bold, FontWeight.Black),
+    Font(R.font.vazirmatn_bold, FontWeight.W900),
 )
 
 private fun appTypography(useVazirmatn: Boolean): Typography {
-    val base = Typography()
-    if (!useVazirmatn) return base
+    if (!useVazirmatn) return Typography()
+    // defaultFontFamily applies to every role; still copy each style so nothing keeps Default.
+    val base = Typography(defaultFontFamily = VazirmatnFamily)
     fun TextStyle.withVazir() = copy(fontFamily = VazirmatnFamily)
     return Typography(
+        defaultFontFamily = VazirmatnFamily,
         displayLarge = base.displayLarge.withVazir(),
         displayMedium = base.displayMedium.withVazir(),
         displaySmall = base.displaySmall.withVazir(),
@@ -164,26 +172,25 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    // Prefer explicit arg; also prefs + device/config locale so Persian never falls back
-    // to the system Latin font after merges or when language is "system".
     val context = LocalContext.current
     val prefsLang = AppStrings.languageCode(context)
     val configLang = runCatching {
-        context.resources.configuration.locales[0]?.language
+        context.resources.configuration.locales.get(0)?.language
     }.getOrNull().orEmpty()
     val defaultLang = runCatching { java.util.Locale.getDefault().language }.getOrNull().orEmpty()
-    val resolvedLang = when {
-        languageCode.equals("fa", ignoreCase = true) -> "fa"
-        prefsLang.equals("fa", ignoreCase = true) -> "fa"
+    // Vazirmatn ONLY for Persian: explicit "fa" in app setting (state or prefs).
+    // Not for English. System+device-fa also gets Vazirmatn.
+    val applyVazir = when {
+        languageCode.equals("en", ignoreCase = true) -> false
+        languageCode.equals("fa", ignoreCase = true) -> true
+        prefsLang.equals("fa", ignoreCase = true) -> true
         languageCode.equals("system", ignoreCase = true) &&
-            (configLang.equals("fa", ignoreCase = true) || defaultLang.equals("fa", ignoreCase = true)) -> "fa"
-        configLang.equals("fa", ignoreCase = true) &&
-            (languageCode.equals("system", ignoreCase = true) || languageCode.isBlank()) -> "fa"
-        else -> languageCode
+            (configLang.equals("fa", ignoreCase = true) || defaultLang.equals("fa", ignoreCase = true)) -> true
+        else -> false
     }
-    val useVazirmatn = resolvedLang.equals("fa", ignoreCase = true)
+
     val accent = if (isDark) accentColor.dark else accentColor.light
-    val typography = appTypography(useVazirmatn)
+    val typography = appTypography(applyVazir)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -199,21 +206,17 @@ fun PocketTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = typography,
     ) {
-        // Material3 Text defaults to LocalTextStyle; force bodyLarge (with Vazirmatn)
-        // so bare Text(fontSize=…) calls still use the Persian font family.
-        val defaultStyle = if (useVazirmatn) {
-            // Explicit family on LocalTextStyle so Text(fontSize=…) and Text without style
-            // cannot fall back to device default (which is not Vazirmatn).
-            typography.bodyLarge.copy(
+        val defaultStyle = if (applyVazir) {
+            TextStyle(
                 fontFamily = VazirmatnFamily,
                 fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
             )
         } else {
             typography.bodyLarge
         }
-        CompositionLocalProvider(
-            LocalTextStyle provides defaultStyle,
-        ) {
+        CompositionLocalProvider(LocalTextStyle provides defaultStyle) {
             content()
         }
     }
