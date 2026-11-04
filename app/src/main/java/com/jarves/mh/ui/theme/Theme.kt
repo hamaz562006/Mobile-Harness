@@ -164,12 +164,21 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    // Prefer explicit arg; also accept prefs in case a caller forgets to pass state.
+    // Prefer explicit arg; also prefs + device/config locale so Persian never falls back
+    // to the system Latin font after merges or when language is "system".
     val context = LocalContext.current
     val prefsLang = AppStrings.languageCode(context)
+    val configLang = runCatching {
+        context.resources.configuration.locales[0]?.language
+    }.getOrNull().orEmpty()
+    val defaultLang = runCatching { java.util.Locale.getDefault().language }.getOrNull().orEmpty()
     val resolvedLang = when {
         languageCode.equals("fa", ignoreCase = true) -> "fa"
         prefsLang.equals("fa", ignoreCase = true) -> "fa"
+        languageCode.equals("system", ignoreCase = true) &&
+            (configLang.equals("fa", ignoreCase = true) || defaultLang.equals("fa", ignoreCase = true)) -> "fa"
+        configLang.equals("fa", ignoreCase = true) &&
+            (languageCode.equals("system", ignoreCase = true) || languageCode.isBlank()) -> "fa"
         else -> languageCode
     }
     val useVazirmatn = resolvedLang.equals("fa", ignoreCase = true)
@@ -193,7 +202,12 @@ fun PocketTheme(
         // Material3 Text defaults to LocalTextStyle; force bodyLarge (with Vazirmatn)
         // so bare Text(fontSize=…) calls still use the Persian font family.
         val defaultStyle = if (useVazirmatn) {
-            typography.bodyLarge.copy(fontFamily = VazirmatnFamily)
+            // Explicit family on LocalTextStyle so Text(fontSize=…) and Text without style
+            // cannot fall back to device default (which is not Vazirmatn).
+            typography.bodyLarge.copy(
+                fontFamily = VazirmatnFamily,
+                fontWeight = FontWeight.Normal,
+            )
         } else {
             typography.bodyLarge
         }

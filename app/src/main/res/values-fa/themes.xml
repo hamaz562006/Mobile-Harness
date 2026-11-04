@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View-system text (dialogs, menus) uses Vazirmatn when locale is fa -->
+    <style name="Theme.PocketDev" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">@font/vazirmatn_family</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#0B0E14</item>
+        <item name="android:navigationBarColor">#0B0E14</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>
