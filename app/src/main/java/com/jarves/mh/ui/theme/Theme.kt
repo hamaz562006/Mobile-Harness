@@ -70,9 +70,11 @@ private val LightColors = lightColorScheme(
 
 
 
+
 /**
- * Vazirmatn for the whole app UI. Resource fonts, Blocking load.
- * SemiBold is a real file (not simulated) so weights never fall back to system.
+ * Vazirmatn for every UI text role and every FontWeight.
+ * Missing weight → system font. So every weight maps to a real TTF.
+ * Titles/buttons use Bold/SemiBold — those MUST resolve to Vazirmatn files.
  */
 val VazirmatnFamily = FontFamily(
     Font(R.font.vazirmatn_regular, FontWeight.Thin, loadingStrategy = FontLoadingStrategy.Blocking),
@@ -92,24 +94,38 @@ val VazirmatnFamily = FontFamily(
     Font(R.font.vazirmatn_bold, FontWeight.W900, loadingStrategy = FontLoadingStrategy.Blocking),
 )
 
+/**
+ * Full Material3 type scale — every style carries [VazirmatnFamily] so
+ * Text(style = typography.headline*), Button (labelLarge), and bare Text all match.
+ */
 fun buildVazirTypography(family: FontFamily = VazirmatnFamily): Typography {
-    fun s(size: androidx.compose.ui.unit.TextUnit, lh: androidx.compose.ui.unit.TextUnit, w: FontWeight, ls: androidx.compose.ui.unit.TextUnit = 0.sp) =
-        TextStyle(fontFamily = family, fontWeight = w, fontSize = size, lineHeight = lh, letterSpacing = ls)
+    fun s(
+        size: androidx.compose.ui.unit.TextUnit,
+        lh: androidx.compose.ui.unit.TextUnit,
+        w: FontWeight,
+        ls: androidx.compose.ui.unit.TextUnit = 0.sp,
+    ) = TextStyle(
+        fontFamily = family,
+        fontWeight = w,
+        fontSize = size,
+        lineHeight = lh,
+        letterSpacing = ls,
+    )
     return Typography(
         displayLarge = s(57.sp, 64.sp, FontWeight.Normal),
         displayMedium = s(45.sp, 52.sp, FontWeight.Normal),
         displaySmall = s(36.sp, 44.sp, FontWeight.Normal),
-        headlineLarge = s(32.sp, 40.sp, FontWeight.Normal),
-        headlineMedium = s(28.sp, 36.sp, FontWeight.Normal),
-        headlineSmall = s(24.sp, 32.sp, FontWeight.Normal),
-        titleLarge = s(22.sp, 28.sp, FontWeight.Normal),
-        titleMedium = s(16.sp, 24.sp, FontWeight.Medium, 0.15.sp),
-        titleSmall = s(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
+        headlineLarge = s(32.sp, 40.sp, FontWeight.Bold),
+        headlineMedium = s(28.sp, 36.sp, FontWeight.Bold),
+        headlineSmall = s(24.sp, 32.sp, FontWeight.Bold),
+        titleLarge = s(22.sp, 28.sp, FontWeight.Bold),
+        titleMedium = s(16.sp, 24.sp, FontWeight.SemiBold, 0.15.sp),
+        titleSmall = s(14.sp, 20.sp, FontWeight.SemiBold, 0.1.sp),
         bodyLarge = s(16.sp, 24.sp, FontWeight.Normal, 0.5.sp),
         bodyMedium = s(14.sp, 20.sp, FontWeight.Normal, 0.25.sp),
         bodySmall = s(12.sp, 16.sp, FontWeight.Normal, 0.4.sp),
-        labelLarge = s(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
-        labelMedium = s(12.sp, 16.sp, FontWeight.Medium, 0.5.sp),
+        labelLarge = s(14.sp, 20.sp, FontWeight.SemiBold, 0.1.sp),
+        labelMedium = s(12.sp, 16.sp, FontWeight.SemiBold, 0.5.sp),
         labelSmall = s(11.sp, 16.sp, FontWeight.Medium, 0.5.sp),
     )
 }
@@ -177,6 +193,8 @@ fun PocketTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = typography,
     ) {
+        // bodyLarge is default LocalTextStyle; titles/buttons use typography roles
+        // that already embed VazirmatnFamily + Bold/SemiBold weights above.
         CompositionLocalProvider(LocalTextStyle provides typography.bodyLarge) {
             content()
         }
