@@ -71,8 +71,8 @@ private val LightColors = lightColorScheme(
 )
 
 /**
- * Vazirmatn for Persian UI only.
- * Every FontWeight maps to a real file so Compose never substitutes the system font.
+ * Vazirmatn — used for the entire Compose UI whenever the app language is Persian (fa).
+ * Loaded with Blocking strategy and preloaded in [com.jarves.mh.MhApp] so the first frame is correct.
  */
 val VazirmatnFamily = FontFamily(
     Font(R.font.vazirmatn_regular, FontWeight.Thin, loadingStrategy = FontLoadingStrategy.Blocking),
@@ -92,11 +92,11 @@ val VazirmatnFamily = FontFamily(
     Font(R.font.vazirmatn_bold, FontWeight.W900, loadingStrategy = FontLoadingStrategy.Blocking),
 )
 
+private fun TextStyle.withVazir(): TextStyle = copy(fontFamily = VazirmatnFamily)
+
 private fun appTypography(useVazirmatn: Boolean): Typography {
-    if (!useVazirmatn) return Typography()
-    // Material3 Typography in our BOM has no defaultFontFamily param — set family on every role.
     val base = Typography()
-    fun TextStyle.withVazir() = copy(fontFamily = VazirmatnFamily)
+    if (!useVazirmatn) return base
     return Typography(
         displayLarge = base.displayLarge.withVazir(),
         displayMedium = base.displayMedium.withVazir(),
@@ -160,6 +160,10 @@ private fun lightSchemeFor(accent: Color) = LightColors.copy(
     onPrimaryContainer = Color(0xFF1A1A1A),
 )
 
+/** True when the in-app language is Persian. */
+fun isPersianUi(languageCode: String, prefsLang: String = ""): Boolean =
+    languageCode.equals("fa", ignoreCase = true) || prefsLang.equals("fa", ignoreCase = true)
+
 @Composable
 fun PocketTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
@@ -174,9 +178,7 @@ fun PocketTheme(
     }
     val context = LocalContext.current
     val prefsLang = AppStrings.languageCode(context)
-    // Persian UI language → Vazirmatn on every text role from first frame (incl. onboarding).
-    val applyVazir = languageCode.equals("fa", ignoreCase = true) ||
-        prefsLang.equals("fa", ignoreCase = true)
+    val applyVazir = isPersianUi(languageCode, prefsLang)
 
     val accent = if (isDark) accentColor.dark else accentColor.light
     val typography = appTypography(applyVazir)
@@ -195,15 +197,19 @@ fun PocketTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = typography,
     ) {
-        if (applyVazir) {
-            // Merge so any Text(fontWeight/fontSize) still keeps Vazirmatn family.
-            val base = LocalTextStyle.current.merge(
-                TextStyle(fontFamily = VazirmatnFamily),
-            )
-            CompositionLocalProvider(LocalTextStyle provides base) {
-                content()
-            }
-        } else {
+        if (!applyVazir) {
+            content()
+            return@MaterialTheme
+        }
+        // Force Vazirmatn on LocalTextStyle for every Text / TextField that does not
+        // explicitly set FontFamily.Monospace (code/terminal).
+        val forced = LocalTextStyle.current.merge(
+            TextStyle(
+                fontFamily = VazirmatnFamily,
+                // Do not pin size/weight here — only the family — so styles keep hierarchy.
+            ),
+        )
+        CompositionLocalProvider(LocalTextStyle provides forced) {
             content()
         }
     }

@@ -68,16 +68,7 @@ class MainActivity : ComponentActivity() {
                     accentColor = state.accentColor,
                     languageCode = state.languageCode,
                 ) {
-                    // Second layer: guarantee Vazirmatn on first install language screen and after.
-                    val isFa = state.languageCode.equals("fa", ignoreCase = true)
-                    if (isFa) {
-                        val merged = LocalTextStyle.current.merge(TextStyle(fontFamily = VazirmatnFamily))
-                        CompositionLocalProvider(LocalTextStyle provides merged) {
-                            PocketDevApp(vm)
-                        }
-                    } else {
-                        PocketDevApp(vm)
-                    }
+                    PocketDevApp(vm)
                 }
             }
         }
