@@ -176,9 +176,10 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    val context = LocalContext.current
-    val prefsLang = AppStrings.languageCode(context)
-    val applyVazir = isPersianUi(languageCode, prefsLang)
+    // This fork: Vazirmatn is the UI typeface for ALL screens (onboarding → settings),
+    // not only when languageCode happens to be "fa". Code/terminal still use Monospace.
+    // Persian remains the primary language; English also renders correctly with Vazirmatn.
+    val applyVazir = true
 
     val accent = if (isDark) accentColor.dark else accentColor.light
     val typography = appTypography(applyVazir)
