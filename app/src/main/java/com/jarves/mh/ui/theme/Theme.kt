@@ -71,33 +71,14 @@ private val LightColors = lightColorScheme(
 
 
 
-/**
- * Vazirmatn for every UI text role and every FontWeight.
- * Missing weight → system font. So every weight maps to a real TTF.
- * Titles/buttons use Bold/SemiBold — those MUST resolve to Vazirmatn files.
- */
-val VazirmatnFamily = FontFamily(
-    Font(R.font.vazirmatn_regular, FontWeight.Thin, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_regular, FontWeight.ExtraLight, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_regular, FontWeight.Light, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_regular, FontWeight.Normal, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_regular, FontWeight.W400, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_medium, FontWeight.Medium, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_medium, FontWeight.W500, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_semibold, FontWeight.SemiBold, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_semibold, FontWeight.W600, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.Bold, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.W700, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.ExtraBold, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.W800, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.Black, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.W900, loadingStrategy = FontLoadingStrategy.Blocking),
-)
 
 /**
- * Full Material3 type scale — every style carries [VazirmatnFamily] so
- * Text(style = typography.headline*), Button (labelLarge), and bare Text all match.
+ * App-wide Vazirmatn. Backed by [com.jarves.mh.VazirmatnFonts] (assets, loaded in Application).
+ * Do not use Font(R.font.*) here — resource font resolution can silently fall back to system.
  */
+val VazirmatnFamily: FontFamily
+    get() = com.jarves.mh.VazirmatnFonts.family
+
 fun buildVazirTypography(family: FontFamily = VazirmatnFamily): Typography {
     fun s(
         size: androidx.compose.ui.unit.TextUnit,
@@ -177,7 +158,9 @@ fun PocketTheme(
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
     val accent = if (isDark) accentColor.dark else accentColor.light
-    val typography = buildVazirTypography(VazirmatnFamily)
+    // Always assets-backed family (initialized in MhApp)
+    val family = VazirmatnFamily
+    val typography = buildVazirTypography(family)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -193,8 +176,6 @@ fun PocketTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = typography,
     ) {
-        // bodyLarge is default LocalTextStyle; titles/buttons use typography roles
-        // that already embed VazirmatnFamily + Bold/SemiBold weights above.
         CompositionLocalProvider(LocalTextStyle provides typography.bodyLarge) {
             content()
         }
