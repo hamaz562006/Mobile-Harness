@@ -17,6 +17,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.runtime.remember
+import android.content.res.AssetManager
 import androidx.compose.ui.text.font.FontLoadingStrategy
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -70,73 +73,85 @@ private val LightColors = lightColorScheme(
     outlineVariant = Color(0xFFD8DEE4),
 )
 
+
 /**
- * Vazirmatn — used for the entire Compose UI whenever the app language is Persian (fa).
- * Loaded with Blocking strategy and preloaded in [com.jarves.mh.MhApp] so the first frame is correct.
+ * Vazirmatn loaded from assets (reliable path) + res/font fallback weights.
  */
+fun createVazirmatnFamily(assets: AssetManager): FontFamily = FontFamily(
+    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.Thin),
+    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.ExtraLight),
+    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.Light),
+    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.Normal),
+    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.W400),
+    Font("fonts/Vazirmatn-Medium.ttf", assets, FontWeight.Medium),
+    Font("fonts/Vazirmatn-Medium.ttf", assets, FontWeight.W500),
+    Font("fonts/Vazirmatn-SemiBold.ttf", assets, FontWeight.SemiBold),
+    Font("fonts/Vazirmatn-SemiBold.ttf", assets, FontWeight.W600),
+    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.Bold),
+    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.W700),
+    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.ExtraBold),
+    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.W800),
+    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.Black),
+    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.W900),
+)
+
+/** Keep for call sites that reference VazirmatnFamily without Context (res/font path). */
 val VazirmatnFamily = FontFamily(
-    Font(R.font.vazirmatn_regular, FontWeight.Thin, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_regular, FontWeight.ExtraLight, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_regular, FontWeight.Light, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_regular, FontWeight.Normal, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_regular, FontWeight.W400, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_medium, FontWeight.Medium, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_medium, FontWeight.W500, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_medium, FontWeight.SemiBold, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_medium, FontWeight.W600, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_semibold, FontWeight.SemiBold, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_bold, FontWeight.Bold, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_regular, FontWeight.W400, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_medium, FontWeight.W500, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_semibold, FontWeight.W600, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_bold, FontWeight.W700, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.ExtraBold, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_bold, FontWeight.W800, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.Black, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_bold, FontWeight.W900, loadingStrategy = FontLoadingStrategy.Blocking),
 )
 
-private fun TextStyle.withVazir(): TextStyle = copy(fontFamily = VazirmatnFamily)
-
-private fun appTypography(useVazirmatn: Boolean): Typography {
-    val base = Typography()
-    if (!useVazirmatn) return base
+private fun buildTypography(family: FontFamily): Typography {
+    fun style(
+        size: androidx.compose.ui.unit.TextUnit,
+        lineHeight: androidx.compose.ui.unit.TextUnit,
+        weight: FontWeight,
+        letter: androidx.compose.ui.unit.TextUnit = 0.sp,
+    ) = TextStyle(
+        fontFamily = family,
+        fontWeight = weight,
+        fontSize = size,
+        lineHeight = lineHeight,
+        letterSpacing = letter,
+    )
     return Typography(
-        displayLarge = base.displayLarge.withVazir(),
-        displayMedium = base.displayMedium.withVazir(),
-        displaySmall = base.displaySmall.withVazir(),
-        headlineLarge = base.headlineLarge.withVazir(),
-        headlineMedium = base.headlineMedium.withVazir(),
-        headlineSmall = base.headlineSmall.withVazir(),
-        titleLarge = base.titleLarge.withVazir(),
-        titleMedium = base.titleMedium.withVazir(),
-        titleSmall = base.titleSmall.withVazir(),
-        bodyLarge = base.bodyLarge.withVazir(),
-        bodyMedium = base.bodyMedium.withVazir(),
-        bodySmall = base.bodySmall.withVazir(),
-        labelLarge = base.labelLarge.withVazir(),
-        labelMedium = base.labelMedium.withVazir(),
-        labelSmall = base.labelSmall.withVazir(),
+        displayLarge = style(57.sp, 64.sp, FontWeight.Normal),
+        displayMedium = style(45.sp, 52.sp, FontWeight.Normal),
+        displaySmall = style(36.sp, 44.sp, FontWeight.Normal),
+        headlineLarge = style(32.sp, 40.sp, FontWeight.Normal),
+        headlineMedium = style(28.sp, 36.sp, FontWeight.Normal),
+        headlineSmall = style(24.sp, 32.sp, FontWeight.Normal),
+        titleLarge = style(22.sp, 28.sp, FontWeight.Normal),
+        titleMedium = style(16.sp, 24.sp, FontWeight.Medium, 0.15.sp),
+        titleSmall = style(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
+        bodyLarge = style(16.sp, 24.sp, FontWeight.Normal, 0.5.sp),
+        bodyMedium = style(14.sp, 20.sp, FontWeight.Normal, 0.25.sp),
+        bodySmall = style(12.sp, 16.sp, FontWeight.Normal, 0.4.sp),
+        labelLarge = style(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
+        labelMedium = style(12.sp, 16.sp, FontWeight.Medium, 0.5.sp),
+        labelSmall = style(11.sp, 16.sp, FontWeight.Medium, 0.5.sp),
     )
 }
 
-/**
- * Accent colors inspired by coding-agent brand hues.
- * Drives MaterialTheme.primary; more appearance options can hang off this later.
- */
 enum class AccentColor(
     val id: String,
     val dark: Color,
     val light: Color,
 ) {
-    /** App default — violet (first install / onboarding) */
     DEFAULT("default", Color(0xFFB39DDB), Color(0xFF9575CD)),
-    /** Claude / Anthropic warm terracotta */
     CLAUDE("claude", Color(0xFFD97757), Color(0xFFC45C3E)),
-    /** DeepSeek blue */
     DEEPSEEK("deepseek", Color(0xFF4C8DFF), Color(0xFF3366CC)),
-    /** Antigravity / Google green */
     ANTIGRAVITY("antigravity", Color(0xFF34A853), Color(0xFF1B8A5A)),
-    /** Legacy app orange */
     ORANGE("orange", Color(0xFFFF6B2C), Color(0xFFD85A20)),
     ;
-
     companion object {
         fun fromId(value: String?): AccentColor =
             entries.firstOrNull {
@@ -160,10 +175,6 @@ private fun lightSchemeFor(accent: Color) = LightColors.copy(
     onPrimaryContainer = Color(0xFF1A1A1A),
 )
 
-/** True when the in-app language is Persian. */
-fun isPersianUi(languageCode: String, prefsLang: String = ""): Boolean =
-    languageCode.equals("fa", ignoreCase = true) || prefsLang.equals("fa", ignoreCase = true)
-
 @Composable
 fun PocketTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
@@ -176,13 +187,11 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    // This fork: Vazirmatn is the UI typeface for ALL screens (onboarding → settings),
-    // not only when languageCode happens to be "fa". Code/terminal still use Monospace.
-    // Persian remains the primary language; English also renders correctly with Vazirmatn.
-    val applyVazir = true
-
+    val context = LocalContext.current
+    // Asset-based family: does not depend on resource font inflation quirks.
+    val family = remember(context.assets) { createVazirmatnFamily(context.assets) }
+    val typography = remember(family) { buildTypography(family) }
     val accent = if (isDark) accentColor.dark else accentColor.light
-    val typography = appTypography(applyVazir)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -198,19 +207,9 @@ fun PocketTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = typography,
     ) {
-        if (!applyVazir) {
-            content()
-            return@MaterialTheme
-        }
-        // Force Vazirmatn on LocalTextStyle for every Text / TextField that does not
-        // explicitly set FontFamily.Monospace (code/terminal).
-        val forced = LocalTextStyle.current.merge(
-            TextStyle(
-                fontFamily = VazirmatnFamily,
-                // Do not pin size/weight here — only the family — so styles keep hierarchy.
-            ),
-        )
-        CompositionLocalProvider(LocalTextStyle provides forced) {
+        CompositionLocalProvider(
+            LocalTextStyle provides typography.bodyLarge,
+        ) {
             content()
         }
     }
