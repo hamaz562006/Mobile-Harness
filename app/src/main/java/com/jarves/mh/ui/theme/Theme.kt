@@ -11,20 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.runtime.remember
-import android.content.res.AssetManager
 import androidx.compose.ui.text.font.FontLoadingStrategy
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.jarves.mh.R
-import com.jarves.mh.ui.AppStrings
 
 /** @deprecated Use MaterialTheme.colorScheme.primary — kept as purple fallback only. */
 val PocketOrange = Color(0xFFB39DDB)
@@ -74,70 +69,48 @@ private val LightColors = lightColorScheme(
 )
 
 
-/**
- * Vazirmatn loaded from assets (reliable path) + res/font fallback weights.
- */
-fun createVazirmatnFamily(assets: AssetManager): FontFamily = FontFamily(
-    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.Thin),
-    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.ExtraLight),
-    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.Light),
-    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.Normal),
-    Font("fonts/Vazirmatn-Regular.ttf", assets, FontWeight.W400),
-    Font("fonts/Vazirmatn-Medium.ttf", assets, FontWeight.Medium),
-    Font("fonts/Vazirmatn-Medium.ttf", assets, FontWeight.W500),
-    Font("fonts/Vazirmatn-SemiBold.ttf", assets, FontWeight.SemiBold),
-    Font("fonts/Vazirmatn-SemiBold.ttf", assets, FontWeight.W600),
-    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.Bold),
-    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.W700),
-    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.ExtraBold),
-    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.W800),
-    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.Black),
-    Font("fonts/Vazirmatn-Bold.ttf", assets, FontWeight.W900),
-)
 
-/** Keep for call sites that reference VazirmatnFamily without Context (res/font path). */
+/**
+ * Vazirmatn for the whole app UI. Resource fonts, Blocking load.
+ * SemiBold is a real file (not simulated) so weights never fall back to system.
+ */
 val VazirmatnFamily = FontFamily(
+    Font(R.font.vazirmatn_regular, FontWeight.Thin, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_regular, FontWeight.ExtraLight, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_regular, FontWeight.Light, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_regular, FontWeight.Normal, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_medium, FontWeight.Medium, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_semibold, FontWeight.SemiBold, loadingStrategy = FontLoadingStrategy.Blocking),
-    Font(R.font.vazirmatn_bold, FontWeight.Bold, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_regular, FontWeight.W400, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_medium, FontWeight.Medium, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_medium, FontWeight.W500, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_semibold, FontWeight.SemiBold, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_semibold, FontWeight.W600, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.Bold, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_bold, FontWeight.W700, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.ExtraBold, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_bold, FontWeight.W800, loadingStrategy = FontLoadingStrategy.Blocking),
+    Font(R.font.vazirmatn_bold, FontWeight.Black, loadingStrategy = FontLoadingStrategy.Blocking),
     Font(R.font.vazirmatn_bold, FontWeight.W900, loadingStrategy = FontLoadingStrategy.Blocking),
 )
 
-private fun buildTypography(family: FontFamily): Typography {
-    fun style(
-        size: androidx.compose.ui.unit.TextUnit,
-        lineHeight: androidx.compose.ui.unit.TextUnit,
-        weight: FontWeight,
-        letter: androidx.compose.ui.unit.TextUnit = 0.sp,
-    ) = TextStyle(
-        fontFamily = family,
-        fontWeight = weight,
-        fontSize = size,
-        lineHeight = lineHeight,
-        letterSpacing = letter,
-    )
+fun buildVazirTypography(family: FontFamily = VazirmatnFamily): Typography {
+    fun s(size: androidx.compose.ui.unit.TextUnit, lh: androidx.compose.ui.unit.TextUnit, w: FontWeight, ls: androidx.compose.ui.unit.TextUnit = 0.sp) =
+        TextStyle(fontFamily = family, fontWeight = w, fontSize = size, lineHeight = lh, letterSpacing = ls)
     return Typography(
-        displayLarge = style(57.sp, 64.sp, FontWeight.Normal),
-        displayMedium = style(45.sp, 52.sp, FontWeight.Normal),
-        displaySmall = style(36.sp, 44.sp, FontWeight.Normal),
-        headlineLarge = style(32.sp, 40.sp, FontWeight.Normal),
-        headlineMedium = style(28.sp, 36.sp, FontWeight.Normal),
-        headlineSmall = style(24.sp, 32.sp, FontWeight.Normal),
-        titleLarge = style(22.sp, 28.sp, FontWeight.Normal),
-        titleMedium = style(16.sp, 24.sp, FontWeight.Medium, 0.15.sp),
-        titleSmall = style(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
-        bodyLarge = style(16.sp, 24.sp, FontWeight.Normal, 0.5.sp),
-        bodyMedium = style(14.sp, 20.sp, FontWeight.Normal, 0.25.sp),
-        bodySmall = style(12.sp, 16.sp, FontWeight.Normal, 0.4.sp),
-        labelLarge = style(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
-        labelMedium = style(12.sp, 16.sp, FontWeight.Medium, 0.5.sp),
-        labelSmall = style(11.sp, 16.sp, FontWeight.Medium, 0.5.sp),
+        displayLarge = s(57.sp, 64.sp, FontWeight.Normal),
+        displayMedium = s(45.sp, 52.sp, FontWeight.Normal),
+        displaySmall = s(36.sp, 44.sp, FontWeight.Normal),
+        headlineLarge = s(32.sp, 40.sp, FontWeight.Normal),
+        headlineMedium = s(28.sp, 36.sp, FontWeight.Normal),
+        headlineSmall = s(24.sp, 32.sp, FontWeight.Normal),
+        titleLarge = s(22.sp, 28.sp, FontWeight.Normal),
+        titleMedium = s(16.sp, 24.sp, FontWeight.Medium, 0.15.sp),
+        titleSmall = s(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
+        bodyLarge = s(16.sp, 24.sp, FontWeight.Normal, 0.5.sp),
+        bodyMedium = s(14.sp, 20.sp, FontWeight.Normal, 0.25.sp),
+        bodySmall = s(12.sp, 16.sp, FontWeight.Normal, 0.4.sp),
+        labelLarge = s(14.sp, 20.sp, FontWeight.Medium, 0.1.sp),
+        labelMedium = s(12.sp, 16.sp, FontWeight.Medium, 0.5.sp),
+        labelSmall = s(11.sp, 16.sp, FontWeight.Medium, 0.5.sp),
     )
 }
 
@@ -187,11 +160,8 @@ fun PocketTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    val context = LocalContext.current
-    // Asset-based family: does not depend on resource font inflation quirks.
-    val family = remember(context.assets) { createVazirmatnFamily(context.assets) }
-    val typography = remember(family) { buildTypography(family) }
     val accent = if (isDark) accentColor.dark else accentColor.light
+    val typography = buildVazirTypography(VazirmatnFamily)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -207,9 +177,7 @@ fun PocketTheme(
         colorScheme = if (isDark) darkSchemeFor(accent) else lightSchemeFor(accent),
         typography = typography,
     ) {
-        CompositionLocalProvider(
-            LocalTextStyle provides typography.bodyLarge,
-        ) {
+        CompositionLocalProvider(LocalTextStyle provides typography.bodyLarge) {
             content()
         }
     }
