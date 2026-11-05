@@ -92,7 +92,7 @@ val VazirmatnFamily = FontFamily(
     Font(R.font.vazirmatn_bold, FontWeight.W900, loadingStrategy = FontLoadingStrategy.Blocking),
 )
 
-private fun appTypographyprivate fun appTypography(useVazirmatn: Boolean): Typography {
+private fun appTypography(useVazirmatn: Boolean): Typography {
     if (!useVazirmatn) return Typography()
     // Material3 Typography in our BOM has no defaultFontFamily param — set family on every role.
     val base = Typography()
