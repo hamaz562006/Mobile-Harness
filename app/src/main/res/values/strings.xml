@@ -445,4 +445,17 @@
     <string name="nine_router_up_to_date">9Router is up to date</string>
     <string name="nine_router_update_available">Update available: %1$s</string>
     <string name="nine_router_error_retry">Retry install</string>
+
+    <string name="nine_router_phase_need_runtime">Need runtime</string>
+    <string name="nine_router_phase_install">Ready to install</string>
+    <string name="nine_router_phase_installing">Installing</string>
+    <string name="nine_router_phase_ready">Ready</string>
+    <string name="nine_router_phase_starting">Starting</string>
+    <string name="nine_router_phase_running">Running</string>
+    <string name="nine_router_phase_stopping">Stopping</string>
+    <string name="nine_router_phase_connecting">Connecting</string>
+    <string name="nine_router_phase_error">Error</string>
+    <string name="download_progress_mb">%1$s / %2$s MB</string>
+    <string name="runtime_msg_downloading_progress">Downloading: %1$s / %2$s MB</string>
+
 </resources>

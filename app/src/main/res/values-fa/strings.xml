@@ -401,9 +401,9 @@
     <string name="accent_deepseek">دیپ‌سیک</string>
     <string name="accent_antigravity">آنتی‌گراویتی</string>
     <string name="accent_orange">نارنجی</string>
-    <string name="fallback_title">Fallbackها</string>
-    <string name="fallback_subtitle">Default for Harness</string>
-    <string name="fallback_automatic">Fallback خودکار</string>
+    <string name="fallback_title">پشتیبان (Fallback)</string>
+    <string name="fallback_subtitle">پیش‌فرض برای Harness</string>
+    <string name="fallback_automatic">تعویض خودکار پشتیبان</string>
     <string name="fallback_help">مشترک برای همهٔ ایجنت‌ها. ابتدا مدل انتخاب‌شده؛ بعد این مدل‌های پشتیبان به ترتیب.</string>
     <string name="fallback_none">مدل پشتیبان اضافه نشده است.</string>
     <string name="fallback_add_model">افزودن مدل (%1$d/%2$d)</string>
@@ -415,7 +415,7 @@
     <string name="fallback_privacy_off">زنجیرهٔ پیش‌فرض فعال نیست. تنظیمات حساب و ساب‌ایجنت همچنان اعمال می‌شود. نگهداری داده تابع سیاست هر پروایدر است؛ این تنظیم تضمین ZDR نمی‌دهد.</string>
     <string name="fallback_privacy_on">فقط اتصال انتخاب‌شده و مدل‌های این زنجیره برای تعویض خودکار استفاده می‌شوند. نگهداری داده تابع سیاست هر پروایدر است؛ این تنظیم تضمین ZDR نمی‌دهد.</string>
     <string name="fallback_same_provider">فقط در همان پروایدر بمان</string>
-    <string name="fallback_save">ذخیره Fallbackها</string>
+    <string name="fallback_save">ذخیره زنجیرهٔ پشتیبان</string>
     <string name="fallback_remove">حذف</string>
     <string name="fallback_pick_title">افزودن مدل پشتیبان</string>
     <string name="fallback_pick_provider">پروایدر</string>
@@ -446,4 +446,17 @@
     <string name="nine_router_update_available">به‌روزرسانی موجود: %1$s</string>
     <string name="nine_router_error_retry">تلاش مجدد نصب</string>
 <string name="provider_skip_setup_later">بعداً در تنظیمات می‌توانید راه‌اندازی را تمام کنید</string>
+
+    <string name="nine_router_phase_need_runtime">نیاز به رانتایم</string>
+    <string name="nine_router_phase_install">آمادهٔ نصب</string>
+    <string name="nine_router_phase_installing">در حال نصب</string>
+    <string name="nine_router_phase_ready">آماده</string>
+    <string name="nine_router_phase_starting">در حال شروع</string>
+    <string name="nine_router_phase_running">در حال اجرا</string>
+    <string name="nine_router_phase_stopping">در حال توقف</string>
+    <string name="nine_router_phase_connecting">در حال اتصال</string>
+    <string name="nine_router_phase_error">خطا</string>
+    <string name="download_progress_mb">%1$s / %2$s مگابایت</string>
+    <string name="runtime_msg_downloading_progress">دانلود: %1$s / %2$s مگابایت</string>
+
 </resources>

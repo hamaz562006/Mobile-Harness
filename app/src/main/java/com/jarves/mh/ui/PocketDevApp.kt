@@ -1892,7 +1892,17 @@ private fun localizeRuntimeMessage(message: String): String {
         trimmed.contains("Resuming 1code harness setup", ignoreCase = true) -> {
             stringResource(R.string.runtime_msg_resuming_setup)
         }
-        trimmed.startsWith("Downloading ") && !trimmed.startsWith("Downloading: ") -> {
+        trimmed.startsWith("Downloading:") || trimmed.startsWith("Downloading: ") -> {
+            val rest = trimmed.substringAfter("Downloading:").trim()
+            // "81.7 / 111.6 MB" or similar
+            val parts = rest.replace("MB", "").split("/").map { it.trim() }
+            if (parts.size >= 2) {
+                stringResource(R.string.runtime_msg_downloading_progress, parts[0], parts[1])
+            } else {
+                stringResource(R.string.runtime_msg_downloading_generic, rest)
+            }
+        }
+        trimmed.startsWith("Downloading ") -> {
             val rest = trimmed.removePrefix("Downloading ")
             stringResource(R.string.runtime_msg_downloading_generic, rest)
         }
@@ -2015,8 +2025,10 @@ private fun RuntimeInstallationScreen(
                         )
                         Spacer(Modifier.weight(1f))
                         state.startupBytes?.let { (downloaded, total) ->
+                            val d = String.format(java.util.Locale.getDefault(), "%.1f", downloaded / 1_048_576.0)
+                            val tot = String.format(java.util.Locale.getDefault(), "%.1f", total / 1_048_576.0)
                             Text(
-                                "${formatMegabytes(downloaded)} / ${formatMegabytes(total)}",
+                                stringResource(R.string.download_progress_mb, d, tot),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.5.sp,
                             )
@@ -2468,7 +2480,11 @@ private fun StartupErrorScreen(
     }
 }
 
-private fun formatMegabytes(bytes: Long): String = "%.1f MB".format(bytes / 1_048_576.0)
+private fun formatMegabytes(bytes: Long): String {
+    val mb = bytes / 1_048_576.0
+    val num = String.format(java.util.Locale.getDefault(), "%.1f", mb)
+    return "$num MB"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -7257,7 +7273,7 @@ private fun FilesTab(files: List<WorkspaceEntry>, loading: Boolean, onRefresh: (
 private fun formatFileSize(bytes: Long): String = when {
     bytes < 1_024 -> "$bytes B"
     bytes < 1_048_576 -> "%.1f KB".format(bytes / 1_024.0)
-    else -> "%.1f MB".format(bytes / 1_048_576.0)
+    else -> String.format(java.util.Locale.getDefault(), "%.1f MB", bytes / 1_048_576.0)
 }
 
 @Composable

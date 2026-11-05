@@ -2377,10 +2377,28 @@ private fun NineRouterCard(
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            val phaseLabel = when (state.phase) {
+                NineRouterPhase.NEED_RUNTIME -> stringResource(R.string.nine_router_phase_need_runtime)
+                NineRouterPhase.INSTALL -> stringResource(R.string.nine_router_phase_install)
+                NineRouterPhase.INSTALLING -> stringResource(R.string.nine_router_phase_installing)
+                NineRouterPhase.READY -> stringResource(R.string.nine_router_phase_ready)
+                NineRouterPhase.STARTING -> stringResource(R.string.nine_router_phase_starting)
+                NineRouterPhase.RUNNING -> stringResource(R.string.nine_router_phase_running)
+                NineRouterPhase.STOPPING -> stringResource(R.string.nine_router_phase_stopping)
+                NineRouterPhase.CONNECTING -> stringResource(R.string.nine_router_phase_connecting)
+                NineRouterPhase.ERROR -> stringResource(R.string.nine_router_phase_error)
+            }
             val statusLine = buildString {
-                append(state.phase.name)
+                append(phaseLabel)
                 state.installedVersion?.let { append(" · v"); append(it) }
-                if (state.detail.isNotBlank()) { append(" · "); append(state.detail) }
+                // Skip raw English detail when it duplicates phase guidance
+                val detail = state.detail.trim()
+                if (detail.isNotBlank() &&
+                    !detail.equals("Install Linux runtime first.", ignoreCase = true)
+                ) {
+                    append(" · ")
+                    append(detail)
+                }
             }
             Text(statusLine, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             state.error?.let {
