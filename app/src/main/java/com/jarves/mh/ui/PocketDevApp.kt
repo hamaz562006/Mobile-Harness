@@ -1,10 +1,5 @@
 package com.jarves.mh.ui
 
-import com.jarves.mh.ui.theme.VazirmatnFamily
-import com.jarves.mh.ui.theme.buildVazirTypography
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-
 import android.Manifest
 import android.app.ActivityManager
 import android.content.Intent
@@ -314,12 +309,6 @@ fun PocketDevApp(viewModel: MainViewModel = viewModel()) {
         }
     }
     BackupRestartEffect()
-    val vazirTypo = buildVazirTypography(VazirmatnFamily)
-    MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme,
-        typography = vazirTypo,
-    ) {
-        CompositionLocalProvider(LocalTextStyle provides vazirTypo.bodyLarge) {
     when {
         state.startupStage == StartupStage.CHECKING -> StartupLoadingScreen(
             state = state,
@@ -482,8 +471,6 @@ fun PocketDevApp(viewModel: MainViewModel = viewModel()) {
         )
         else -> RootScreenHost(state, viewModel, projectsListState)
     }
-    } // CompositionLocalProvider Vazirmatn
-    } // MaterialTheme Vazirmatn
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -659,7 +646,6 @@ private fun InitialLanguageSetupScreen(
                         stringResource(R.string.language_welcome_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = VazirmatnFamily,
                     )
                 }
             }
@@ -933,7 +919,7 @@ private fun BackgroundTaskSetupScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             Spacer(Modifier.height(8.dp))
-            Text(stringResource(R.string.bg_setup_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, fontFamily = VazirmatnFamily)
+            Text(stringResource(R.string.bg_setup_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             Text(
                 stringResource(R.string.bg_setup_subtitle),

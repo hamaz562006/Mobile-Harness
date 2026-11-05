@@ -1,8 +1,8 @@
 package com.jarves.mh
 
+import android.content.ComponentCallbacks2
 import android.content.Context
 import android.os.Bundle
-import android.content.ComponentCallbacks2
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
@@ -24,21 +24,15 @@ import com.jarves.mh.ui.LocaleHelper
 import com.jarves.mh.ui.MainViewModel
 import com.jarves.mh.ui.PocketDevApp
 import com.jarves.mh.ui.theme.PocketTheme
-import com.jarves.mh.ui.theme.VazirmatnFamily
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity() {
     private var appliedLanguageCode: String? = null
 
-    // Apply the in-app language to the Activity itself, not only to the Compose tree:
-    // dialogs, dropdown menus and popups get their own window whose context is the Activity.
     override fun attachBaseContext(newBase: Context) {
         appliedLanguageCode = AppStrings.languageCode(newBase)
         super.attachBaseContext(AppStrings.context(newBase))
     }
+
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,13 +50,18 @@ class MainActivity : ComponentActivity() {
             }
             val localizedConfiguration = localizedContext.resources.configuration
             val layoutDirection: LayoutDirection =
-                if (localizedConfiguration.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL) Rtl else Ltr
+                if (localizedConfiguration.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL) {
+                    Rtl
+                } else {
+                    Ltr
+                }
             CompositionLocalProvider(
                 LocalContext provides localizedContext,
                 LocalConfiguration provides localizedConfiguration,
                 LocalLayoutDirection provides layoutDirection,
                 LocalActivityResultRegistryOwner provides this,
             ) {
+                // PocketTheme applies Vazirmatn Typography + LocalTextStyle to the ENTIRE app tree.
                 PocketTheme(
                     themeMode = state.themeMode,
                     accentColor = state.accentColor,
