@@ -4112,6 +4112,13 @@ private fun ProjectsScreen(
             icon = { Icon(Icons.Default.Code, null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(state.githubLogin?.let { stringResource(R.string.projects_github_account, it) } ?: stringResource(R.string.projects_connect_github)) },
             text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 480.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                 when (state.githubAuthStatus) {
                     GitHubAuthStatus.DISCONNECTED, GitHubAuthStatus.ERROR -> {
                         var showPatForm by rememberSaveable { mutableStateOf(false) }
@@ -4307,6 +4314,7 @@ private fun ProjectsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                } // Column scroll
             },
             confirmButton = {
                 if (state.githubAuthStatus == GitHubAuthStatus.CONNECTED) {
