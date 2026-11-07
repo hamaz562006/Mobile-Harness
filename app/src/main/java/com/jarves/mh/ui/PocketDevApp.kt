@@ -4043,6 +4043,7 @@ private fun ProjectsScreen(
         icon = { Icon(Icons.Default.Code, null, tint = MaterialTheme.colorScheme.primary) },
         title = { Text(stringResource(R.string.ws_clone_git_title)) },
         text = {
+            var commitMessagePublic by rememberSaveable { mutableStateOf("") }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.ws_clone_git_desc), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.5.sp)
                 OutlinedTextField(
@@ -4053,6 +4054,44 @@ private fun ProjectsScreen(
                     singleLine = true,
                 )
                 state.gitCloneMessage?.let { Text(it, color = MaterialTheme.colorScheme.primary, fontSize = 12.sp) }
+                // Public clone path (no login): still allow Commit & push on the open workspace.
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Text(
+                    stringResource(R.string.ws_github_commit_push),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                )
+                Text(
+                    state.activeProject?.let {
+                        stringResource(R.string.ws_github_current_workspace, it.name)
+                    } ?: stringResource(R.string.ws_github_no_workspace),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = commitMessagePublic,
+                    onValueChange = { commitMessagePublic = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = state.activeProject != null && !state.gitCloneRunning,
+                    label = { Text(stringResource(R.string.ws_github_commit_message)) },
+                    placeholder = { Text(stringResource(R.string.ws_github_commit_placeholder)) },
+                )
+                Button(
+                    onClick = { onCommitAndPushGitHub(commitMessagePublic) },
+                    enabled = state.activeProject != null && !state.gitCloneRunning,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        if (state.gitCloneRunning) stringResource(R.string.ws_github_pushing)
+                        else stringResource(R.string.ws_github_commit_push),
+                    )
+                }
+                Text(
+                    stringResource(R.string.ws_github_commit_note_public),
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         confirmButton = {
@@ -4222,45 +4261,51 @@ private fun ProjectsScreen(
                                 }
                             }
                         }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    }
+                }
+                // Reference: Commit & push is for the open workspace — public or private —
+                // and is NOT gated on GitHub sign-in (login only needed for private remote auth).
+                if (state.githubAuthStatus != GitHubAuthStatus.STARTING &&
+                    state.githubAuthStatus != GitHubAuthStatus.AWAITING_USER
+                ) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Text(
+                        stringResource(R.string.ws_github_commit_push),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                    )
+                    Text(
+                        state.activeProject?.let {
+                            stringResource(R.string.ws_github_current_workspace, it.name)
+                        } ?: stringResource(R.string.ws_github_no_workspace),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    var commitMessageGh by rememberSaveable { mutableStateOf("") }
+                    OutlinedTextField(
+                        value = commitMessageGh,
+                        onValueChange = { commitMessageGh = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = state.activeProject != null && !state.gitCloneRunning,
+                        label = { Text(stringResource(R.string.ws_github_commit_message)) },
+                        placeholder = { Text(stringResource(R.string.ws_github_commit_placeholder)) },
+                    )
+                    Button(
+                        onClick = { onCommitAndPushGitHub(commitMessageGh) },
+                        enabled = state.activeProject != null && !state.gitCloneRunning,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
                         Text(
-                            stringResource(R.string.ws_github_commit_push),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                        )
-                        Text(
-                            state.activeProject?.let {
-                                stringResource(R.string.ws_github_current_workspace, it.name)
-                            } ?: stringResource(R.string.ws_github_no_workspace),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        var commitMessage by rememberSaveable { mutableStateOf("") }
-                        OutlinedTextField(
-                            value = commitMessage,
-                            onValueChange = { commitMessage = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            enabled = state.activeProject != null && !state.gitCloneRunning,
-                            label = { Text(stringResource(R.string.ws_github_commit_message)) },
-                            placeholder = { Text(stringResource(R.string.ws_github_commit_placeholder)) },
-                        )
-                        Button(
-                            onClick = { onCommitAndPushGitHub(commitMessage) },
-                            enabled = state.activeProject != null && !state.gitCloneRunning,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(
-                                if (state.gitCloneRunning) stringResource(R.string.ws_github_pushing)
-                                else stringResource(R.string.ws_github_commit_push),
-                            )
-                        }
-                        Text(
-                            stringResource(R.string.ws_github_commit_note),
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            if (state.gitCloneRunning) stringResource(R.string.ws_github_pushing)
+                            else stringResource(R.string.ws_github_commit_push),
                         )
                     }
+                    Text(
+                        stringResource(R.string.ws_github_commit_note),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             },
             confirmButton = {

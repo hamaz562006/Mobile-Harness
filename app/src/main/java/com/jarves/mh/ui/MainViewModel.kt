@@ -3920,10 +3920,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(toastMessage = str(R.string.vm_github_no_project)) }
             return
         }
-        if (_state.value.githubAuthStatus != GitHubAuthStatus.CONNECTED) {
-            _state.update { it.copy(toastMessage = str(R.string.vm_github_connect_again)) }
-            return
-        }
+        // Reference behavior: Commit & push needs an open workspace only.
+        // Public clones work without GitHub login; private remotes need prior login/PAT/credentials.
         if (_state.value.gitCloneRunning) return
         _state.update { it.copy(gitCloneRunning = true, gitCloneMessage = str(R.string.ws_github_pushing)) }
         startGitHubForegroundOperation()

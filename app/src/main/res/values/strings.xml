@@ -485,4 +485,5 @@
     <string name="vm_github_push_ok">Pushed to GitHub</string>
     <string name="vm_github_push_failed">Commit/push failed: %1$s</string>
 
+    <string name="ws_github_commit_note_public">Works on the open project after a public clone. Push to GitHub still needs write access (your credentials or a token).</string>
 </resources>
