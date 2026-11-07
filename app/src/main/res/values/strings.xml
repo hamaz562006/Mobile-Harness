@@ -470,6 +470,19 @@
     <string name="vm_github_pat_empty">Enter a personal access token</string>
     <string name="vm_github_pat_signing_in">Signing in with token…</string>
     <string name="vm_github_pat_failed">Token sign-in failed</string>
-    <string name="vm_github_connected_as">Connected as @%1$s</string>
+
+    <string name="ws_github_commit_push">Commit &amp; push</string>
+    <string name="ws_github_commit_message">Commit message</string>
+    <string name="ws_github_commit_placeholder">Update from Mobile Harness</string>
+    <string name="ws_github_commit_note">Review the repository, branch and files before publishing.</string>
+    <string name="ws_github_current_workspace">Current workspace: %1$s</string>
+    <string name="ws_github_no_workspace">Open a project first to commit &amp; push.</string>
+    <string name="ws_github_pushing">Committing and pushing…</string>
+    <string name="vm_github_commit_empty">Enter a commit message</string>
+    <string name="vm_github_no_project">Open a project first</string>
+    <string name="vm_github_not_a_repo">This project is not a Git repository</string>
+    <string name="vm_github_nothing_to_commit">Nothing to commit</string>
+    <string name="vm_github_push_ok">Pushed to GitHub</string>
+    <string name="vm_github_push_failed">Commit/push failed: %1$s</string>
 
 </resources>

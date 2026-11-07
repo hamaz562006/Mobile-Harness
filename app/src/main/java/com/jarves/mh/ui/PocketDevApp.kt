@@ -2575,6 +2575,7 @@ private fun RootScreenHost(
                     onRefreshGitHub = viewModel::refreshGitHubRepositories,
                     onDisconnectGitHub = viewModel::disconnectGitHub,
                     onCloneGitHub = viewModel::cloneGitHubRepository,
+                    onCommitAndPushGitHub = viewModel::commitAndPushActiveProject,
                     onRenameProject = viewModel::renameProject,
                     onDeleteProject = viewModel::deleteProject,
                     onSettings = { screen = RootScreen.SETTINGS },
@@ -3703,6 +3704,7 @@ private fun ProjectsScreen(
     onRefreshGitHub: () -> Unit,
     onDisconnectGitHub: () -> Unit,
     onCloneGitHub: (GitHubRepository) -> Unit,
+    onCommitAndPushGitHub: (String) -> Unit,
     onRenameProject: (String, String) -> Unit,
     onDeleteProject: (String) -> Unit,
     onSettings: () -> Unit,
@@ -4199,7 +4201,7 @@ private fun ProjectsScreen(
                             modifier = Modifier.fillMaxWidth(),
                         )
                         if (state.githubRepositoriesLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
-                        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 350.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 280.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             items(filteredRepositories, key = { it.fullName }) { repository ->
                                 Surface(
                                     modifier = Modifier.fillMaxWidth().clickable(enabled = !state.gitCloneRunning) {
@@ -4220,6 +4222,44 @@ private fun ProjectsScreen(
                                 }
                             }
                         }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Text(
+                            stringResource(R.string.ws_github_commit_push),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                        )
+                        Text(
+                            state.activeProject?.let {
+                                stringResource(R.string.ws_github_current_workspace, it.name)
+                            } ?: stringResource(R.string.ws_github_no_workspace),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        var commitMessage by rememberSaveable { mutableStateOf("") }
+                        OutlinedTextField(
+                            value = commitMessage,
+                            onValueChange = { commitMessage = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            enabled = state.activeProject != null && !state.gitCloneRunning,
+                            label = { Text(stringResource(R.string.ws_github_commit_message)) },
+                            placeholder = { Text(stringResource(R.string.ws_github_commit_placeholder)) },
+                        )
+                        Button(
+                            onClick = { onCommitAndPushGitHub(commitMessage) },
+                            enabled = state.activeProject != null && !state.gitCloneRunning,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                if (state.gitCloneRunning) stringResource(R.string.ws_github_pushing)
+                                else stringResource(R.string.ws_github_commit_push),
+                            )
+                        }
+                        Text(
+                            stringResource(R.string.ws_github_commit_note),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             },

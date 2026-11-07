@@ -3911,6 +3911,91 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+
+    /** Stage all changes, commit, and push the active project workspace to its GitHub remote. */
+    fun commitAndPushActiveProject(message: String) {
+        val cleaned = message.trim().ifBlank { str(R.string.ws_github_commit_placeholder) }
+        val project = _state.value.activeProject
+        if (project == null) {
+            _state.update { it.copy(toastMessage = str(R.string.vm_github_no_project)) }
+            return
+        }
+        if (_state.value.githubAuthStatus != GitHubAuthStatus.CONNECTED) {
+            _state.update { it.copy(toastMessage = str(R.string.vm_github_connect_again)) }
+            return
+        }
+        if (_state.value.gitCloneRunning) return
+        _state.update { it.copy(gitCloneRunning = true, gitCloneMessage = str(R.string.ws_github_pushing)) }
+        startGitHubForegroundOperation()
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val workspace = File(getApplication<Application>().filesDir, "workspaces/${project.id}")
+                    check(workspace.isDirectory) { str(R.string.vm_github_not_a_repo) }
+                    val gitDir = File(workspace, ".git")
+                    check(gitDir.exists()) { str(R.string.vm_github_not_a_repo) }
+                    val installed = installer.installedRuntime()
+                    fun runGit(args: List<String>): Pair<Int, String> {
+                        val output = File(getApplication<Application>().cacheDir, "git-push-${System.nanoTime()}.log")
+                        val process = installer.process(
+                            installed.proot,
+                            installed.rootfs,
+                            workspace,
+                            githubCliEnvironment() + mapOf(
+                                "GIT_TERMINAL_PROMPT" to "0",
+                                "GIT_AUTHOR_NAME" to "Mobile Harness",
+                                "GIT_AUTHOR_EMAIL" to "mobile-harness@local",
+                                "GIT_COMMITTER_NAME" to "Mobile Harness",
+                                "GIT_COMMITTER_EMAIL" to "mobile-harness@local",
+                            ),
+                            listOf("git") + args,
+                            guestWorkspacePath = "/workspace/${project.slug}",
+                            outputFile = output,
+                        )
+                        val exit = process.waitFor()
+                        val text = if (output.isFile) output.readText().trim() else ""
+                        output.delete()
+                        return exit to text
+                    }
+                    // status
+                    val (stExit, stOut) = runGit(listOf("status", "--porcelain"))
+                    check(stExit == 0) { stOut.ifBlank { str(R.string.vm_github_push_failed, "status") } }
+                    if (stOut.isBlank()) {
+                        // try push existing commits only
+                        val (pExit, pOut) = runGit(listOf("push", "-u", "origin", "HEAD"))
+                        check(pExit == 0) { pOut.ifBlank { str(R.string.vm_github_push_failed, "push") } }
+                        return@runCatching str(R.string.vm_github_push_ok)
+                    }
+                    val (addExit, addOut) = runGit(listOf("add", "-A"))
+                    check(addExit == 0) { addOut.ifBlank { str(R.string.vm_github_push_failed, "add") } }
+                    val (cExit, cOut) = runGit(listOf("commit", "-m", cleaned))
+                    check(cExit == 0) { cOut.ifBlank { str(R.string.vm_github_push_failed, "commit") } }
+                    val (pExit, pOut) = runGit(listOf("push", "-u", "origin", "HEAD"))
+                    check(pExit == 0) { pOut.ifBlank { str(R.string.vm_github_push_failed, "push") } }
+                    str(R.string.vm_github_push_ok)
+                }
+            }
+            result.onSuccess { msg ->
+                _state.update {
+                    it.copy(gitCloneRunning = false, gitCloneMessage = null, toastMessage = msg)
+                }
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(
+                        gitCloneRunning = false,
+                        gitCloneMessage = null,
+                        toastMessage = str(
+                            R.string.vm_github_push_failed,
+                            error.message?.lineSequence()?.lastOrNull()?.take(180)
+                                ?: str(R.string.vm_unknown_error),
+                        ),
+                    )
+                }
+            }
+            stopGitHubForegroundOperation()
+        }
+    }
+
     fun disconnectGitHub() {
         if (_state.value.githubAuthStatus == GitHubAuthStatus.STARTING) return
         val login = _state.value.githubLogin
