@@ -458,4 +458,18 @@
     <string name="download_progress_mb">%1$s / %2$s MB</string>
     <string name="runtime_msg_downloading_progress">Downloading: %1$s / %2$s MB</string>
 
+
+    <string name="ws_github_allow_workflows">Allow editing GitHub Actions workflows</string>
+    <string name="ws_github_use_pat">Use a personal access token</string>
+    <string name="ws_github_pat_label">Personal access token</string>
+    <string name="ws_github_pat_placeholder">ghp_… or github_pat_…</string>
+    <string name="ws_github_pat_hint">Needs the repo scope. Add workflow for Actions. Token is stored by the GitHub CLI in the private runtime.</string>
+    <string name="ws_github_pat_continue">Sign in with token</string>
+    <string name="ws_github_repositories">Repositories</string>
+    <string name="ws_github_import_hint">Tap a repository to clone it into a new project (public or private).</string>
+    <string name="vm_github_pat_empty">Enter a personal access token</string>
+    <string name="vm_github_pat_signing_in">Signing in with token…</string>
+    <string name="vm_github_pat_failed">Token sign-in failed</string>
+    <string name="vm_github_connected_as">Connected as @%1$s</string>
+
 </resources>

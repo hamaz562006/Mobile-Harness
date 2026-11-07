@@ -3686,7 +3686,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return uri.toASCIIString()
     }
 
-    fun startGitHubLogin() {
+    fun startGitHubLogin(includeWorkflows: Boolean = false) {
         if (_state.value.githubAuthStatus == GitHubAuthStatus.STARTING || _state.value.githubAuthStatus == GitHubAuthStatus.AWAITING_USER) return
         _state.update { it.copy(githubAuthStatus = GitHubAuthStatus.STARTING, githubMessage = str(R.string.vm_github_preparing_signin)) }
         startGitHubForegroundOperation()
@@ -3700,6 +3700,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val runtime = installer.installedRuntime()
                     val outputFile = File(getApplication<Application>().cacheDir, "github-auth-${System.nanoTime()}.log")
                     val workspace = File(getApplication<Application>().filesDir, "workspaces/github-auth").apply { mkdirs() }
+                    val scopes = if (includeWorkflows) "repo,workflow,read:org" else "repo,read:org"
                     val process = installer.process(
                         runtime.proot,
                         runtime.rootfs,
@@ -3711,6 +3712,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             "--hostname", "github.com",
                             "--git-protocol", "https",
                             "--web",
+                            "--scopes", scopes,
                             "--insecure-storage",
                         ),
                         guestWorkspacePath = "/workspace/github-auth",
@@ -3788,6 +3790,81 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } finally {
                 stopGitHubForegroundOperation()
                 githubAuthJob = null
+            }
+        }
+    }
+
+
+
+    /** Sign in with a classic/fine-grained personal access token (repo; optional workflow). */
+    fun loginGitHubWithPat(token: String) {
+        val cleaned = token.trim()
+        if (cleaned.isEmpty()) {
+            _state.update {
+                it.copy(githubMessage = str(R.string.vm_github_pat_empty), githubAuthStatus = GitHubAuthStatus.ERROR)
+            }
+            return
+        }
+        if (_state.value.githubAuthStatus == GitHubAuthStatus.STARTING) return
+        _state.update {
+            it.copy(githubAuthStatus = GitHubAuthStatus.STARTING, githubMessage = str(R.string.vm_github_pat_signing_in))
+        }
+        startGitHubForegroundOperation()
+        githubAuthJob = viewModelScope.launch {
+            try {
+                val login = withContext(Dispatchers.IO) {
+                    installer.ensureGitHubCliInstalled { progress ->
+                        _state.update { it.copy(githubMessage = progress.message) }
+                    }
+                    val runtime = installer.installedRuntime()
+                    val workspace = File(getApplication<Application>().filesDir, "workspaces/github-auth").apply { mkdirs() }
+                    val patFile = File(workspace, ".pat")
+                    patFile.writeText(cleaned)
+                    try {
+                        val outputFile = File(getApplication<Application>().cacheDir, "github-pat-${System.nanoTime()}.log")
+                        val process = installer.process(
+                            runtime.proot,
+                            runtime.rootfs,
+                            workspace,
+                            githubCliEnvironment(),
+                            listOf(
+                                "/bin/sh", "-c",
+                                "cat /workspace/github-auth/.pat | ${RuntimeInstaller.GITHUB_CLI_GUEST_PATH} auth login --hostname github.com --with-token --insecure-storage",
+                            ),
+                            guestWorkspacePath = "/workspace/github-auth",
+                            outputFile = outputFile,
+                        )
+                        val exit = process.waitFor()
+                        val out = if (outputFile.isFile) outputFile.readText() else ""
+                        check(exit == 0) {
+                            out.lineSequence().lastOrNull { it.isNotBlank() }
+                                ?: str(R.string.vm_github_pat_failed)
+                        }
+                        githubAccountLogin() ?: error(str(R.string.vm_github_account_unknown))
+                    } finally {
+                        patFile.delete()
+                    }
+                }
+                preferences.githubLogin = login
+                _state.update {
+                    it.copy(
+                        githubAuthStatus = GitHubAuthStatus.CONNECTED,
+                        githubLogin = login,
+                        githubUserCode = null,
+                        githubVerificationUri = null,
+                        githubMessage = str(R.string.vm_github_connected_as, login),
+                    )
+                }
+                refreshGitHubRepositories()
+            } catch (error: Throwable) {
+                _state.update {
+                    it.copy(
+                        githubAuthStatus = GitHubAuthStatus.ERROR,
+                        githubMessage = error.message ?: str(R.string.vm_github_pat_failed),
+                    )
+                }
+            } finally {
+                stopGitHubForegroundOperation()
             }
         }
     }

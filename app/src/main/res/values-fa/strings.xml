@@ -459,4 +459,18 @@
     <string name="download_progress_mb">%1$s / %2$s مگابایت</string>
     <string name="runtime_msg_downloading_progress">دانلود: %1$s / %2$s مگابایت</string>
 
+
+    <string name="ws_github_allow_workflows">اجازهٔ ویرایش workflowهای GitHub Actions</string>
+    <string name="ws_github_use_pat">استفاده از Personal Access Token</string>
+    <string name="ws_github_pat_label">توکن دسترسی شخصی</string>
+    <string name="ws_github_pat_placeholder">ghp_… یا github_pat_…</string>
+    <string name="ws_github_pat_hint">نیاز به دسترسی repo دارد. برای Actions، workflow را هم اضافه کنید. توکن توسط GitHub CLI در رانتایم خصوصی ذخیره می‌شود.</string>
+    <string name="ws_github_pat_continue">ورود با توکن</string>
+    <string name="ws_github_repositories">مخازن</string>
+    <string name="ws_github_import_hint">برای کلون به‌عنوان پروژهٔ جدید، روی مخزن بزنید (عمومی یا خصوصی).</string>
+    <string name="vm_github_pat_empty">توکن دسترسی شخصی را وارد کنید</string>
+    <string name="vm_github_pat_signing_in">ورود با توکن…</string>
+    <string name="vm_github_pat_failed">ورود با توکن ناموفق بود</string>
+    <string name="vm_github_connected_as">متصل به‌عنوان @%1$s</string>
+
 </resources>

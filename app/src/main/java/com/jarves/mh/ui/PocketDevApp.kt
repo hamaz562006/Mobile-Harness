@@ -2569,7 +2569,8 @@ private fun RootScreenHost(
                     onCreateQuickProject = viewModel::createQuickProject,
                     onImportZip = viewModel::importZipProject,
                     onCloneGit = viewModel::clonePublicGitRepository,
-                    onStartGitHubLogin = viewModel::startGitHubLogin,
+                    onStartGitHubLogin = { workflows -> viewModel.startGitHubLogin(workflows) },
+                    onLoginGitHubPat = viewModel::loginGitHubWithPat,
                     onGenerateNewGitHubCode = viewModel::generateNewGitHubCode,
                     onRefreshGitHub = viewModel::refreshGitHubRepositories,
                     onDisconnectGitHub = viewModel::disconnectGitHub,
@@ -3696,7 +3697,8 @@ private fun ProjectsScreen(
     onCreateQuickProject: () -> Unit,
     onImportZip: (Uri) -> Unit,
     onCloneGit: (String) -> Unit,
-    onStartGitHubLogin: () -> Unit,
+    onStartGitHubLogin: (includeWorkflows: Boolean) -> Unit,
+    onLoginGitHubPat: (String) -> Unit,
     onGenerateNewGitHubCode: () -> Unit,
     onRefreshGitHub: () -> Unit,
     onDisconnectGitHub: () -> Unit,
@@ -4070,13 +4072,69 @@ private fun ProjectsScreen(
             title = { Text(state.githubLogin?.let { stringResource(R.string.projects_github_account, it) } ?: stringResource(R.string.projects_connect_github)) },
             text = {
                 when (state.githubAuthStatus) {
-                    GitHubAuthStatus.DISCONNECTED, GitHubAuthStatus.ERROR -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(
-                            state.githubMessage ?: stringResource(R.string.ws_github_signin_desc),
-                            color = if (state.githubAuthStatus == GitHubAuthStatus.ERROR) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp,
-                        )
-                        Button(onClick = onStartGitHubLogin, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.ws_github_signin)) }
+                    GitHubAuthStatus.DISCONNECTED, GitHubAuthStatus.ERROR -> {
+                        var showPatForm by rememberSaveable { mutableStateOf(false) }
+                        var patToken by rememberSaveable { mutableStateOf("") }
+                        var allowWorkflows by rememberSaveable { mutableStateOf(false) }
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                state.githubMessage ?: stringResource(R.string.ws_github_signin_desc),
+                                color = if (state.githubAuthStatus == GitHubAuthStatus.ERROR) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                fontSize = 13.sp,
+                            )
+                            if (!showPatForm) {
+                                Button(
+                                    onClick = { onStartGitHubLogin(allowWorkflows) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) { Text(stringResource(R.string.ws_github_signin)) }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Checkbox(
+                                        checked = allowWorkflows,
+                                        onCheckedChange = { allowWorkflows = it },
+                                    )
+                                    Text(
+                                        stringResource(R.string.ws_github_allow_workflows),
+                                        fontSize = 13.sp,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                                OutlinedButton(
+                                    onClick = { showPatForm = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) { Text(stringResource(R.string.ws_github_use_pat)) }
+                            } else {
+                                OutlinedTextField(
+                                    value = patToken,
+                                    onValueChange = { patToken = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    label = { Text(stringResource(R.string.ws_github_pat_label)) },
+                                    placeholder = { Text(stringResource(R.string.ws_github_pat_placeholder)) },
+                                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                )
+                                Text(
+                                    stringResource(R.string.ws_github_pat_hint),
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Button(
+                                    onClick = { onLoginGitHubPat(patToken) },
+                                    enabled = patToken.isNotBlank(),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) { Text(stringResource(R.string.ws_github_pat_continue)) }
+                                TextButton(
+                                    onClick = { showPatForm = false; patToken = "" },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) { Text(stringResource(R.string.action_cancel)) }
+                            }
+                        }
                     }
                     GitHubAuthStatus.STARTING -> Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 2.5.dp)
@@ -4111,12 +4169,27 @@ private fun ProjectsScreen(
                         }
                     }
                     GitHubAuthStatus.CONNECTED -> Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                        Text(
+                            stringResource(R.string.ws_github_repositories),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(state.githubMessage ?: stringResource(R.string.ws_github_select_repo), modifier = Modifier.weight(1f), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                state.githubMessage ?: stringResource(R.string.ws_github_select_repo),
+                                modifier = Modifier.weight(1f),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                             IconButton(onClick = onRefreshGitHub, enabled = !state.githubRepositoriesLoading) {
                                 Icon(Icons.Default.Refresh, stringResource(R.string.ws_github_refresh_repos))
                             }
                         }
+                        Text(
+                            stringResource(R.string.ws_github_import_hint),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                         OutlinedTextField(
                             value = repositorySearch,
                             onValueChange = { repositorySearch = it },
