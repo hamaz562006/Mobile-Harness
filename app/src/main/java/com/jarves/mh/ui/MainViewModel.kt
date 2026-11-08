@@ -411,7 +411,7 @@ data class AppUiState(
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun defaultGreeting(): String =
-        defaultGreeting()
+        str(R.string.chat_welcome)
 
     /** Resolves a user-visible string in the language selected in the app. */
     private fun str(@StringRes id: Int, vararg args: Any): String = AppStrings.get(getApplication(), id, *args)
