@@ -177,8 +177,10 @@ internal fun extractFailedRepository(output: String): String? {
         Regex("""Could not GET\s+'(https?://[^']+)'""", RegexOption.IGNORE_CASE),
         Regex("""Received status code\s+\d+\s+from\s+(https?://\S+)""", RegexOption.IGNORE_CASE),
     )
-    for (p in patterns) {
-        p.find(output)?.groupValues?.getOrNull(1)?.let { return it.trimEnd('.', '\'', '"') }
+    for (pattern in patterns) {
+        val match = pattern.find(output) ?: continue
+        val value = match.groupValues.getOrNull(1) ?: continue
+        return value.trimEnd('.', '\'', '"')
     }
     return null
 }
