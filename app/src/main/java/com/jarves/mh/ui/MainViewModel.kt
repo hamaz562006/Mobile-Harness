@@ -4354,7 +4354,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun renameProject(projectId: String, newName: String) {
-        val clean = newName.replace(Regex("\s+"), " ").trim().take(60)
+        val clean = newName.replace(Regex("\\s+"), " ").trim().take(60)
         if (clean.isBlank()) return
         _state.update { current ->
             val usedSlugs = current.projects
