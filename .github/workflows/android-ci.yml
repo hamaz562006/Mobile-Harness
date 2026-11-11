@@ -37,6 +37,32 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      # Secrets are unavailable to fork pull requests. Those builds use the
+      # runner's temporary debug key; trusted pushes and manual runs must use
+      # the shared key so installed APKs remain update-compatible.
+      - name: Configure stable debug signing
+        if: github.event_name != 'pull_request'
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+          DEBUG_KEYSTORE_PASSWORD: ${{ secrets.DEBUG_KEYSTORE_PASSWORD }}
+          DEBUG_KEY_PASSWORD: ${{ secrets.DEBUG_KEY_PASSWORD }}
+          DEBUG_KEY_ALIAS: ${{ secrets.DEBUG_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          test -n "$DEBUG_KEYSTORE_BASE64" || { echo "Missing DEBUG_KEYSTORE_BASE64"; exit 1; }
+          test -n "$DEBUG_KEYSTORE_PASSWORD" || { echo "Missing DEBUG_KEYSTORE_PASSWORD"; exit 1; }
+          test -n "$DEBUG_KEY_PASSWORD" || { echo "Missing DEBUG_KEY_PASSWORD"; exit 1; }
+          test -n "$DEBUG_KEY_ALIAS" || { echo "Missing DEBUG_KEY_ALIAS"; exit 1; }
+          SIGNING_DIR="$RUNNER_TEMP/mh-debug-signing"
+          mkdir -p "$SIGNING_DIR"
+          chmod 700 "$SIGNING_DIR"
+          printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 --decode > "$SIGNING_DIR/debug.keystore"
+          chmod 600 "$SIGNING_DIR/debug.keystore"
+          echo "MH_DEBUG_STORE_FILE=$SIGNING_DIR/debug.keystore" >> "$GITHUB_ENV"
+          echo "MH_DEBUG_STORE_PASSWORD=$DEBUG_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "MH_DEBUG_KEY_PASSWORD=$DEBUG_KEY_PASSWORD" >> "$GITHUB_ENV"
+          echo "MH_DEBUG_KEY_ALIAS=$DEBUG_KEY_ALIAS" >> "$GITHUB_ENV"
+
       # Pin matches app/build.gradle.kts ndkVersion = 28.2.13676358 (r28c).
       # Do not use `yes | sdkmanager` under pipefail: sdkmanager succeeds then
       # `yes` gets SIGPIPE and the step is wrongly treated as failed.
