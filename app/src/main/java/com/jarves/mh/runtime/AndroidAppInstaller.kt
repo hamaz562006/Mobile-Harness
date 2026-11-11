@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
-import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Process
@@ -25,71 +24,33 @@ data class AndroidInstallEvent(
     val message: String? = null,
 )
 
-/** Installs a locally-built APK through Android's package manager, without ADB. */
+/**
+ * Installs a locally-built APK through Android's package manager, without ADB.
+ *
+ * Some OEMs (especially MIUI) never deliver PackageInstaller status callbacks even when
+ * the system installer succeeds. We always track the pending APK and complete the
+ * operation when the host Activity resumes and the package is present.
+ */
 object AndroidAppInstaller {
     private val _events = MutableSharedFlow<AndroidInstallEvent>(extraBufferCapacity = 8)
     val events = _events.asSharedFlow()
 
-    private data class LegacyPendingInstall(
+    const val ACTION_INSTALL_RESULT = "com.jarves.mh.action.ANDROID_INSTALL_RESULT"
+    const val EXTRA_OPERATION_ID = "operation_id"
+    const val EXTRA_LAUNCH_AFTER = "launch_after"
+    const val EXTRA_APK_FINGERPRINT = "apk_fingerprint"
+
+    private data class PendingInstall(
         val operationId: String,
         val apkPath: String,
         val packageName: String?,
         val fingerprint: String,
         val launchAfterInstall: Boolean,
+        val archiveVersionCode: Long,
     )
 
     @Volatile
-    private var pendingLegacyInstall: LegacyPendingInstall? = null
-
-    /** Call when the host Activity resumes — completes MIUI/legacy installs that have no session callback. */
-    fun onHostResumed(context: Context) {
-        val pending = pendingLegacyInstall ?: return
-        val apk = File(pending.apkPath)
-        if (!apk.isFile) return
-        val pkg = pending.packageName ?: archivePackageName(context, apk) ?: return
-        if (!isInstalled(context, pkg)) return
-        // Prefer matching the APK we asked to install; if fingerprint prefs lag, still accept installed pkg.
-        val matches = installedMatches(context, apk) ||
-            runCatching {
-                val info = context.packageManager.getPackageArchiveInfo(apk.absolutePath, 0)
-                info?.packageName == pkg
-            }.getOrDefault(false)
-        if (!matches && installedFingerprint(context, pkg) != null &&
-            installedFingerprint(context, pkg) != pending.fingerprint
-        ) {
-            // Different version already stored — wait; user may still be in installer.
-            return
-        }
-        // After system installer returns, package is present → treat as success for this operation.
-        if (!isInstalled(context, pkg)) return
-        rememberInstalled(context, pkg, pending.fingerprint)
-        pendingLegacyInstall = null
-        val launched = if (pending.launchAfterInstall) launch(context, pkg) else false
-        publish(
-            AndroidInstallEvent(
-                operationId = pending.operationId,
-                packageName = pkg,
-                success = true,
-                launched = launched,
-            ),
-        )
-    }
-
-    fun cancelPendingInstall(operationId: String? = null) {
-        val pending = pendingLegacyInstall ?: return
-        if (operationId != null && pending.operationId != operationId) return
-        pendingLegacyInstall = null
-        publish(
-            AndroidInstallEvent(
-                operationId = pending.operationId,
-                packageName = pending.packageName,
-                success = false,
-                launched = false,
-                message = "Installation cancelled",
-            ),
-        )
-    }
-
+    private var pendingInstall: PendingInstall? = null
 
     fun openIfAlreadyInstalled(context: Context, apk: File): Boolean {
         val packageName = archivePackageName(context, apk) ?: return false
@@ -106,16 +67,20 @@ object AndroidAppInstaller {
         require(apk.isFile && apk.extension.equals("apk", ignoreCase = true) && apk.length() > 0L) {
             AppStrings.get(context, R.string.rt_apk_invalid, apk.name)
         }
-        // MIUI/HyperOS often breaks PackageInstaller sessions; use the system installer UI.
-        // That path does not deliver a callback — track the APK and finish on resume/poll.
+        val packageName = archivePackageName(context, apk)
+        val fp = fingerprint(apk)
+        val versionCode = archiveVersionCode(context, apk)
+        pendingInstall = PendingInstall(
+            operationId = operationId,
+            apkPath = apk.absolutePath,
+            packageName = packageName,
+            fingerprint = fp,
+            launchAfterInstall = launchAfterInstall,
+            archiveVersionCode = versionCode,
+        )
+
+        // MIUI / HyperOS: system package installer UI (no reliable session callback).
         if (isMiuiDevice()) {
-            pendingLegacyInstall = LegacyPendingInstall(
-                operationId = operationId,
-                apkPath = apk.absolutePath,
-                packageName = archivePackageName(context, apk),
-                fingerprint = fingerprint(apk),
-                launchAfterInstall = launchAfterInstall,
-            )
             val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", apk)
             context.startActivity(
                 Intent(Intent.ACTION_INSTALL_PACKAGE, uri).apply {
@@ -125,66 +90,115 @@ object AndroidAppInstaller {
             )
             return operationId
         }
+
         val installer = context.packageManager.packageInstaller
-        val packageName = archivePackageName(context, apk)
         val isUpdate = packageName?.let { isInstalled(context, it) } == true
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
             .apply {
                 setSize(apk.length())
-                setInstallLocation(PackageInfo.INSTALL_LOCATION_AUTO)
-                setInstallReason(PackageManager.INSTALL_REASON_USER)
-                setOriginatingUid(Process.myUid())
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     setRequireUserAction(
                         if (isUpdate) PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED
                         else PackageInstaller.SessionParams.USER_ACTION_REQUIRED,
                     )
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    setPackageSource(PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    setInstallerPackageName(context.packageName)
                 }
             }
         val sessionId = installer.createSession(params)
-        try {
-            installer.openSession(sessionId).use { session ->
-                apk.inputStream().use { input ->
-                    session.openWrite(apk.name, 0, apk.length()).use { output ->
-                        input.copyTo(output)
-                        session.fsync(output)
-                    }
+        installer.openSession(sessionId).use { session ->
+            apk.inputStream().buffered().use { input ->
+                session.openWrite("package", 0, apk.length()).use { output ->
+                    input.copyTo(output)
+                    session.fsync(output)
                 }
-                val callback = Intent(context, AndroidAppInstallReceiver::class.java)
-                    .setAction(ACTION_INSTALL_RESULT)
-                    .setPackage(context.packageName)
-                    .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-                    .putExtra(PackageInstaller.EXTRA_SESSION_ID, sessionId)
-                    .putExtra(EXTRA_APK_FINGERPRINT, fingerprint(apk))
-                    .putExtra(EXTRA_OPERATION_ID, operationId)
-                    .putExtra(EXTRA_LAUNCH_AFTER_INSTALL, launchAfterInstall)
-                val mutabilityFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    PendingIntent.FLAG_MUTABLE
-                } else {
-                    0
-                }
-                val pending = PendingIntent.getBroadcast(
-                    context, sessionId, callback,
-                    PendingIntent.FLAG_UPDATE_CURRENT or mutabilityFlag,
-                )
-                session.commit(pending.intentSender)
             }
-        } catch (error: Throwable) {
-            runCatching { installer.abandonSession(sessionId) }
-            throw error
+            val callback = Intent(ACTION_INSTALL_RESULT).apply {
+                setPackage(context.packageName)
+                putExtra(EXTRA_OPERATION_ID, operationId)
+                putExtra(EXTRA_LAUNCH_AFTER, launchAfterInstall)
+                putExtra(EXTRA_APK_FINGERPRINT, fp)
+            }
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
+            val pi = PendingIntent.getBroadcast(context, sessionId, callback, flags)
+            session.commit(pi.intentSender)
         }
         return operationId
     }
 
-    const val ACTION_INSTALL_RESULT = "com.jarves.mh.action.APK_INSTALL_RESULT"
-    const val EXTRA_APK_FINGERPRINT = "com.jarves.mh.extra.APK_FINGERPRINT"
-    const val EXTRA_OPERATION_ID = "com.jarves.mh.extra.OPERATION_ID"
-    const val EXTRA_LAUNCH_AFTER_INSTALL = "com.jarves.mh.extra.LAUNCH_AFTER_INSTALL"
+    /**
+     * Called from MainActivity.onResume.
+     * Completes a pending install when the system has the package (covers MIUI and
+     * any OEM where PackageInstaller status is never delivered).
+     */
+    fun onHostResumed(context: Context) {
+        val pending = pendingInstall ?: return
+        val apk = File(pending.apkPath)
+        if (!apk.isFile) return
+        val pkg = pending.packageName ?: archivePackageName(context, apk) ?: return
+        if (!isInstalled(context, pkg)) return
 
-    internal fun publish(event: AndroidInstallEvent) {
+        // Prefer matching versionCode from the APK we handed to the installer.
+        val installedVc = installedVersionCode(context, pkg)
+        if (pending.archiveVersionCode > 0L && installedVc > 0L && installedVc < pending.archiveVersionCode) {
+            // Older build still present — user likely cancelled the update.
+            return
+        }
+
+        rememberInstalled(context, pkg, pending.fingerprint)
+        pendingInstall = null
+        val launched = if (pending.launchAfterInstall) launch(context, pkg) else false
+        publish(
+            AndroidInstallEvent(
+                operationId = pending.operationId,
+                packageName = pkg,
+                success = true,
+                launched = launched,
+            ),
+        )
+    }
+
+    fun cancelPendingInstall(operationId: String? = null) {
+        val pending = pendingInstall ?: return
+        if (operationId != null && pending.operationId != operationId) return
+        pendingInstall = null
+        publish(
+            AndroidInstallEvent(
+                operationId = pending.operationId,
+                packageName = pending.packageName,
+                success = false,
+                launched = false,
+                message = "Installation cancelled",
+            ),
+        )
+    }
+
+    /** Receiver / session path reports completion — clear pending and publish once. */
+    fun completeFromCallback(
+        operationId: String,
+        packageName: String?,
+        success: Boolean,
+        launched: Boolean,
+        message: String? = null,
+    ) {
+        val pending = pendingInstall
+        if (pending != null && pending.operationId == operationId) {
+            pendingInstall = null
+        }
+        publish(
+            AndroidInstallEvent(
+                operationId = operationId,
+                packageName = packageName ?: pending?.packageName,
+                success = success,
+                launched = launched,
+                message = message,
+            ),
+        )
+    }
+
+    fun publish(event: AndroidInstallEvent) {
         _events.tryEmit(event)
     }
 
@@ -225,6 +239,16 @@ object AndroidAppInstaller {
     private fun archivePackageName(context: Context, apk: File): String? =
         context.packageManager.getPackageArchiveInfo(apk.absolutePath, 0)?.packageName
 
+    private fun archiveVersionCode(context: Context, apk: File): Long {
+        val info = context.packageManager.getPackageArchiveInfo(apk.absolutePath, 0) ?: return -1L
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else @Suppress("DEPRECATION") info.versionCode.toLong()
+    }
+
+    private fun installedVersionCode(context: Context, packageName: String): Long = runCatching {
+        val info = context.packageManager.getPackageInfo(packageName, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else @Suppress("DEPRECATION") info.versionCode.toLong()
+    }.getOrDefault(-1L)
+
     private fun installedFingerprint(context: Context, packageName: String): String? =
         context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE).getString(packageName, null)
 
@@ -243,6 +267,6 @@ object AndroidAppInstaller {
 
     private const val PREFERENCES = "installed_android_apks"
 
-    private fun isMiuiDevice(): Boolean = android.os.Build.MANUFACTURER.lowercase() in
+    private fun isMiuiDevice(): Boolean = Build.MANUFACTURER.lowercase() in
         setOf("xiaomi", "redmi", "poco")
 }
