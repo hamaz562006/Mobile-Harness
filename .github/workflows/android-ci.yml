@@ -112,6 +112,24 @@ jobs:
       - name: Unit tests and online debug APK
         run: ./gradlew :app:testOnlineDebugUnitTest :app:assembleOnlineDebug --stacktrace
 
+      - name: Verify stable debug APK certificate
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          EXPECTED='83e1e2efa0a264421c35ce3c1bf472cbb3b8d6c0adc3568c36ca412b9c57e3b5'
+          APK=$(find app/build/outputs/apk/online/debug -maxdepth 1 -type f -name '*.apk' -print -quit)
+          test -n "$APK" && test -f "$APK"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          APKSIGNER=$(find "$SDK_ROOT/build-tools" -type f -name apksigner 2>/dev/null | sort -V | tail -n 1)
+          test -n "$APKSIGNER" && test -x "$APKSIGNER"
+          "$APKSIGNER" verify --print-certs "$APK" | tee "$RUNNER_TEMP/apk-signature.txt"
+          ACTUAL=$(sed -n 's/.*certificate SHA-256 digest: //p' "$RUNNER_TEMP/apk-signature.txt" | head -n 1 | tr -d ':\r\n' | tr 'A-F' 'a-f')
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::APK signing certificate mismatch. Expected $EXPECTED, got ${ACTUAL:-<empty>}"
+            exit 1
+          fi
+          echo "OK: APK uses the shared debug certificate ($ACTUAL)"
+
       - name: Report APK size
         run: |
           set -euo pipefail
