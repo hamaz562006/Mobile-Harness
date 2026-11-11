@@ -123,6 +123,7 @@ import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.DriveFileRenameOutline
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.BatterySaver
@@ -4567,7 +4568,7 @@ private fun ProjectCard(
                                 else stringResource(R.string.ws_update_from_zip),
                             )
                         },
-                        leadingIcon = { Icon(Icons.Default.Upload, null) },
+                        leadingIcon = { Icon(Icons.Default.FolderZip, null) },
                         enabled = !updateBusy && !taskRunning && !terminalRunning && !buildRunning,
                         onClick = { menuOpen = false; onUpdateFromZip() },
                     )

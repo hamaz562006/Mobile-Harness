@@ -4354,18 +4354,62 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun renameProject(projectId: String, newName: String) {
-        val clean = newName.replace(Regex("\\s+"), " ").trim().take(60)
+        val clean = newName.replace(Regex("\s+"), " ").trim().take(60)
         if (clean.isBlank()) return
         _state.update { current ->
+            val usedSlugs = current.projects
+                .filter { it.id != projectId }
+                .mapTo(mutableSetOf()) { it.slug }
+            val baseSlug = projectSlug(clean)
+            val uniqueSlug = if (baseSlug !in usedSlugs) {
+                baseSlug
+            } else {
+                generateSequence(2) { it + 1 }
+                    .map { "$baseSlug-$it" }
+                    .first { it !in usedSlugs }
+            }
             val projects = current.projects.map { project ->
-                if (project.id == projectId) project.copy(name = clean) else project
+                if (project.id == projectId) {
+                    project.copy(
+                        name = clean,
+                        slug = uniqueSlug,
+                        updatedAtMillis = System.currentTimeMillis(),
+                    )
+                } else {
+                    project
+                }
             }
             val active = current.activeProject?.let { project ->
-                if (project.id == projectId) project.copy(name = clean) else project
+                if (project.id == projectId) {
+                    project.copy(
+                        name = clean,
+                        slug = uniqueSlug,
+                        updatedAtMillis = System.currentTimeMillis(),
+                    )
+                } else {
+                    project
+                }
             }
-            current.copy(projects = projects, activeProject = active)
+            val cwd = active?.let { projectGuestRoot(it) }
+            current.copy(
+                projects = projects,
+                activeProject = active,
+                projectTerminalCwd = when {
+                    cwd != null && current.activeProject?.id == projectId -> cwd
+                    else -> current.projectTerminalCwd
+                },
+            )
         }
         preferences.saveProjects(_state.value.projects)
+        val active = _state.value.activeProject
+        if (active?.id == projectId) {
+            configureBridgeRoots(active.id, active.rootPath)
+            saveProjectTerminal(
+                active.id,
+                projectGuestRoot(active),
+                _state.value.projectTerminalLines,
+            )
+        }
     }
 
     fun deleteProject(projectId: String) {
