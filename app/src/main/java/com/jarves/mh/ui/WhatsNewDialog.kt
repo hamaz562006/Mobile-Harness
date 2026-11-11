@@ -29,7 +29,7 @@ import com.jarves.mh.R
 
 /** Shown once after an update. Edit `whats_new_items` for each release. */
 @Composable
-fun WhatsNewDialog(onDismiss: () -> Unit, onOpenBackup: () -> Unit) {
+fun WhatsNewDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary) },
@@ -59,7 +59,8 @@ fun WhatsNewDialog(onDismiss: () -> Unit, onOpenBackup: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.whats_new_got_it)) } },
-        dismissButton = { TextButton(onClick = onOpenBackup) { Text(stringResource(R.string.whats_new_open_backup)) } },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.whats_new_got_it)) }
+        },
     )
 }

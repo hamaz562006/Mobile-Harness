@@ -1408,6 +1408,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun cancelAndroidBuild() {
         if (!_state.value.androidBuildRunning) return
         androidBuildStopRequested = true
+        val installId = pendingAndroidInstallId
+        if (installId != null) {
+            pendingAndroidInstallId = null
+            pendingAndroidInstallLaunch = false
+            AndroidAppInstaller.cancelPendingInstall(installId)
+            _state.update {
+                it.copy(
+                    androidBuildRunning = false,
+                    androidBuildPhase = AndroidBuildPhase.CANCELLED,
+                    androidBuildStage = AndroidBuildStage.CANCELLED,
+                    androidBuildMessage = str(R.string.an_build_cancelled),
+                    androidBuildFinishedAtMillis = System.currentTimeMillis(),
+                )
+            }
+            return
+        }
         _state.update {
             it.copy(
                 androidBuildPhase = AndroidBuildPhase.CANCELLING,

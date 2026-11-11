@@ -23,6 +23,7 @@ import com.jarves.mh.ui.AppStrings
 import com.jarves.mh.ui.LocaleHelper
 import com.jarves.mh.ui.MainViewModel
 import com.jarves.mh.ui.PocketDevApp
+import com.jarves.mh.runtime.AndroidAppInstaller
 import com.jarves.mh.ui.theme.PocketTheme
 
 class MainActivity : ComponentActivity() {
@@ -74,6 +75,11 @@ class MainActivity : ComponentActivity() {
     }
 
     @Suppress("DEPRECATION")
+    override fun onResume() {
+        super.onResume()
+        AndroidAppInstaller.onHostResumed(this)
+    }
+
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {

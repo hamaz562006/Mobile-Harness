@@ -2500,14 +2500,7 @@ private fun RootScreenHost(
     var openBackup by rememberSaveable { mutableStateOf(false) }
 
     if (state.showWhatsNew) {
-        WhatsNewDialog(
-            onDismiss = viewModel::dismissWhatsNew,
-            onOpenBackup = {
-                viewModel.dismissWhatsNew()
-                openBackup = true
-                screen = RootScreen.SETTINGS
-            },
-        )
+        WhatsNewDialog(onDismiss = viewModel::dismissWhatsNew)
     }
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val terminalLines by viewModel.terminalLines.collectAsStateWithLifecycle()
