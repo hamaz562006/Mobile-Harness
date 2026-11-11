@@ -178,7 +178,7 @@ internal fun extractFailedRepository(output: String): String? {
         Regex("""Received status code\s+\d+\s+from\s+(https?://\S+)""", RegexOption.IGNORE_CASE),
     )
     for (p in patterns) {
-        p.find(output)?.groupValues?.getOrNull(1)?.let { return it.trimEnd('.', ''', '"') }
+        p.find(output)?.groupValues?.getOrNull(1)?.let { return it.trimEnd('.', '\'', '"') }
     }
     return null
 }
