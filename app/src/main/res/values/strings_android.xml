@@ -114,4 +114,8 @@
         <item quantity="one">%1$d attachment</item>
         <item quantity="other">%1$d attachments</item>
     </plurals>
+    <string name="an_health_network_ok_limited">Internet is available. This does not guarantee every Maven repository or artifact is reachable.</string>
+    <string name="an_health_maven_title">Local Maven mirror</string>
+    <string name="an_health_maven_ok">Offline Maven mirror is present for common Android dependencies.</string>
+    <string name="an_health_maven_missing">Local Maven mirror is missing or empty. Use Fix to reinstall Android tools.</string>
 </resources>

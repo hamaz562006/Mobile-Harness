@@ -156,6 +156,33 @@ internal fun inferAndroidBuildStage(output: String, current: AndroidBuildStage):
     }
 }
 
+
+/** Best-effort parse of Gradle "Could not resolve/find X:Y:Z" lines. */
+internal fun extractUnresolvedDependency(output: String): String? {
+    val patterns = listOf(
+        Regex("""Could not (?:resolve|find)(?: all files for| any matches for)?\s+([\w.-]+:[\w.-]+:[\w.-]+)""", RegexOption.IGNORE_CASE),
+        Regex("""Could not find\s+([\w.-]+:[\w.-]+:[\w.-]+)\.""", RegexOption.IGNORE_CASE),
+        Regex("""Failed to resolve:\s*([\w.-]+:[\w.-]+:[\w.-]+)""", RegexOption.IGNORE_CASE),
+    )
+    for (p in patterns) {
+        p.find(output)?.groupValues?.getOrNull(1)?.let { return it }
+    }
+    return null
+}
+
+/** Best-effort parse of a failed repository URL from Gradle output. */
+internal fun extractFailedRepository(output: String): String? {
+    val patterns = listOf(
+        Regex("""from\s+(https?://\S+)""", RegexOption.IGNORE_CASE),
+        Regex("""Could not GET\s+'(https?://[^']+)'""", RegexOption.IGNORE_CASE),
+        Regex("""Received status code\s+\d+\s+from\s+(https?://\S+)""", RegexOption.IGNORE_CASE),
+    )
+    for (p in patterns) {
+        p.find(output)?.groupValues?.getOrNull(1)?.let { return it.trimEnd('.', ''', '"') }
+    }
+    return null
+}
+
 internal fun parseAndroidBuildIssues(output: String, projectRoot: File, exitCode: Int): List<AndroidBuildIssue> {
     val issues = mutableListOf<AndroidBuildIssue>()
     val location = Regex("(?m)^(.+?\\.(?:kt|java|xml|gradle|kts)):(\\d+)(?::(\\d+))?[: ]+(?:error: )?(.+)$", RegexOption.IGNORE_CASE)
@@ -177,12 +204,33 @@ internal fun parseAndroidBuildIssues(output: String, projectRoot: File, exitCode
             column = match.groupValues[3].toIntOrNull(),
         )
     }
+    // Explicit unresolved dependency issues (better than one generic line)
+    val depMatches = Regex(
+        """Could not (?:resolve|find)(?: all files for| any matches for)?\s+([\w.-]+:[\w.-]+:[\w.-]+)""",
+        RegexOption.IGNORE_CASE,
+    ).findAll(output)
+    for (m in depMatches) {
+        val coord = m.groupValues[1]
+        val repo = extractFailedRepository(output)
+        issues += AndroidBuildIssue(
+            title = "Unresolved dependency",
+            detail = buildString {
+                append(coord)
+                if (repo != null) append(" (failed from ").append(repo).append(")")
+            },
+            suggestion = "Confirm the coordinate and repositories. PocketDev injects local Maven, Google, and Maven Central via the Gradle init script.",
+        )
+    }
     if (issues.isNotEmpty()) return issues.distinctBy { Triple(it.filePath, it.line, it.detail) }
+
     val summary = diagnoseAndroidBuildFailure(output, exitCode)
     val lower = output.lowercase()
     val suggestion = when {
         "no space left" in lower -> "Free device storage, then retry the build."
-        "could not resolve" in lower || "could not get resource" in lower -> "Check the network connection or use a cached dependency version."
+        "could not resolve" in lower || "could not get resource" in lower ->
+            extractUnresolvedDependency(output)?.let { dep ->
+                "Could not resolve $dep. Check repositories (google/mavenCentral), the version, or the local Maven mirror."
+            } ?: "A dependency could not be resolved from configured repositories. See the Gradle log for the artifact and repository URL."
         "manifest merger failed" in lower -> "Review duplicate or conflicting manifest declarations."
         "aapt2" in lower || "resource linking failed" in lower -> "Review resource names and XML diagnostics in the build output."
         "outofmemory" in lower || "heap space" in lower -> "Close other apps and retry."
@@ -196,7 +244,16 @@ internal fun diagnoseAndroidBuildFailure(output: String, exitCode: Int): String 
     return when {
         "no space left on device" in text -> "The device does not have enough free storage for this build."
         "outofmemoryerror" in text || "java heap space" in text -> "Gradle ran out of memory. Close other apps and retry."
-        "could not resolve" in text || "could not get resource" in text -> "A project dependency is unavailable. Connect to the internet or use an offline-cached version."
+        "could not resolve" in text || "could not get resource" in text -> {
+            val dep = extractUnresolvedDependency(output)
+            val repo = extractFailedRepository(output)
+            buildString {
+                append("Dependency resolution failed")
+                if (dep != null) append(" for ").append(dep)
+                if (repo != null) append(" from ").append(repo)
+                append(". Verify repository access (not only general internet), artifact coordinates, and the local Maven mirror.")
+            }
+        }
         "manifest merger failed" in text -> "Android manifest merge failed. Open the build log for the conflicting declaration."
         "aapt2" in text || "android resource linking failed" in text -> "Android resources could not be compiled. Open the build log for the file and line."
         "compilation error" in text || "compilation failed" in text || "unresolved reference" in text -> "Kotlin or Java compilation failed. Open the build log for source errors."

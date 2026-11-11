@@ -114,4 +114,8 @@
         <item quantity="one">%1$d attachment</item>
         <item quantity="other">%1$d attachments</item>
     </plurals>
+    <string name="an_health_network_ok_limited">اینترنت در دسترس است. این به‌معنی دسترسی قطعی به همهٔ مخازن Maven نیست.</string>
+    <string name="an_health_maven_title">مخزن محلی Maven</string>
+    <string name="an_health_maven_ok">آینهٔ Maven آفلاین برای وابستگی‌های رایج اندروید موجود است.</string>
+    <string name="an_health_maven_missing">آینهٔ محلی Maven نیست یا خالی است. با Fix ابزارهای اندروید را دوباره نصب کنید.</string>
 </resources>
