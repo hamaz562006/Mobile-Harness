@@ -4,5 +4,11 @@
     <string name="whats_new_version">نسخه %1$s</string>
     <string name="whats_new_open_backup">پشتیبان‌گیری و بازیابی</string>
     <string name="whats_new_got_it">متوجه شدم</string>
-    <string name="whats_new_items">پشتیبان‌گیری و بازیابی در تنظیمات · ذخیرهٔ پروژه‌ها، فایل‌ها، گفتگوها و تنظیمات در یک فایل · با رمز، کلید API و ورودها هم ذخیره می‌شوند · بعد از نصب دوباره از صفحهٔ راه‌اندازی قابل بازیابی است</string>
+    <string-array name="whats_new_items">
+        <item>به‌روزرسانی از ZIP: از منوی سه‌نقطه فایل‌های همان پروژه را عوض کنید؛ نام، چت و شناسه حفظ می‌شود.</item>
+        <item>اتصال GitHub: ورود، محدوده workflow، توکن، Import و Commit و push (حتی برای کلون عمومی).</item>
+        <item>با تغییر نام پروژه، مسیر /workspace هم با نام جدید هم‌خوان می‌شود.</item>
+        <item>فونت وزیرمتن فارسی، بومی‌سازی و اصلاحات 9Router در نسخه‌های اخیر.</item>
+        <item>رفع کرش بعد از ایمپورت ZIP هنگام باز کردن پروژه.</item>
+    </string-array>
 </resources>

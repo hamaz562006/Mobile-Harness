@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="whats_new_title">What\'s new</string>
+    <string name="whats_new_title">What's new</string>
     <string name="whats_new_version">Version %1$s</string>
     <string name="whats_new_open_backup">Open Backup &amp; Restore</string>
     <string name="whats_new_got_it">Got it</string>
-    <!-- Update for every release; shown once after the app is updated. -->
+    <!-- Update this array for every release; shown once when VERSION_CODE increases. -->
     <string-array name="whats_new_items">
-        <item>Backup &amp; Restore: save your projects, files, chats and settings into one file. Find it in Settings.</item>
-        <item>Add a password to also save your API keys and logins (GitHub, git, SSH, coding agents).</item>
-        <item>Restoring adds the backup\'s projects next to the ones on your phone, so nothing here is lost.</item>
-        <item>After a reinstall, restore from the setup screen to get everything back.</item>
-        <item>Backups keep running with the screen off and show live progress.</item>
+        <item>Update from ZIP: replace an existing project's files from the three-dot menu while keeping name, chats, and project id.</item>
+        <item>GitHub Connect: Sign in, workflow scope, personal access token, Import, and Commit &amp; push (including public clones).</item>
+        <item>Renaming a project now updates its /workspace path to match the new name.</item>
+        <item>Persian (Vazirmatn) font, localization, and 9Router provider fixes from recent builds.</item>
+        <item>ZIP import crash after open project fixed (greeting recursion).</item>
     </string-array>
 </resources>

@@ -2531,7 +2531,7 @@ private fun RootScreenHost(
                             onClick = { screen = tab },
                             icon = {
                                 BadgedBox(
-                                    badge = { if (tab == RootScreen.SETTINGS && !state.backupFeatureSeen) Badge() },
+                                    badge = { if (tab == RootScreen.SETTINGS && state.showWhatsNew) Badge() },
                                 ) { Icon(tab.icon, contentDescription = stringResource(tab.labelRes)) }
                             },
                             label = { Text(stringResource(tab.labelRes), fontSize = 11.sp) },

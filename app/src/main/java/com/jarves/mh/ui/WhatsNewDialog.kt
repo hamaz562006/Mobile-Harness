@@ -59,7 +59,7 @@ fun WhatsNewDialog(onDismiss: () -> Unit, onOpenBackup: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onOpenBackup) { Text(stringResource(R.string.whats_new_open_backup)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.whats_new_got_it)) } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.whats_new_got_it)) } },
+        dismissButton = { TextButton(onClick = onOpenBackup) { Text(stringResource(R.string.whats_new_open_backup)) } },
     )
 }
