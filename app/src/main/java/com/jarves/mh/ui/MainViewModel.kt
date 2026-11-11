@@ -410,6 +410,8 @@ data class AppUiState(
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val PRESERVED_WORKSPACE_NAMES = setOf(".pocketdev")
+
     private fun defaultGreeting(): String =
         str(R.string.chat_welcome)
 
