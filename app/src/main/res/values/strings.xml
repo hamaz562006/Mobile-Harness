@@ -486,4 +486,15 @@
     <string name="vm_github_push_failed">Commit/push failed: %1$s</string>
 
     <string name="ws_github_commit_note_public">Works on the open project after a public clone. Push to GitHub still needs write access (your credentials or a token).</string>
+
+    <string name="ws_update_from_zip">Update from ZIP</string>
+    <string name="ws_updating_from_zip">Updating…</string>
+    <string name="vm_update_zip_busy">Finish the current operation before updating from ZIP</string>
+    <string name="vm_update_zip_missing_project">Project not found</string>
+    <string name="vm_update_zip_reading">Updating project from ZIP…</string>
+    <string name="vm_update_zip_workspace_missing">Project workspace is missing</string>
+    <string name="vm_update_zip_success">Updated “%1$s” from ZIP</string>
+    <string name="vm_update_zip_failed_restored">Update failed; previous files restored. %1$s</string>
+    <string name="vm_update_zip_failed_keep_backup">Update failed and restore was incomplete. Recovery data was kept. %1$s</string>
+
 </resources>

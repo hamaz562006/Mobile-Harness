@@ -487,4 +487,15 @@
     <string name="vm_github_push_failed">خطا در commit/push: %1$s</string>
 
     <string name="ws_github_commit_note_public">روی پروژهٔ باز بعد از کلون عمومی کار می‌کند. برای push به GitHub همچنان دسترسی نوشتن لازم است (اعتبارنامه یا توکن).</string>
+
+    <string name="ws_update_from_zip">به‌روزرسانی از ZIP</string>
+    <string name="ws_updating_from_zip">در حال به‌روزرسانی…</string>
+    <string name="vm_update_zip_busy">قبل از به‌روزرسانی از ZIP عملیات جاری را تمام کنید</string>
+    <string name="vm_update_zip_missing_project">پروژه پیدا نشد</string>
+    <string name="vm_update_zip_reading">به‌روزرسانی پروژه از ZIP…</string>
+    <string name="vm_update_zip_workspace_missing">فضای کاری پروژه موجود نیست</string>
+    <string name="vm_update_zip_success">«%1$s» از ZIP به‌روز شد</string>
+    <string name="vm_update_zip_failed_restored">به‌روزرسانی ناموفق بود؛ فایل‌های قبلی بازیابی شدند. %1$s</string>
+    <string name="vm_update_zip_failed_keep_backup">به‌روزرسانی ناموفق و بازیابی ناقص بود. دادهٔ بازیابی نگه داشته شد. %1$s</string>
+
 </resources>

@@ -113,7 +113,7 @@ import java.util.UUID
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
+import ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -3457,6 +3457,212 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         toastMessage = str(R.string.vm_import_failed, error.message?.take(180) ?: str(R.string.vm_invalid_zip)),
                     )
                 }
+            }
+        }
+    }
+
+
+    /**
+     * Replace an existing project's workspace files from a ZIP while preserving
+     * project id, name, slug, chats, and Mobile Harness internal metadata.
+     * Temporary backup + rollback on failure; backup deleted after success/restore.
+     */
+    fun updateProjectFromZip(projectId: String, uri: Uri) {
+        if (_state.value.projectImporting || _state.value.isRunning ||
+            _state.value.projectTerminalRunning || _state.value.androidBuildRunning
+        ) {
+            _state.update { it.copy(toastMessage = str(R.string.vm_update_zip_busy)) }
+            return
+        }
+        val existing = _state.value.projects.firstOrNull { it.id == projectId }
+        if (existing == null) {
+            _state.update { it.copy(toastMessage = str(R.string.vm_update_zip_missing_project)) }
+            return
+        }
+        _state.update {
+            it.copy(projectImporting = true, projectImportMessage = str(R.string.vm_update_zip_reading))
+        }
+        viewModelScope.launch {
+            val app = getApplication<Application>()
+            val workspace = File(app.filesDir, "workspaces/$projectId")
+            val backup = File(app.cacheDir, "zip-update-backup-$projectId-${System.nanoTime()}")
+            val staging = File(app.cacheDir, "zip-update-stage-$projectId-${System.nanoTime()}")
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    require(workspace.isDirectory || workspace.mkdirs()) {
+                        str(R.string.vm_update_zip_workspace_missing)
+                    }
+                    // 1) Backup current workspace
+                    if (backup.exists()) backup.deleteRecursively()
+                    backup.mkdirs()
+                    copyDirectoryContents(workspace, backup)
+                    // 2) Extract ZIP into empty staging (path-safe)
+                    if (staging.exists()) staging.deleteRecursively()
+                    staging.mkdirs()
+                    extractZipInto(uri, staging)
+                    // 3) Detect nested single-folder root inside staging
+                    val nested = detectNestedRootInDirectory(staging)
+                    val sourceRoot = nested?.let { File(staging, it) } ?: staging
+                    // 4) Clear workspace except preserved internal dirs
+                    clearWorkspaceForUpdate(workspace)
+                    // 5) Copy new content into workspace
+                    copyDirectoryContents(sourceRoot, workspace)
+                    // 6) Refresh metadata from new tree (keep id/name/slug/kind)
+                    val metadata = detectImportedProjectMetadata(workspace)
+                    val nestedRoot = detectNestedProjectRoot(
+                        existing.copy(rootPath = ""),
+                    )
+                    existing.copy(
+                        description = metadata.first,
+                        language = metadata.second,
+                        rootPath = nestedRoot.orEmpty(),
+                        updatedAtMillis = System.currentTimeMillis(),
+                    )
+                }
+            }
+            result.onSuccess { updatedProject ->
+                // Success: drop backup + staging
+                withContext(Dispatchers.IO) {
+                    runCatching { backup.deleteRecursively() }
+                    runCatching { staging.deleteRecursively() }
+                }
+                val projects = _state.value.projects.map {
+                    if (it.id == projectId) updatedProject else it
+                }
+                preferences.saveProjects(projects)
+                _state.update { current ->
+                    current.copy(
+                        projects = projects,
+                        activeProject = current.activeProject?.takeIf { it.id == projectId }?.let { updatedProject }
+                            ?: current.activeProject,
+                        projectImporting = false,
+                        projectImportMessage = null,
+                        toastMessage = str(R.string.vm_update_zip_success, updatedProject.name),
+                    )
+                }
+                // Refresh open workspace file listing if this project is open
+                if (_state.value.activeProject?.id == projectId && _state.value.workspaceVisible) {
+                    configureBridgeRoots(updatedProject.id, updatedProject.rootPath)
+                    refreshProjectFiles()
+                }
+            }.onFailure { error ->
+                // Rollback from backup
+                val restored = withContext(Dispatchers.IO) {
+                    runCatching {
+                        if (backup.isDirectory && backup.listFiles()?.isNotEmpty() == true) {
+                            if (workspace.exists()) {
+                                workspace.listFiles()?.forEach { child ->
+                                    if (child.name !in PRESERVED_WORKSPACE_NAMES) {
+                                        child.deleteRecursively()
+                                    }
+                                }
+                            } else {
+                                workspace.mkdirs()
+                            }
+                            copyDirectoryContents(backup, workspace)
+                            true
+                        } else {
+                            false
+                        }
+                    }.getOrDefault(false)
+                }
+                withContext(Dispatchers.IO) {
+                    runCatching { staging.deleteRecursively() }
+                    if (restored) runCatching { backup.deleteRecursively() }
+                    // If restore failed, keep backup for recovery
+                }
+                _state.update {
+                    it.copy(
+                        projectImporting = false,
+                        projectImportMessage = null,
+                        toastMessage = if (restored) {
+                            str(R.string.vm_update_zip_failed_restored, error.message?.take(160) ?: str(R.string.vm_unknown_error))
+                        } else {
+                            str(R.string.vm_update_zip_failed_keep_backup, error.message?.take(160) ?: str(R.string.vm_unknown_error))
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    private fun extractZipInto(uri: Uri, destination: File) {
+        val app = getApplication<Application>()
+        val resolver = app.contentResolver
+        val destinationPath = destination.canonicalFile.toPath()
+        val availableLimit = (destination.usableSpace * 8L / 10L).coerceAtMost(MAX_IMPORTED_PROJECT_BYTES)
+        var extractedBytes = 0L
+        var entries = 0
+        val source = resolver.openInputStream(uri) ?: error(str(R.string.vm_zip_open_failed))
+        source.buffered().use { input ->
+            ZipInputStream(input).use { zip ->
+                while (true) {
+                    val entry = zip.nextEntry ?: break
+                    entries++
+                    require(entries <= MAX_IMPORTED_ZIP_ENTRIES) { str(R.string.vm_zip_too_many_files) }
+                    val entryName = entry.name.replace('\\', '/').trimStart('/')
+                    require(entryName.isNotBlank() && '\u0000' !in entryName) { str(R.string.vm_zip_invalid_path) }
+                    if (entryName.startsWith("__MACOSX/") || entryName.endsWith("/.DS_Store") || entryName == ".DS_Store") {
+                        zip.closeEntry()
+                        continue
+                    }
+                    val target = File(destination, entryName).canonicalFile
+                    require(target.toPath().startsWith(destinationPath)) { str(R.string.vm_zip_unsafe_path) }
+                    if (entry.isDirectory) {
+                        target.mkdirs()
+                    } else {
+                        target.parentFile?.mkdirs()
+                        target.outputStream().buffered().use { output ->
+                            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                            while (true) {
+                                val count = zip.read(buffer)
+                                if (count < 0) break
+                                extractedBytes += count
+                                require(extractedBytes <= availableLimit) { str(R.string.vm_import_too_large) }
+                                output.write(buffer, 0, count)
+                            }
+                        }
+                        if (entry.time > 0) target.setLastModified(entry.time)
+                    }
+                    zip.closeEntry()
+                }
+            }
+        }
+        require(entries > 0 && destination.walkTopDown().any { it.isFile }) { str(R.string.vm_zip_no_files) }
+    }
+
+    private fun detectNestedRootInDirectory(base: File): String? {
+        if (!base.isDirectory) return null
+        val visible = base.listFiles().orEmpty().filterNot { file ->
+            file.name == ".claude" || file.name == ".claude.json" || file.name == ".pocketdev"
+        }
+        val onlyDirectory = visible.singleOrNull()?.takeIf(File::isDirectory) ?: return null
+        val containsProjectFiles = onlyDirectory.walkTopDown()
+            .maxDepth(2)
+            .any { it.isFile && it.name !in setOf(".DS_Store", ".claude.json") }
+        return onlyDirectory.name.takeIf { containsProjectFiles && !it.contains("..") }
+    }
+
+    private fun clearWorkspaceForUpdate(workspace: File) {
+        workspace.listFiles()?.forEach { child ->
+            if (child.name !in PRESERVED_WORKSPACE_NAMES) {
+                child.deleteRecursively()
+            }
+        }
+    }
+
+    private fun copyDirectoryContents(from: File, to: File) {
+        if (!from.isDirectory) return
+        to.mkdirs()
+        from.walkTopDown().forEach { src ->
+            val rel = src.relativeTo(from).path
+            if (rel.isEmpty()) return@forEach
+            val dest = File(to, rel)
+            if (src.isDirectory) {
+                dest.mkdirs()
+            } else {
+                dest.parentFile?.mkdirs()
+                src.copyTo(dest, overwrite = true)
             }
         }
     }

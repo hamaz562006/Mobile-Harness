@@ -2577,6 +2577,7 @@ private fun RootScreenHost(
                     onCloneGitHub = viewModel::cloneGitHubRepository,
                     onCommitAndPushGitHub = viewModel::commitAndPushActiveProject,
                     onRenameProject = viewModel::renameProject,
+                    onUpdateProjectFromZip = viewModel::updateProjectFromZip,
                     onDeleteProject = viewModel::deleteProject,
                     onSettings = { screen = RootScreen.SETTINGS },
                     onPing = viewModel::pingApi,
@@ -3706,6 +3707,7 @@ private fun ProjectsScreen(
     onCloneGitHub: (GitHubRepository) -> Unit,
     onCommitAndPushGitHub: (String) -> Unit,
     onRenameProject: (String, String) -> Unit,
+    onUpdateProjectFromZip: (String, android.net.Uri) -> Unit,
     onDeleteProject: (String) -> Unit,
     onSettings: () -> Unit,
     onPing: () -> Unit,
@@ -3728,6 +3730,12 @@ private fun ProjectsScreen(
     }
     val importZipLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) onImportZip(uri)
+    }
+    var updateZipTargetId by rememberSaveable { mutableStateOf<String?>(null) }
+    val updateZipLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val id = updateZipTargetId
+        updateZipTargetId = null
+        if (uri != null && id != null) onUpdateProjectFromZip(id, uri)
     }
     LaunchedEffect(state.appUpdate?.versionCode) {
         if (state.appUpdate != null) showUpdateDialog = true
@@ -3965,8 +3973,13 @@ private fun ProjectsScreen(
                         taskRunning = state.isRunning && state.activeProject?.id == project.id,
                         terminalRunning = state.projectTerminalRunning && state.activeProject?.id == project.id,
                         buildRunning = state.androidBuildRunning && state.activeProject?.id == project.id,
+                        updateBusy = state.projectImporting,
                         onOpen = { onOpen(project) },
                         onRename = { onRenameProject(project.id, it) },
+                        onUpdateFromZip = {
+                            updateZipTargetId = project.id
+                            updateZipLauncher.launch("*/*")
+                        },
                         onDelete = { onDeleteProject(project.id) },
                     )
                 }
@@ -4484,8 +4497,10 @@ private fun ProjectCard(
     taskRunning: Boolean,
     terminalRunning: Boolean,
     buildRunning: Boolean,
+    updateBusy: Boolean = false,
     onOpen: () -> Unit,
     onRename: (String) -> Unit,
+    onUpdateFromZip: () -> Unit = {},
     onDelete: () -> Unit,
 ) {
     var menuOpen by rememberSaveable(project.id) { mutableStateOf(false) }
@@ -4544,6 +4559,17 @@ private fun ProjectCard(
                         text = { Text(stringResource(R.string.ws_rename_project)) },
                         leadingIcon = { Icon(Icons.Default.Edit, null) },
                         onClick = { menuOpen = false; renameText = project.name; showRename = true },
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                if (updateBusy) stringResource(R.string.ws_updating_from_zip)
+                                else stringResource(R.string.ws_update_from_zip),
+                            )
+                        },
+                        leadingIcon = { Icon(Icons.Default.Upload, null) },
+                        enabled = !updateBusy && !taskRunning && !terminalRunning && !buildRunning,
+                        onClick = { menuOpen = false; onUpdateFromZip() },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.ws_delete_project)) },
