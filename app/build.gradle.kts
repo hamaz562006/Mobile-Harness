@@ -19,6 +19,16 @@ val uploadStorePath = providers.environmentVariable("MH_UPLOAD_STORE_FILE").orNu
 val uploadStorePassword = providers.environmentVariable("MH_UPLOAD_STORE_PASSWORD").orNull
 val uploadKeyAlias = providers.environmentVariable("MH_UPLOAD_KEY_ALIAS").orNull
 val uploadKeyPassword = providers.environmentVariable("MH_UPLOAD_KEY_PASSWORD").orNull
+val debugStorePath = providers.environmentVariable("MH_DEBUG_STORE_FILE").orNull
+val debugStorePassword = providers.environmentVariable("MH_DEBUG_STORE_PASSWORD").orNull
+val debugKeyAlias = providers.environmentVariable("MH_DEBUG_KEY_ALIAS").orNull
+val debugKeyPassword = providers.environmentVariable("MH_DEBUG_KEY_PASSWORD").orNull
+val hasDebugSigning = listOf(
+    debugStorePath,
+    debugStorePassword,
+    debugKeyAlias,
+    debugKeyPassword,
+).all { !it.isNullOrBlank() }
 val hasUploadSigning = listOf(
     uploadStorePath,
     uploadStorePassword,
@@ -62,6 +72,14 @@ android {
     ndkVersion = providers.gradleProperty("mhNdkVersion").orNull ?: "28.2.13676358"
 
     signingConfigs {
+        if (hasDebugSigning) {
+            create("stableDebug") {
+                storeFile = rootProject.file(checkNotNull(debugStorePath))
+                storePassword = checkNotNull(debugStorePassword)
+                keyAlias = checkNotNull(debugKeyAlias)
+                keyPassword = checkNotNull(debugKeyPassword)
+            }
+        }
         if (hasUploadSigning) {
             create("upload") {
                 storeFile = rootProject.file(checkNotNull(uploadStorePath))
@@ -128,6 +146,9 @@ android {
 
     buildTypes {
         debug {
+            if (hasDebugSigning) {
+                signingConfig = signingConfigs.getByName("stableDebug")
+            }
             buildConfigField(
                 "String",
                 "TEST_OPENROUTER_API_KEY",
