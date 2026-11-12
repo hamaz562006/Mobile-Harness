@@ -5614,7 +5614,12 @@ private fun AndroidDashboardScreen(
                         }
                         if (state.healthFixLog.isNotEmpty()) {
                             item {
-                                Card(Modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                                Card(
+                                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                    ),
+                                ) {
                                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                         Text(
                                             stringResource(R.string.an_health_fix_log_title),
