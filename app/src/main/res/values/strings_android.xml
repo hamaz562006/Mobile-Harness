@@ -114,4 +114,9 @@
         <item quantity="one">%1$d attachment</item>
         <item quantity="other">%1$d attachments</item>
     </plurals>
+    <string name="an_health_fix_busy">Another tools install is already running. See the Fix log.</string>
+    <string name="an_health_fix_finished_check_log">Tools install finished. Check Health and the Fix log below.</string>
+    <string name="an_health_fix_failed_check_log">Tools install failed. Open the Fix log below for details.</string>
+    <string name="an_health_fix_log_title">Last Fix log</string>
+    <string name="an_health_fix_log_hint">Steps taken by Health → Fix. Copy if you need to report a problem.</string>
 </resources>

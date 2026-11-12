@@ -114,4 +114,9 @@
         <item quantity="one">%1$d attachment</item>
         <item quantity="other">%1$d attachments</item>
     </plurals>
+    <string name="an_health_fix_busy">نصب ابزار دیگری در حال اجراست. لاگ Fix را ببینید.</string>
+    <string name="an_health_fix_finished_check_log">نصب ابزار تمام شد. Health و لاگ Fix پایین را بررسی کنید.</string>
+    <string name="an_health_fix_failed_check_log">نصب ابزار ناموفق بود. جزئیات در لاگ Fix پایین.</string>
+    <string name="an_health_fix_log_title">آخرین لاگ Fix</string>
+    <string name="an_health_fix_log_hint">مراحل Health → Fix. برای گزارش مشکل کپی کنید.</string>
 </resources>

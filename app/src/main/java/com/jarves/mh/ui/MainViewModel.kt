@@ -399,6 +399,8 @@ data class AppUiState(
     val androidApkInfo: AndroidApkInfo? = null,
     val androidHealthChecks: List<AndroidHealthCheck> = emptyList(),
     val androidHealthRunning: Boolean = false,
+    /** Observable trace of the last Health → Fix operation (newest last). */
+    val healthFixLog: List<String> = emptyList(),
     val androidLogcat: AndroidLogcatState = AndroidLogcatState(),
     val appUpdate: AppUpdateInfo? = null,
     val appUpdateStatus: AppUpdateStatus? = null,
@@ -1877,7 +1879,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     if (ok) AndroidHealthFix.NONE else AndroidHealthFix.INSTALL_TOOLS,
                 )
                 val compileSdk = root.walkTopDown().maxDepth(3).filter { it.isFile && it.name in setOf("build.gradle", "build.gradle.kts") }
-                    .mapNotNull { Regex("compileSdk(?:Version)?\\s*(?:=|\\s)\\s*(\\d+)").find(it.readText())?.groupValues?.get(1)?.toIntOrNull() }
+                    .mapNotNull { Regex("compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)").find(it.readText())?.groupValues?.get(1)?.toIntOrNull() }
                     .maxOrNull()
                 val platformAvailable = compileSdk == null || File(installer.installedRuntime().rootfs, "root/android-sdk/platforms/android-$compileSdk/android.jar").isFile
                 checks += AndroidHealthCheck(
@@ -1921,10 +1923,80 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+
+    private fun appendHealthFixLog(line: String) {
+        val stamped = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US)
+            .format(java.util.Date()) + "  " + line
+        _state.update { current ->
+            current.copy(healthFixLog = (current.healthFixLog + stamped).takeLast(80))
+        }
+        // Also persist for inspection after process death
+        runCatching {
+            val file = File(getApplication<Application>().filesDir, "health-fix-last.log")
+            file.appendText(stamped + "\n")
+            // keep file bounded
+            if (file.length() > 64_000L) {
+                val tail = file.readLines().takeLast(100).joinToString("\n") + "\n"
+                file.writeText(tail)
+            }
+        }
+    }
+
+    private fun clearHealthFixLogFile() {
+        runCatching {
+            File(getApplication<Application>().filesDir, "health-fix-last.log").writeText("")
+        }
+        _state.update { it.copy(healthFixLog = emptyList()) }
+    }
+
+    private fun platformJarPath(api: Int): File =
+        File(installer.installedRuntime().rootfs, "root/android-sdk/platforms/android-$api/android.jar")
+
     fun performAndroidHealthFix(fix: AndroidHealthFix) {
         val app = getApplication<Application>()
         when (fix) {
             AndroidHealthFix.INSTALL_TOOLS -> {
+                clearHealthFixLogFile()
+                appendHealthFixLog("Fix tapped: INSTALL_TOOLS (Compile SDK / Android tools)")
+                // Report which platforms the project asked for vs what is on disk
+                val project = _state.value.activeProject
+                val root = project?.let { findAndroidProjectRoot(projectWorkspaceRoot(it)) }
+                val requiredApis = root?.walkTopDown()?.maxDepth(3)
+                    ?.filter { it.isFile && it.name in setOf("build.gradle", "build.gradle.kts") }
+                    ?.mapNotNull {
+                        Regex("compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)")
+                            .find(it.readText())?.groupValues?.get(1)?.toIntOrNull()
+                    }
+                    ?.toSet()
+                    .orEmpty()
+                appendHealthFixLog("Project compileSdk values: ${requiredApis.ifEmpty { setOf(-1) }}")
+                for (api in requiredApis) {
+                    val jar = runCatching { platformJarPath(api) }.getOrNull()
+                    appendHealthFixLog(
+                        "platform android-$api: " +
+                            if (jar != null && jar.isFile) "PRESENT (${jar.absolutePath})"
+                            else "MISSING",
+                    )
+                }
+                val already = runCatching { platformJarPath(36).isFile }.getOrDefault(false)
+                appendHealthFixLog("Bundled platform android-36 present=$already")
+                appendHealthFixLog(
+                    "Note: installAndroidToolchain only ensures API 36 bundle; " +
+                        "it does not install arbitrary compileSdk platforms (e.g. 35).",
+                )
+                if (_state.value.devStackInstalling != null) {
+                    appendHealthFixLog(
+                        "ABORT: devStackInstalling=${_state.value.devStackInstalling} — " +
+                            "installDevStack returned without starting a new job",
+                    )
+                    _state.update {
+                        it.copy(
+                            androidHealthRunning = false,
+                            toastMessage = str(R.string.an_health_fix_busy),
+                        )
+                    }
+                    return
+                }
                 _state.update { current ->
                     current.copy(
                         androidHealthRunning = true,
@@ -1939,6 +2011,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         },
                     )
                 }
+                appendHealthFixLog("Dispatching installDevStack(ANDROID)…")
                 installDevStack(DevStack.ANDROID, refreshAndroidHealthAfter = true)
             }
             AndroidHealthFix.OPEN_INSTALL_SETTINGS -> app.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${app.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -2913,6 +2986,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             sampleTime = android.os.SystemClock.elapsedRealtime()
                             latestSpeed = null
                         }
+                        if (refreshAndroidHealthAfter && progress.message.isNotBlank()) {
+                            // Coalesce rapid updates: only log when message changes
+                            val last = _state.value.healthFixLog.lastOrNull().orEmpty()
+                            if (progress.message !in last) {
+                                appendHealthFixLog("progress ${"%.0f".format(progress.fraction * 100)}%: ${progress.message}")
+                            }
+                        }
                         _state.update { current ->
                             current.copy(
                                 devStackMessage = progress.message,
@@ -2923,6 +3003,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
+            }
+            if (refreshAndroidHealthAfter) {
+                appendHealthFixLog(
+                    "installDevStack finished success=${result.isSuccess} " +
+                        "error=${result.exceptionOrNull()?.message?.take(180)}",
+                )
+                for (api in listOf(34, 35, 36)) {
+                    val jar = runCatching { platformJarPath(api) }.getOrNull()
+                    appendHealthFixLog(
+                        "after: platform android-$api " +
+                            if (jar != null && jar.isFile) "PRESENT" else "MISSING",
+                    )
+                }
+                appendHealthFixLog("Refreshing Health checks…")
             }
             _state.update { current ->
                 current.copy(
@@ -2937,6 +3031,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         onFailure = { _ -> result.exceptionOrNull()?.message?.take(200) ?: str(R.string.vm_install_failed_named, stack.localizedLabel(getApplication())) },
                     ),
                     androidHealthRunning = if (refreshAndroidHealthAfter) false else current.androidHealthRunning,
+                    toastMessage = if (refreshAndroidHealthAfter) {
+                        if (result.isSuccess) str(R.string.an_health_fix_finished_check_log)
+                        else str(R.string.an_health_fix_failed_check_log)
+                    } else {
+                        result.fold(
+                            onSuccess = { str(R.string.vm_stack_tools_ready, stack.localizedLabel(getApplication())) },
+                            onFailure = { _ -> result.exceptionOrNull()?.message?.take(200) },
+                        )
+                    },
                 )
             }
             if (refreshAndroidHealthAfter) refreshAndroidHealth()
