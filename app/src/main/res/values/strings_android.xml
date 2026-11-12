@@ -119,4 +119,6 @@
     <string name="an_health_fix_failed_check_log">Tools install failed. Open the Fix log below for details.</string>
     <string name="an_health_fix_log_title">Last Fix log</string>
     <string name="an_health_fix_log_hint">Steps taken by Health → Fix. Copy if you need to report a problem.</string>
+    <string name="an_health_fix_log_collapse">Collapse</string>
+    <string name="an_health_fix_log_expand">Expand</string>
 </resources>

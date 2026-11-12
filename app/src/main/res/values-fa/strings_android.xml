@@ -119,4 +119,6 @@
     <string name="an_health_fix_failed_check_log">نصب ابزار ناموفق بود. جزئیات در لاگ Fix پایین.</string>
     <string name="an_health_fix_log_title">آخرین لاگ Fix</string>
     <string name="an_health_fix_log_hint">مراحل Health → Fix. برای گزارش مشکل کپی کنید.</string>
+    <string name="an_health_fix_log_collapse">جمع کردن</string>
+    <string name="an_health_fix_log_expand">باز کردن</string>
 </resources>

@@ -5614,6 +5614,7 @@ private fun AndroidDashboardScreen(
                         }
                         if (state.healthFixLog.isNotEmpty()) {
                             item {
+                                var fixLogExpanded by remember(state.healthFixLog.size) { mutableStateOf(true) }
                                 Card(
                                     Modifier.fillMaxWidth().padding(top = 8.dp),
                                     colors = CardDefaults.cardColors(
@@ -5621,26 +5622,44 @@ private fun AndroidDashboardScreen(
                                     ),
                                 ) {
                                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Text(
-                                            stringResource(R.string.an_health_fix_log_title),
-                                            fontWeight = FontWeight.SemiBold,
-                                        )
-                                        Text(
-                                            stringResource(R.string.an_health_fix_log_hint),
-                                            fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        Text(
-                                            state.healthFixLog.joinToString("\n"),
-                                            fontFamily = FontFamily.Monospace,
-                                            fontSize = 10.sp,
-                                            lineHeight = 14.sp,
-                                        )
-                                        TextButton(
-                                            onClick = {
-                                                clipboard.setText(AnnotatedString(state.healthFixLog.joinToString("\n")))
-                                            },
-                                        ) { Text(stringResource(R.string.copy_log)) }
+                                        Row(
+                                            Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.an_health_fix_log_title),
+                                                modifier = Modifier.weight(1f),
+                                                fontWeight = FontWeight.SemiBold,
+                                            )
+                                            TextButton(onClick = { fixLogExpanded = !fixLogExpanded }) {
+                                                Text(
+                                                    stringResource(
+                                                        if (fixLogExpanded) R.string.an_health_fix_log_collapse
+                                                        else R.string.an_health_fix_log_expand,
+                                                    ),
+                                                )
+                                            }
+                                        }
+                                        if (fixLogExpanded) {
+                                            Text(
+                                                stringResource(R.string.an_health_fix_log_hint),
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                            Text(
+                                                state.healthFixLog.joinToString("
+"),
+                                                fontFamily = FontFamily.Monospace,
+                                                fontSize = 10.sp,
+                                                lineHeight = 14.sp,
+                                            )
+                                            TextButton(
+                                                onClick = {
+                                                    clipboard.setText(AnnotatedString(state.healthFixLog.joinToString("
+")))
+                                                },
+                                            ) { Text(stringResource(R.string.copy_log)) }
+                                        }
                                     }
                                 }
                             }
