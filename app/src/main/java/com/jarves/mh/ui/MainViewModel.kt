@@ -1952,48 +1952,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun platformJarPath(api: Int): File =
         File(installer.installedRuntime().rootfs, "root/android-sdk/platforms/android-$api/android.jar")
 
+    /** compileSdk values from any module under the Android project root (all projects). */
+    private fun detectProjectCompileSdkApis(projectRoot: File?): Set<Int> {
+        if (projectRoot == null || !projectRoot.isDirectory) return emptySet()
+        val regex = Regex("""compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)""")
+        return projectRoot.walkTopDown()
+            .maxDepth(6)
+            .filter { it.isFile && it.name in setOf("build.gradle", "build.gradle.kts") }
+            .mapNotNull { file ->
+                runCatching { regex.find(file.readText())?.groupValues?.get(1)?.toIntOrNull() }.getOrNull()
+            }
+            .filter { it in 21..36 }
+            .toSet()
+    }
+
     fun performAndroidHealthFix(fix: AndroidHealthFix) {
         val app = getApplication<Application>()
         when (fix) {
             AndroidHealthFix.INSTALL_TOOLS -> {
                 clearHealthFixLogFile()
-                appendHealthFixLog("Fix tapped: INSTALL_TOOLS (Compile SDK / Android tools)")
-                // Report which platforms the project asked for vs what is on disk
+                appendHealthFixLog("Fix tapped: INSTALL_TOOLS (stack + required platforms for this project)")
                 val project = _state.value.activeProject
                 val root = project?.let { findAndroidProjectRoot(projectWorkspaceRoot(it)) }
-                val requiredApis = root?.walkTopDown()?.maxDepth(3)
-                    ?.filter { it.isFile && it.name in setOf("build.gradle", "build.gradle.kts") }
-                    ?.mapNotNull {
-                        Regex("""compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)""")
-                            .find(it.readText())?.groupValues?.get(1)?.toIntOrNull()
-                    }
-                    ?.toSet()
-                    .orEmpty()
+                val requiredApis = detectProjectCompileSdkApis(root)
                 appendHealthFixLog("Project compileSdk values: ${requiredApis.ifEmpty { setOf(-1) }}")
-                for (api in requiredApis) {
+                for (api in requiredApis.sorted()) {
                     val jar = runCatching { platformJarPath(api) }.getOrNull()
                     appendHealthFixLog(
                         "platform android-$api: " +
-                            if (jar != null && jar.isFile) "PRESENT (${jar.absolutePath})"
-                            else "MISSING",
+                            if (jar != null && jar.isFile) "PRESENT" else "MISSING",
                     )
                 }
-                val already = runCatching { platformJarPath(36).isFile }.getOrDefault(false)
-                appendHealthFixLog("Bundled platform android-36 present=$already")
-                appendHealthFixLog(
-                    "Note: installAndroidToolchain only ensures API 36 bundle; " +
-                        "it does not install arbitrary compileSdk platforms (e.g. 35).",
-                )
                 if (_state.value.devStackInstalling != null) {
-                    appendHealthFixLog(
-                        "ABORT: devStackInstalling=${_state.value.devStackInstalling} — " +
-                            "installDevStack returned without starting a new job",
-                    )
+                    appendHealthFixLog("ABORT: tools install already running (${_state.value.devStackInstalling})")
                     _state.update {
-                        it.copy(
-                            androidHealthRunning = false,
-                            toastMessage = str(R.string.an_health_fix_busy),
-                        )
+                        it.copy(androidHealthRunning = false, toastMessage = str(R.string.an_health_fix_busy))
                     }
                     return
                 }
@@ -2011,8 +2004,66 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         },
                     )
                 }
-                appendHealthFixLog("Dispatching installDevStack(ANDROID)…")
-                installDevStack(DevStack.ANDROID, refreshAndroidHealthAfter = true)
+                viewModelScope.launch {
+                    val outcome = runCatching {
+                        appendHealthFixLog("Step 1/2: ensure Android stack (SDK/Gradle/Java)…")
+                        withContext(Dispatchers.IO) {
+                            installer.ensureStackInstalled(DevStack.ANDROID) { progress ->
+                                if (progress.message.isNotBlank()) {
+                                    val last = _state.value.healthFixLog.lastOrNull().orEmpty()
+                                    if (progress.message !in last) {
+                                        appendHealthFixLog("stack: ${progress.message}")
+                                    }
+                                }
+                            }
+                        }
+                        appendHealthFixLog("Step 2/2: ensure platforms for compileSdk=$requiredApis…")
+                        if (requiredApis.isEmpty()) {
+                            appendHealthFixLog("No compileSdk found in project; skipped platform install")
+                            return@runCatching
+                        }
+                        val result = withContext(Dispatchers.IO) {
+                            installer.ensureAndroidPlatforms(requiredApis) { progress ->
+                                if (progress.message.isNotBlank()) {
+                                    appendHealthFixLog("platform: ${progress.message}")
+                                }
+                            }
+                        }
+                        appendHealthFixLog(
+                            "result present=${result.alreadyPresent} installedNow=${result.installedNow} stillMissing=${result.stillMissing}",
+                        )
+                        result.errors.forEach { appendHealthFixLog("error: ${it.take(500)}") }
+                        for (api in requiredApis.sorted()) {
+                            val ok = runCatching { platformJarPath(api).isFile }.getOrDefault(false)
+                            appendHealthFixLog("verify android-$api: ${if (ok) "PRESENT" else "MISSING"}")
+                        }
+                        if (result.stillMissing.isNotEmpty()) {
+                            error(
+                                "Still missing platforms ${result.stillMissing}. " +
+                                    (result.errors.lastOrNull() ?: "sdkmanager did not install them"),
+                            )
+                        }
+                    }
+                    outcome.onSuccess {
+                        appendHealthFixLog("Fix SUCCEEDED; refreshing Health…")
+                        _state.update {
+                            it.copy(
+                                androidHealthRunning = false,
+                                toastMessage = str(R.string.an_health_fix_finished_check_log),
+                            )
+                        }
+                        refreshAndroidHealth()
+                    }.onFailure { error ->
+                        appendHealthFixLog("Fix FAILED: ${error.message?.take(400)}")
+                        _state.update {
+                            it.copy(
+                                androidHealthRunning = false,
+                                toastMessage = str(R.string.an_health_fix_failed_check_log),
+                            )
+                        }
+                        refreshAndroidHealth()
+                    }
+                }
             }
             AndroidHealthFix.OPEN_INSTALL_SETTINGS -> app.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${app.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             AndroidHealthFix.OPEN_NETWORK_SETTINGS -> app.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

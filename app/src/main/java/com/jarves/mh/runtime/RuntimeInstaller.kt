@@ -714,6 +714,126 @@ class RuntimeInstaller(private val context: Context) {
         onProgress(RuntimeInstallProgress(str(R.string.rt_install_stack_ready, stack.localizedLabel(context)), 1f))
     }
 
+
+    data class EnsurePlatformsResult(
+        val alreadyPresent: Set<Int>,
+        val stillMissing: Set<Int>,
+        val errors: List<String>,
+        val installedNow: Set<Int> = emptySet(),
+    )
+
+    /**
+     * Install missing Android platform packages for any project compileSdk.
+     * Uses guest sdkmanager when platforms;android-N is not on disk.
+     */
+    suspend fun ensureAndroidPlatforms(
+        apiLevels: Set<Int>,
+        onProgress: suspend (RuntimeInstallProgress) -> Unit = {},
+    ): EnsurePlatformsResult {
+        val required = apiLevels.filter { it in 21..36 }.toSortedSet()
+        if (required.isEmpty()) {
+            return EnsurePlatformsResult(emptySet(), emptySet(), emptyList())
+        }
+        val runtime = installedRuntime()
+        val androidHome = File(rootfs, "root/android-sdk")
+        val missing = required.filter { api ->
+            !File(androidHome, "platforms/android-$api/android.jar").isFile
+        }.toSortedSet()
+        val present = (required - missing).toSet()
+        if (missing.isEmpty()) {
+            onProgress(RuntimeInstallProgress("All required platforms already present: $required", 1f))
+            return EnsurePlatformsResult(present, emptySet(), emptyList())
+        }
+        if (!File(androidHome, "cmdline-tools").isDirectory &&
+            File(rootfs, "root/android-sdk/cmdline-tools").listFiles().isNullOrEmpty()
+        ) {
+            return EnsurePlatformsResult(
+                present,
+                missing,
+                listOf("Android cmdline-tools / sdkmanager not found under /root/android-sdk"),
+            )
+        }
+        val errors = mutableListOf<String>()
+        val installedNow = mutableSetOf<Int>()
+        val total = missing.size.coerceAtLeast(1)
+        missing.forEachIndexed { index, api ->
+            onProgress(
+                RuntimeInstallProgress(
+                    "Installing platforms;android-$api…",
+                    0.05f + 0.85f * (index.toFloat() / total),
+                    indeterminate = true,
+                ),
+            )
+            val outputFile = File(context.cacheDir, "sdkmanager-platform-$api-${System.nanoTime()}.log")
+            try {
+                val script = """
+                    set +e
+                    export ANDROID_HOME=/root/android-sdk
+                    export ANDROID_SDK_ROOT=/root/android-sdk
+                    SM=""
+                    if [ -x /root/android-sdk/cmdline-tools/latest/bin/sdkmanager ]; then
+                      SM=/root/android-sdk/cmdline-tools/latest/bin/sdkmanager
+                    else
+                      SM=${'$'}(ls /root/android-sdk/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+                    fi
+                    if [ -z "${'$'}SM" ] || [ ! -x "${'$'}SM" ]; then
+                      echo "sdkmanager not executable"
+                      exit 127
+                    fi
+                    echo "Using sdkmanager: ${'$'}SM"
+                    yes 2>/dev/null | "${'$'}SM" --sdk_root=/root/android-sdk --licenses >/tmp/sdk-licenses-${'$'}${'$'}.log 2>&1 || true
+                    yes 2>/dev/null | "${'$'}SM" --sdk_root=/root/android-sdk "platforms;android-$api"
+                    EC=${'$'}?
+                    if [ -f /root/android-sdk/platforms/android-$api/android.jar ]; then
+                      echo "VERIFIED android-$api"
+                      exit 0
+                    fi
+                    echo "VERIFY_FAILED android-$api exit=${'$'}EC"
+                    exit ${'$'}EC
+                """.trimIndent()
+                val process = process(
+                    runtime.proot,
+                    runtime.rootfs,
+                    File(rootfs, "root"),
+                    emptyMap(),
+                    listOf("/usr/bin/bash", "-lc", script),
+                    guestWorkspacePath = "/root",
+                    outputFile = outputFile,
+                )
+                val exit = process.waitFor()
+                val log = runCatching { outputFile.readText() }.getOrDefault("")
+                val ok = File(androidHome, "platforms/android-$api/android.jar").isFile
+                if (ok) {
+                    installedNow += api
+                    onProgress(
+                        RuntimeInstallProgress(
+                            "Installed and verified platforms;android-$api",
+                            0.05f + 0.85f * ((index + 1).toFloat() / total),
+                        ),
+                    )
+                } else {
+                    errors += "platforms;android-$api failed (exit=$exit): ${log.takeLast(1000)}"
+                }
+            } catch (error: Throwable) {
+                errors += "platforms;android-$api exception: ${error.message}"
+            } finally {
+                outputFile.delete()
+            }
+        }
+        val stillMissing = missing.filter {
+            !File(androidHome, "platforms/android-$it/android.jar").isFile
+        }.toSet()
+        onProgress(
+            RuntimeInstallProgress(
+                if (stillMissing.isEmpty()) "Required platforms ready: $required"
+                else "Still missing platforms: $stillMissing",
+                1f,
+            ),
+        )
+        return EnsurePlatformsResult(present, stillMissing, errors, installedNow)
+    }
+
+
     /**
      * Removes an optional development stack without touching projects or the core
      * Node.js/Git runtime. Package-backed stacks are purged through dpkg; bundled
