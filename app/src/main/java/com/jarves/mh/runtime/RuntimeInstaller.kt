@@ -1100,20 +1100,11 @@ class RuntimeInstaller(private val context: Context) {
             .forEach { Os.chmod(it.absolutePath, 0b111101101) }
     }
 
-    /** Re-write Gradle init + properties so repository injection stays current after upgrades. */
-    fun ensureAndroidGradleConfig() {
-        val runtime = installedRuntime()
-        writeAndroidGradleConfiguration(runtime.rootfs)
-    }
-
     private fun writeAndroidGradleInitScript(runtimeRootfs: File) {
         val script = File(runtimeRootfs, "root/.gradle/init.d/pocketdev-android.gradle")
         script.parentFile?.mkdirs()
         script.writeText(
             """
-            // Local mirror first, then public repos. FAIL_ON_PROJECT_REPOS projects only
-            // see dependencyResolutionManagement — local-only injection caused online
-            // dependency failures while Health still reported internet OK.
             def pocketMaven = uri('/root/maven/localMvnRepository')
             beforeSettings { settings ->
                 settings.pluginManagement.repositories {
@@ -1126,9 +1117,6 @@ class RuntimeInstaller(private val context: Context) {
             settingsEvaluated { settings ->
                 settings.dependencyResolutionManagement.repositories {
                     maven { url = pocketMaven }
-                    google()
-                    mavenCentral()
-                    gradlePluginPortal()
                 }
             }
             gradle.beforeProject { project ->
@@ -1138,14 +1126,6 @@ class RuntimeInstaller(private val context: Context) {
                 )
                 project.buildscript.repositories {
                     maven { url = pocketMaven }
-                    google()
-                    mavenCentral()
-                    gradlePluginPortal()
-                }
-                project.repositories {
-                    maven { url = pocketMaven }
-                    google()
-                    mavenCentral()
                 }
             }
             """.trimIndent() + "\n",

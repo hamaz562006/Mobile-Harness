@@ -1484,7 +1484,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val workspace = findAndroidProjectRoot(projectWorkspaceRoot(project))
                     ?: error(str(R.string.vm_no_android_project))
                 buildWorkspace = workspace
-                runCatching { installer.ensureAndroidGradleConfig() }
                 val command = androidGradleCommand(workspace, task)
                 _state.update {
                     it.copy(
@@ -1893,19 +1892,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val online = network?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
             checks += AndroidHealthCheck(
                 "network", str(R.string.an_health_network_title),
-                if (online) str(R.string.an_health_network_ok_limited)
-                else str(R.string.an_health_network_offline),
+                if (online) str(R.string.an_health_network_ok) else str(R.string.an_health_network_offline),
                 if (online) AndroidHealthStatus.PASSED else AndroidHealthStatus.WARNING,
                 if (online) AndroidHealthFix.NONE else AndroidHealthFix.OPEN_NETWORK_SETTINGS,
-            )
-            val localMaven = runCatching { File(installer.installedRuntime().rootfs, "root/maven/localMvnRepository") }.getOrNull()
-            val mavenOk = localMaven != null && localMaven.isDirectory && !localMaven.list().isNullOrEmpty()
-            checks += AndroidHealthCheck(
-                "maven",
-                str(R.string.an_health_maven_title),
-                if (mavenOk) str(R.string.an_health_maven_ok) else str(R.string.an_health_maven_missing),
-                if (mavenOk) AndroidHealthStatus.PASSED else AndroidHealthStatus.FAILED,
-                if (mavenOk) AndroidHealthFix.NONE else AndroidHealthFix.INSTALL_TOOLS,
             )
             val freeBytes = StatFs(app.filesDir.absolutePath).availableBytes
             val enoughStorage = freeBytes >= 1_500L * 1024L * 1024L
