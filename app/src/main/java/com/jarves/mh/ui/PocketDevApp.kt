@@ -5647,16 +5647,14 @@ private fun AndroidDashboardScreen(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                             Text(
-                                                state.healthFixLog.joinToString("
-"),
+                                                state.healthFixLog.joinToString("\n"),
                                                 fontFamily = FontFamily.Monospace,
                                                 fontSize = 10.sp,
                                                 lineHeight = 14.sp,
                                             )
                                             TextButton(
                                                 onClick = {
-                                                    clipboard.setText(AnnotatedString(state.healthFixLog.joinToString("
-")))
+                                                    clipboard.setText(AnnotatedString(state.healthFixLog.joinToString("\n")))
                                                 },
                                             ) { Text(stringResource(R.string.copy_log)) }
                                         }
