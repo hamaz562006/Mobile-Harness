@@ -204,7 +204,7 @@ internal fun parseAndroidBuildIssues(output: String, projectRoot: File, exitCode
         return issues.distinctBy { Triple(it.title, it.detail.take(120), it.suggestion) }.take(8)
     }
 
-    val diagnosis = diagnoseAndroidBuildFailure(output, exitCode)
+    val diagnosis = diagnoseAndroidBuildFailureDetailed(output, exitCode)
     return listOf(
         AndroidBuildIssue(
             title = diagnosis.title,
@@ -486,8 +486,8 @@ internal fun parseExecutionIssues(output: String): List<AndroidBuildIssue> {
     }
 }
 
-private data class HttpFailure(val title: String, val detail: String, val suggestion: String, val url: String?)
-private data class NetworkFailure(val title: String, val detail: String, val suggestion: String)
+internal data class HttpFailure(val title: String, val detail: String, val suggestion: String, val url: String?)
+internal data class NetworkFailure(val title: String, val detail: String, val suggestion: String)
 
 internal fun extractArtifactCoordinate(output: String): String? {
     val patterns = listOf(
