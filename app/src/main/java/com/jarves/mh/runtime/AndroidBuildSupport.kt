@@ -300,10 +300,6 @@ internal fun parseDependencyResolutionIssues(output: String): List<AndroidBuildI
     val hasResolveSignal =
         "could not resolve" in lower ||
             "could not find" in lower ||
-            "could not get resource" in lower ||
-            "could not get '" in lower ||
-            "could not get "" in lower ||
-            "could not get '" in lower ||
             "could not get" in lower ||
             "failed to resolve" in lower ||
             "could not download" in lower ||
