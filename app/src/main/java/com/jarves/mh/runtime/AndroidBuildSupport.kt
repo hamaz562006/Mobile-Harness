@@ -301,8 +301,13 @@ internal fun parseDependencyResolutionIssues(output: String): List<AndroidBuildI
         "could not resolve" in lower ||
             "could not find" in lower ||
             "could not get resource" in lower ||
+            "could not get '" in lower ||
+            "could not get "" in lower ||
+            "could not get '" in lower ||
+            "could not get" in lower ||
             "failed to resolve" in lower ||
-            "could not download" in lower
+            "could not download" in lower ||
+            "received status code" in lower
     if (!hasResolveSignal) return emptyList()
 
     val issues = mutableListOf<AndroidBuildIssue>()
@@ -396,12 +401,13 @@ internal fun parsePluginResolutionIssues(output: String): List<AndroidBuildIssue
     val lower = output.lowercase()
     if ("plugin" !in lower) return emptyList()
     val pluginSignals =
-        "plugin was not found" in lower ||
+        ("plugin" in lower && "was not found" in lower) ||
             "plugin request" in lower ||
             "could not find specified plugin" in lower ||
             "failed to apply plugin" in lower ||
             "invalid plugin request" in lower ||
-            ("pluginmanagement" in lower && "could not resolve" in lower)
+            ("pluginmanagement" in lower && "could not resolve" in lower) ||
+            ("plugin repositories" in lower && "not found" in lower)
     if (!pluginSignals) return emptyList()
     val pluginId = Regex("""[A-Za-z0-9._-]+:[A-Za-z0-9._-]+(?::[A-Za-z0-9._-]+)?""")
         .find(output)?.value
