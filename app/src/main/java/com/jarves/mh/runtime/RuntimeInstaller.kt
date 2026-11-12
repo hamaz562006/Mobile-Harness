@@ -715,6 +715,7 @@ class RuntimeInstaller(private val context: Context) {
     }
 
 
+
     data class EnsurePlatformsResult(
         val alreadyPresent: Set<Int>,
         val stillMissing: Set<Int>,
@@ -724,7 +725,10 @@ class RuntimeInstaller(private val context: Context) {
 
     /**
      * Install missing Android platform packages for any project compileSdk.
-     * Uses guest sdkmanager when platforms;android-N is not on disk.
+     * Strategy (works without pre-bundled cmdline-tools):
+     * 1) Ensure Google cmdline-tools (sdkmanager) under the SDK root
+     * 2) sdkmanager "platforms;android-N"
+     * 3) Fallback: download platform-N zip from dl.google.com and extract
      */
     suspend fun ensureAndroidPlatforms(
         apiLevels: Set<Int>,
@@ -734,8 +738,8 @@ class RuntimeInstaller(private val context: Context) {
         if (required.isEmpty()) {
             return EnsurePlatformsResult(emptySet(), emptySet(), emptyList())
         }
-        val runtime = installedRuntime()
         val androidHome = File(rootfs, "root/android-sdk")
+        androidHome.mkdirs()
         val missing = required.filter { api ->
             !File(androidHome, "platforms/android-$api/android.jar").isFile
         }.toSortedSet()
@@ -744,82 +748,49 @@ class RuntimeInstaller(private val context: Context) {
             onProgress(RuntimeInstallProgress("All required platforms already present: $required", 1f))
             return EnsurePlatformsResult(present, emptySet(), emptyList())
         }
-        if (!File(androidHome, "cmdline-tools").isDirectory &&
-            File(rootfs, "root/android-sdk/cmdline-tools").listFiles().isNullOrEmpty()
-        ) {
-            return EnsurePlatformsResult(
-                present,
-                missing,
-                listOf("Android cmdline-tools / sdkmanager not found under /root/android-sdk"),
-            )
-        }
+
         val errors = mutableListOf<String>()
         val installedNow = mutableSetOf<Int>()
+
+        onProgress(RuntimeInstallProgress("Ensuring Android cmdline-tools (sdkmanager)…", 0.02f, indeterminate = true))
+        val cmdlineError = runCatching { ensureAndroidCmdlineTools(androidHome, onProgress) }.exceptionOrNull()
+        if (cmdlineError != null) {
+            errors += "cmdline-tools: ${cmdlineError.message}"
+            onProgress(RuntimeInstallProgress("cmdline-tools unavailable; will try direct platform download", 0.05f))
+        } else {
+            onProgress(RuntimeInstallProgress("cmdline-tools ready", 0.08f))
+        }
+
         val total = missing.size.coerceAtLeast(1)
         missing.forEachIndexed { index, api ->
-            onProgress(
-                RuntimeInstallProgress(
-                    "Installing platforms;android-$api…",
-                    0.05f + 0.85f * (index.toFloat() / total),
-                    indeterminate = true,
-                ),
-            )
-            val outputFile = File(context.cacheDir, "sdkmanager-platform-$api-${System.nanoTime()}.log")
-            try {
-                val script = """
-                    set +e
-                    export ANDROID_HOME=/root/android-sdk
-                    export ANDROID_SDK_ROOT=/root/android-sdk
-                    SM=""
-                    if [ -x /root/android-sdk/cmdline-tools/latest/bin/sdkmanager ]; then
-                      SM=/root/android-sdk/cmdline-tools/latest/bin/sdkmanager
-                    else
-                      SM=${'$'}(ls /root/android-sdk/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
-                    fi
-                    if [ -z "${'$'}SM" ] || [ ! -x "${'$'}SM" ]; then
-                      echo "sdkmanager not executable"
-                      exit 127
-                    fi
-                    echo "Using sdkmanager: ${'$'}SM"
-                    yes 2>/dev/null | "${'$'}SM" --sdk_root=/root/android-sdk --licenses >/tmp/sdk-licenses-${'$'}${'$'}.log 2>&1 || true
-                    yes 2>/dev/null | "${'$'}SM" --sdk_root=/root/android-sdk "platforms;android-$api"
-                    EC=${'$'}?
-                    if [ -f /root/android-sdk/platforms/android-$api/android.jar ]; then
-                      echo "VERIFIED android-$api"
-                      exit 0
-                    fi
-                    echo "VERIFY_FAILED android-$api exit=${'$'}EC"
-                    exit ${'$'}EC
-                """.trimIndent()
-                val process = process(
-                    runtime.proot,
-                    runtime.rootfs,
-                    File(rootfs, "root"),
-                    emptyMap(),
-                    listOf("/usr/bin/bash", "-lc", script),
-                    guestWorkspacePath = "/root",
-                    outputFile = outputFile,
-                )
-                val exit = process.waitFor()
-                val log = runCatching { outputFile.readText() }.getOrDefault("")
-                val ok = File(androidHome, "platforms/android-$api/android.jar").isFile
-                if (ok) {
-                    installedNow += api
-                    onProgress(
-                        RuntimeInstallProgress(
-                            "Installed and verified platforms;android-$api",
-                            0.05f + 0.85f * ((index + 1).toFloat() / total),
-                        ),
-                    )
-                } else {
-                    errors += "platforms;android-$api failed (exit=$exit): ${log.takeLast(1000)}"
+            val base = 0.1f + 0.8f * (index.toFloat() / total)
+            onProgress(RuntimeInstallProgress("Installing platforms;android-$api…", base, indeterminate = true))
+            var ok = File(androidHome, "platforms/android-$api/android.jar").isFile
+            if (!ok && findSdkManager(androidHome) != null) {
+                val sdkErr = runCatching {
+                    installPlatformWithSdkManager(androidHome, api, onProgress)
+                }.exceptionOrNull()
+                ok = File(androidHome, "platforms/android-$api/android.jar").isFile
+                if (!ok && sdkErr != null) {
+                    errors += "sdkmanager android-$api: ${sdkErr.message?.take(400)}"
                 }
-            } catch (error: Throwable) {
-                errors += "platforms;android-$api exception: ${error.message}"
-            } finally {
-                outputFile.delete()
+            }
+            if (!ok) {
+                onProgress(RuntimeInstallProgress("Direct download platforms;android-$api…", base + 0.05f, indeterminate = true))
+                val dlErr = runCatching {
+                    installPlatformFromGoogleZip(androidHome, api, onProgress)
+                }.exceptionOrNull()
+                ok = File(androidHome, "platforms/android-$api/android.jar").isFile
+                if (!ok) {
+                    errors += "direct android-$api: ${dlErr?.message?.take(400) ?: "android.jar still missing"}"
+                }
+            }
+            if (ok) {
+                installedNow += api
+                onProgress(RuntimeInstallProgress("Verified platforms;android-$api", 0.1f + 0.8f * ((index + 1f) / total)))
             }
         }
+
         val stillMissing = missing.filter {
             !File(androidHome, "platforms/android-$it/android.jar").isFile
         }.toSet()
@@ -833,6 +804,237 @@ class RuntimeInstaller(private val context: Context) {
         return EnsurePlatformsResult(present, stillMissing, errors, installedNow)
     }
 
+    private fun findSdkManager(androidHome: File): File? {
+        val latest = File(androidHome, "cmdline-tools/latest/bin/sdkmanager")
+        if (latest.isFile) return latest
+        return File(androidHome, "cmdline-tools").listFiles()
+            ?.mapNotNull { File(it, "bin/sdkmanager").takeIf(File::isFile) }
+            ?.firstOrNull()
+    }
+
+    private suspend fun ensureAndroidCmdlineTools(
+        androidHome: File,
+        onProgress: suspend (RuntimeInstallProgress) -> Unit,
+    ) {
+        if (findSdkManager(androidHome) != null) return
+        onProgress(RuntimeInstallProgress("Downloading Android cmdline-tools…", 0.03f, indeterminate = true))
+        val zip = File(context.cacheDir, "commandlinetools-linux.zip")
+        downloadFileNoChecksum(CMDLINE_TOOLS_URL, zip) { downloaded, total ->
+            if (total > 0L) {
+                onProgress(
+                    RuntimeInstallProgress(
+                        "Downloading cmdline-tools…",
+                        0.03f,
+                        downloadedBytes = downloaded,
+                        totalBytes = total,
+                    ),
+                )
+            }
+        }
+        val dest = File(androidHome, "cmdline-tools/latest")
+        dest.parentFile?.mkdirs()
+        if (dest.exists()) dest.deleteRecursively()
+        // Zip root is usually "cmdline-tools/" — extract then normalize to latest/
+        val extractRoot = File(context.cacheDir, "cmdline-tools-extract-${System.nanoTime()}")
+        extractRoot.mkdirs()
+        try {
+            unzipTo(zip, extractRoot)
+            val nested = sequenceOf(
+                File(extractRoot, "cmdline-tools"),
+                extractRoot,
+            ).firstOrNull { dir -> File(dir, "bin/sdkmanager").isFile || dir.listFiles()?.any { File(it, "bin/sdkmanager").isFile } == true }
+                ?: error("sdkmanager not found inside cmdline-tools archive")
+            val source = when {
+                File(nested, "bin/sdkmanager").isFile -> nested
+                else -> nested.listFiles()?.firstOrNull { File(it, "bin/sdkmanager").isFile }
+                    ?: error("sdkmanager not found in extracted cmdline-tools")
+            }
+            source.copyRecursively(dest, overwrite = true)
+            File(dest, "bin").listFiles()?.forEach { runCatching { android.system.Os.chmod(it.absolutePath, 0b111101101) } }
+        } finally {
+            extractRoot.deleteRecursively()
+            zip.delete()
+        }
+        check(findSdkManager(androidHome) != null) { "cmdline-tools install failed" }
+    }
+
+    private suspend fun installPlatformWithSdkManager(
+        androidHome: File,
+        api: Int,
+        onProgress: suspend (RuntimeInstallProgress) -> Unit,
+    ) {
+        val runtime = installedRuntime()
+        val outputFile = File(context.cacheDir, "sdkmanager-platform-$api-${System.nanoTime()}.log")
+        try {
+            val script = """
+                set +e
+                export ANDROID_HOME=/root/android-sdk
+                export ANDROID_SDK_ROOT=/root/android-sdk
+                SM=""
+                if [ -x /root/android-sdk/cmdline-tools/latest/bin/sdkmanager ]; then
+                  SM=/root/android-sdk/cmdline-tools/latest/bin/sdkmanager
+                else
+                  SM=${'$'}(ls /root/android-sdk/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+                fi
+                if [ -z "${'$'}SM" ] || [ ! -x "${'$'}SM" ]; then
+                  echo "sdkmanager not executable"
+                  exit 127
+                fi
+                echo "Using ${'$'}SM"
+                yes 2>/dev/null | "${'$'}SM" --sdk_root=/root/android-sdk --licenses >/tmp/sdk-licenses-${'$'}${'$'}.log 2>&1 || true
+                yes 2>/dev/null | "${'$'}SM" --sdk_root=/root/android-sdk "platforms;android-$api"
+                EC=${'$'}?
+                test -f /root/android-sdk/platforms/android-$api/android.jar
+                exit ${'$'}?
+            """.trimIndent()
+            val process = process(
+                runtime.proot,
+                runtime.rootfs,
+                File(rootfs, "root"),
+                emptyMap(),
+                listOf("/usr/bin/bash", "-lc", script),
+                guestWorkspacePath = "/root",
+                outputFile = outputFile,
+            )
+            val exit = process.waitFor()
+            val log = runCatching { outputFile.readText() }.getOrDefault("")
+            if (!File(androidHome, "platforms/android-$api/android.jar").isFile) {
+                error("sdkmanager exit=$exit: ${log.takeLast(600)}")
+            }
+            onProgress(RuntimeInstallProgress("sdkmanager installed android-$api", 0.5f))
+        } finally {
+            outputFile.delete()
+        }
+    }
+
+    private suspend fun installPlatformFromGoogleZip(
+        androidHome: File,
+        api: Int,
+        onProgress: suspend (RuntimeInstallProgress) -> Unit,
+    ) {
+        val candidates = platformZipCandidates(api)
+        var lastError: String? = null
+        for (url in candidates) {
+            onProgress(RuntimeInstallProgress("Downloading ${url.substringAfterLast('/')}", 0.4f, indeterminate = true))
+            val zip = File(context.cacheDir, "platform-$api-${System.nanoTime()}.zip")
+            try {
+                downloadFileNoChecksum(url, zip) { downloaded, total ->
+                    if (total > 0L) {
+                        onProgress(
+                            RuntimeInstallProgress(
+                                "Downloading platform-$api…",
+                                0.45f,
+                                downloadedBytes = downloaded,
+                                totalBytes = total,
+                            ),
+                        )
+                    }
+                }
+                val extractRoot = File(context.cacheDir, "platform-extract-$api-${System.nanoTime()}")
+                extractRoot.mkdirs()
+                try {
+                    unzipTo(zip, extractRoot)
+                    // Archives contain android-<api>/ or platform files at root
+                    val sourceDir = sequenceOf(
+                        File(extractRoot, "android-$api"),
+                        extractRoot.listFiles()?.firstOrNull { File(it, "android.jar").isFile },
+                        extractRoot.takeIf { File(it, "android.jar").isFile },
+                    ).filterNotNull().firstOrNull { File(it, "android.jar").isFile }
+                        ?: error("android.jar not found in ${url.substringAfterLast('/')}")
+                    val dest = File(androidHome, "platforms/android-$api")
+                    if (dest.exists()) dest.deleteRecursively()
+                    dest.parentFile?.mkdirs()
+                    sourceDir.copyRecursively(dest, overwrite = true)
+                    check(File(dest, "android.jar").isFile) { "copy failed for android-$api" }
+                    return
+                } finally {
+                    extractRoot.deleteRecursively()
+                }
+            } catch (error: Throwable) {
+                lastError = "${url.substringAfterLast('/')}: ${error.message}"
+            } finally {
+                zip.delete()
+            }
+        }
+        error(lastError ?: "No platform zip worked for API $api")
+    }
+
+    private fun platformZipCandidates(api: Int): List<String> {
+        val base = "https://dl.google.com/android/repository"
+        // Prefer known package names; try a few revisions for each API.
+        val names = when (api) {
+            36 -> listOf("platform-36_r01.zip", "platform-36-ext1_r01.zip")
+            35 -> listOf("platform-35_r01.zip", "platform-35-ext1_r01.zip")
+            34 -> listOf("platform-34-ext7_r03.zip", "platform-34-ext8_r01.zip", "platform-34_r03.zip", "platform-34_r02.zip")
+            33 -> listOf("platform-33-ext5_r01.zip", "platform-33-ext4_r01.zip", "platform-33_r02.zip")
+            32 -> listOf("platform-32_r01.zip")
+            31 -> listOf("platform-31_r01.zip")
+            30 -> listOf("platform-30_r03.zip", "platform-30_r01.zip")
+            29 -> listOf("platform-29_r05.zip")
+            28 -> listOf("platform-28_r06.zip")
+            else -> listOf("platform-${api}_r01.zip", "platform-${api}_r02.zip", "platform-${api}_r03.zip")
+        }
+        return names.map { "$base/$it" }
+    }
+
+    private suspend fun downloadFileNoChecksum(
+        url: String,
+        destination: File,
+        onBytes: suspend (downloaded: Long, total: Long) -> Unit = { _, _ -> },
+    ) {
+        destination.parentFile?.mkdirs()
+        val temporary = File(destination.parentFile, "${destination.name}.part")
+        temporary.delete()
+        val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+        connection.connectTimeout = 20_000
+        connection.readTimeout = 180_000
+        connection.instanceFollowRedirects = true
+        connection.connect()
+        if (connection.responseCode !in 200..299) {
+            val code = connection.responseCode
+            connection.disconnect()
+            error("HTTP $code for $url")
+        }
+        val total = connection.contentLengthLong.takeIf { it >= 0L } ?: -1L
+        connection.inputStream.use { input ->
+            java.io.FileOutputStream(temporary).use { output ->
+                val buffer = ByteArray(128 * 1024)
+                var downloaded = 0L
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    output.write(buffer, 0, count)
+                    downloaded += count
+                    onBytes(downloaded, total)
+                }
+            }
+        }
+        connection.disconnect()
+        if (destination.exists()) destination.delete()
+        if (!temporary.renameTo(destination)) {
+            temporary.copyTo(destination, overwrite = true)
+            temporary.delete()
+        }
+    }
+
+    private fun unzipTo(zipFile: File, destination: File) {
+        destination.mkdirs()
+        java.util.zip.ZipInputStream(zipFile.inputStream().buffered()).use { zis ->
+            while (true) {
+                val entry = zis.nextEntry ?: break
+                val name = entry.name.trimStart('/')
+                if (name.isBlank() || name.contains("..")) continue
+                val out = File(destination, name)
+                if (entry.isDirectory) {
+                    out.mkdirs()
+                } else {
+                    out.parentFile?.mkdirs()
+                    java.io.FileOutputStream(out).use { zis.copyTo(it) }
+                }
+                zis.closeEntry()
+            }
+        }
+    }
 
     /**
      * Removes an optional development stack without touching projects or the core
