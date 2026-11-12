@@ -1879,7 +1879,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     if (ok) AndroidHealthFix.NONE else AndroidHealthFix.INSTALL_TOOLS,
                 )
                 val compileSdk = root.walkTopDown().maxDepth(3).filter { it.isFile && it.name in setOf("build.gradle", "build.gradle.kts") }
-                    .mapNotNull { Regex("compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)").find(it.readText())?.groupValues?.get(1)?.toIntOrNull() }
+                    .mapNotNull { Regex("""compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)""").find(it.readText())?.groupValues?.get(1)?.toIntOrNull() }
                     .maxOrNull()
                 val platformAvailable = compileSdk == null || File(installer.installedRuntime().rootfs, "root/android-sdk/platforms/android-$compileSdk/android.jar").isFile
                 checks += AndroidHealthCheck(
@@ -1964,7 +1964,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val requiredApis = root?.walkTopDown()?.maxDepth(3)
                     ?.filter { it.isFile && it.name in setOf("build.gradle", "build.gradle.kts") }
                     ?.mapNotNull {
-                        Regex("compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)")
+                        Regex("""compileSdk(?:Version)?\s*(?:=|\s)\s*(\d+)""")
                             .find(it.readText())?.groupValues?.get(1)?.toIntOrNull()
                     }
                     ?.toSet()
