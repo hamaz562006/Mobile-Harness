@@ -227,11 +227,19 @@ private fun classifySourceErrorTitle(detail: String): String {
 internal data class Diagnosis(val title: String, val detail: String, val suggestion: String?)
 
 internal fun diagnoseAndroidBuildFailure(output: String, exitCode: Int): String {
-    // Backwards-compatible summary string for existing callers/tests
+    // Backwards-compatible summary string for existing callers/tests.
+    // Include title so codes like HTTP 403 are visible (detail alone may omit them).
     val d = diagnoseAndroidBuildFailureDetailed(output, exitCode)
     return buildString {
-        append(d.detail)
-        if (d.suggestion != null) append(' ').append(d.suggestion)
+        append(d.title)
+        if (d.detail.isNotBlank() && d.detail != d.title) {
+            append(": ")
+            append(d.detail)
+        }
+        if (d.suggestion != null) {
+            append(' ')
+            append(d.suggestion)
+        }
     }.trim()
 }
 
@@ -546,9 +554,9 @@ internal fun extractHttpFailure(output: String): HttpFailure? {
         ?: Regex("""Could not GET\s+'([^']+)'""", RegexOption.IGNORE_CASE).find(output)?.groupValues?.getOrNull(1)
     if (code == null && url == null && "could not get resource" !in output.lowercase()) return null
     return when (code) {
-        401 -> HttpFailure("Repository authentication failed (HTTP 401)", "Access to the repository was unauthorized.", "Check repository credentials if this repository requires authentication.", url)
-        403 -> HttpFailure("Repository access forbidden (HTTP 403)", "The repository refused access to the requested resource.", "Confirm you are allowed to use this repository and that the URL is correct.", url)
-        404 -> HttpFailure("Artifact not found at repository (HTTP 404)", "The repository responded that the resource does not exist at that URL.", "Verify the dependency coordinate/version and the repository URL.", url)
+        401 -> HttpFailure("Repository authentication failed (HTTP 401)", "HTTP 401 Unauthorized: access to the repository was not authorized.", "Check repository credentials if this repository requires authentication.", url)
+        403 -> HttpFailure("Repository access forbidden (HTTP 403)", "HTTP 403 Forbidden: the repository refused access to the requested resource.", "Confirm you are allowed to use this repository and that the URL is correct.", url)
+        404 -> HttpFailure("Artifact not found at repository (HTTP 404)", "HTTP 404 Not Found: the resource does not exist at that repository URL.", "Verify the dependency coordinate/version and the repository URL.", url)
         429 -> HttpFailure("Repository rate limited (HTTP 429)", "Too many requests were sent to the repository.", "Wait and retry; avoid rapid repeated builds against the same host.", url)
         in 500..599 -> HttpFailure("Repository server error (HTTP $code)", "The remote repository returned a server error.", "Retry later; the failure is on the repository host, not proven to be a local configuration error.", url)
         null -> null
