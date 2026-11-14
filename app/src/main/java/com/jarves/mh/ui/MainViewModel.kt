@@ -78,6 +78,7 @@ import com.jarves.mh.runtime.AndroidBuildRecord
 import com.jarves.mh.runtime.AndroidAction
 import com.jarves.mh.runtime.AndroidApkInfo
 import com.jarves.mh.runtime.AndroidBuildIssue
+import com.jarves.mh.runtime.AndroidBuildIssueFix
 import com.jarves.mh.runtime.AndroidBuildStage
 import com.jarves.mh.runtime.AndroidHealthCheck
 import com.jarves.mh.runtime.AndroidHealthFix
@@ -390,6 +391,8 @@ data class AppUiState(
     val androidBuildAction: AndroidAction = AndroidAction.NONE,
     val androidBuildStage: AndroidBuildStage = AndroidBuildStage.IDLE,
     val androidBuildIssues: List<AndroidBuildIssue> = emptyList(),
+    val androidBuildFixRunning: Boolean = false,
+    val androidBuildFixLog: List<String> = emptyList(),
     val androidBuildLog: String = "",
     val androidBuildStartedAtMillis: Long? = null,
     val androidBuildFinishedAtMillis: Long? = null,
@@ -1823,7 +1826,89 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun openAndroidIssue(issue: AndroidBuildIssue) {
+    
+    fun fixAndroidBuildIssue(issue: AndroidBuildIssue) {
+        if (issue.fixKind == AndroidBuildIssueFix.NONE) return
+        if (_state.value.androidBuildFixRunning || _state.value.androidBuildRunning) {
+            _state.update { it.copy(toastMessage = str(R.string.an_build_fix_busy)) }
+            return
+        }
+        when (issue.fixKind) {
+            AndroidBuildIssueFix.FETCH_LOCAL_MIRROR_ARTIFACTS -> {
+                val coords = issue.coordinates.ifEmpty {
+                    // Fallback: try to re-parse from detail text
+                    Regex("""[A-Za-z0-9._-]+:[A-Za-z0-9._-]+:[A-Za-z0-9._-]+""").findAll(issue.detail).map { it.value }.toList()
+                }
+                if (coords.isEmpty()) {
+                    _state.update { it.copy(toastMessage = str(R.string.an_build_fix_no_coords)) }
+                    return
+                }
+                _state.update {
+                    it.copy(
+                        androidBuildFixRunning = true,
+                        androidBuildFixLog = listOf(
+                            java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date()) +
+                                "  Fetching ${coords.size} artifact(s) into local Maven mirror…",
+                        ),
+                    )
+                }
+                viewModelScope.launch {
+                    val result = runCatching {
+                        withContext(Dispatchers.IO) {
+                            installer.fetchMavenArtifactsIntoLocalMirror(coords) { msg ->
+                                _state.update { cur ->
+                                    cur.copy(
+                                        androidBuildFixLog = (
+                                            cur.androidBuildFixLog + (
+                                                java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US)
+                                                    .format(java.util.Date()) + "  " + msg
+                                                )
+                                            ).takeLast(40),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    result.onSuccess { fetch ->
+                        val lines = fetch.messages.map {
+                            java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date()) + "  " + it
+                        }
+                        val summary = when {
+                            fetch.failed.isEmpty() -> str(R.string.an_build_fix_fetch_ok, fetch.downloaded.size)
+                            fetch.downloaded.isEmpty() -> str(R.string.an_build_fix_fetch_failed)
+                            else -> str(R.string.an_build_fix_fetch_partial, fetch.downloaded.size, fetch.failed.size)
+                        }
+                        _state.update {
+                            it.copy(
+                                androidBuildFixRunning = false,
+                                androidBuildFixLog = (it.androidBuildFixLog + lines + (
+                                    java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date()) +
+                                        "  " + summary + " — run Build again."
+                                    )).takeLast(50),
+                                toastMessage = summary,
+                            )
+                        }
+                    }.onFailure { error ->
+                        _state.update {
+                            it.copy(
+                                androidBuildFixRunning = false,
+                                androidBuildFixLog = (
+                                    it.androidBuildFixLog + (
+                                        java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date()) +
+                                            "  FAILED: ${error.message?.take(200)}"
+                                        )
+                                    ).takeLast(50),
+                                toastMessage = error.message?.take(120) ?: str(R.string.an_build_fix_fetch_failed),
+                            )
+                        }
+                    }
+                }
+            }
+            AndroidBuildIssueFix.NONE -> Unit
+        }
+    }
+
+fun openAndroidIssue(issue: AndroidBuildIssue) {
         val project = _state.value.activeProject ?: return
         val path = issue.filePath ?: return
         val root = projectWorkspaceRoot(project)

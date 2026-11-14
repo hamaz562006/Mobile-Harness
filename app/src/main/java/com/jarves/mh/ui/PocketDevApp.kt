@@ -247,6 +247,7 @@ import com.jarves.mh.runtime.supportsArm64Runtime
 import com.jarves.mh.runtime.AntigravityAuthStatus
 import com.jarves.mh.runtime.AndroidAction
 import com.jarves.mh.runtime.AndroidBuildIssue
+import com.jarves.mh.runtime.AndroidBuildIssueFix
 import com.jarves.mh.runtime.AndroidBuildStage
 import com.jarves.mh.runtime.AndroidHealthCheck
 import com.jarves.mh.runtime.AndroidHealthFix
@@ -457,6 +458,7 @@ fun PocketDevApp(viewModel: MainViewModel = viewModel()) {
             onOpenAndroidAppDetails = viewModel::openInstalledAndroidAppDetails,
             onUninstallAndroidApp = viewModel::uninstallAndroidApp,
             onOpenAndroidIssue = viewModel::openAndroidIssue,
+            onFixAndroidBuildIssue = viewModel::fixAndroidBuildIssue,
             onAndroidHealthFix = viewModel::performAndroidHealthFix,
             onRefreshAndroidHealth = viewModel::refreshAndroidHealth,
             onStartAndroidLogcat = viewModel::startAndroidLogcat,
@@ -4734,6 +4736,7 @@ private fun WorkspaceScreen(
     onOpenAndroidAppDetails: () -> Unit,
     onUninstallAndroidApp: () -> Unit,
     onOpenAndroidIssue: (AndroidBuildIssue) -> Unit,
+    onFixAndroidBuildIssue: (AndroidBuildIssue) -> Unit,
     onAndroidHealthFix: (AndroidHealthFix) -> Unit,
     onRefreshAndroidHealth: () -> Unit,
     onStartAndroidLogcat: () -> Unit,
@@ -4917,6 +4920,7 @@ private fun WorkspaceScreen(
             onOpenAppDetails = onOpenAndroidAppDetails,
             onUninstallApp = onUninstallAndroidApp,
             onOpenIssue = { issue -> showAndroidBuild = false; onOpenAndroidIssue(issue) },
+            onFixBuildIssue = onFixAndroidBuildIssue,
             onHealthFix = onAndroidHealthFix,
             onRefreshHealth = onRefreshAndroidHealth,
             onStartLogcat = onStartAndroidLogcat,
@@ -5267,6 +5271,7 @@ private fun AndroidDashboardScreen(
     onOpenAppDetails: () -> Unit,
     onUninstallApp: () -> Unit,
     onOpenIssue: (AndroidBuildIssue) -> Unit,
+    onFixBuildIssue: (AndroidBuildIssue) -> Unit,
     onHealthFix: (AndroidHealthFix) -> Unit,
     onRefreshHealth: () -> Unit,
     onStartLogcat: () -> Unit,
@@ -5382,6 +5387,7 @@ private fun AndroidDashboardScreen(
                     onCancelBuild = onCancelBuild,
                     onInstallTools = onInstallTools,
                     onOpenIssue = onOpenIssue,
+                    onFixBuildIssue = onFixBuildIssue,
                 )
                 AndroidDashboardSection.BUILD -> {
                     LazyColumn(
@@ -5479,6 +5485,32 @@ private fun AndroidDashboardScreen(
                                         Text(issue.detail, fontSize = 12.sp, color = MaterialTheme.colorScheme.onErrorContainer)
                                         issue.suggestion?.let { Text(it, fontSize = 11.sp, color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)) }
                                         if (issue.filePath != null) Text("${issue.filePath}${issue.line?.let { ":$it" }.orEmpty()}", fontFamily = FontFamily.Monospace, fontSize = 10.sp)
+                                        if (issue.fixKind != AndroidBuildIssueFix.NONE) {
+                                            TextButton(
+                                                onClick = { onFixBuildIssue(issue) },
+                                                enabled = !state.androidBuildFixRunning && !state.androidBuildRunning,
+                                            ) {
+                                                Text(
+                                                    if (state.androidBuildFixRunning) stringResource(R.string.an_build_fix_running)
+                                                    else stringResource(R.string.fix),
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (state.androidBuildFixLog.isNotEmpty()) {
+                                item {
+                                    Card(Modifier.fillMaxWidth()) {
+                                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Text(stringResource(R.string.an_build_fix_log_title), fontWeight = FontWeight.SemiBold)
+                                            Text(
+                                                state.androidBuildFixLog.joinToString("
+"),
+                                                fontFamily = FontFamily.Monospace,
+                                                fontSize = 10.sp,
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -5679,6 +5711,7 @@ private fun ProfessionalAndroidOverview(
     onCancelBuild: () -> Unit,
     onInstallTools: () -> Unit,
     onOpenIssue: (AndroidBuildIssue) -> Unit,
+    onFixBuildIssue: (AndroidBuildIssue) -> Unit,
 ) {
     val apk = state.androidApkInfo
     val toolsInstalled = DevStack.ANDROID in state.installedDevStacks
@@ -5831,6 +5864,32 @@ private fun ProfessionalAndroidOverview(
                         Text(issue.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onErrorContainer)
                         Text(issue.detail, fontSize = 12.sp, color = MaterialTheme.colorScheme.onErrorContainer)
                         issue.suggestion?.let { Text(it, fontSize = 11.sp, color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)) }
+                        if (issue.fixKind != AndroidBuildIssueFix.NONE) {
+                            TextButton(
+                                onClick = { onFixBuildIssue(issue) },
+                                enabled = !state.androidBuildFixRunning && !state.androidBuildRunning,
+                            ) {
+                                Text(
+                                    if (state.androidBuildFixRunning) stringResource(R.string.an_build_fix_running)
+                                    else stringResource(R.string.fix),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            if (state.androidBuildFixLog.isNotEmpty()) {
+                item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(stringResource(R.string.an_build_fix_log_title), fontWeight = FontWeight.SemiBold)
+                            Text(
+                                state.androidBuildFixLog.joinToString("
+"),
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp,
+                            )
+                        }
                     }
                 }
             }

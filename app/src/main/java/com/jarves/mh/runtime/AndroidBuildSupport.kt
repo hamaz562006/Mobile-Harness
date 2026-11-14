@@ -11,6 +11,12 @@ enum class AndroidBuildStage {
 }
 enum class AndroidIssueSeverity { INFO, WARNING, ERROR }
 
+enum class AndroidBuildIssueFix {
+    NONE,
+    /** Download missing Maven coordinates into the local mirror and leave rebuild to the user. */
+    FETCH_LOCAL_MIRROR_ARTIFACTS,
+}
+
 data class AndroidBuildIssue(
     val severity: AndroidIssueSeverity = AndroidIssueSeverity.ERROR,
     val title: String,
@@ -19,6 +25,10 @@ data class AndroidBuildIssue(
     val filePath: String? = null,
     val line: Int? = null,
     val column: Int? = null,
+    /** Optional automated repair supported for this issue. */
+    val fixKind: AndroidBuildIssueFix = AndroidBuildIssueFix.NONE,
+    /** Maven coordinates (group:artifact:version) when fixKind needs them. */
+    val coordinates: List<String> = emptyList(),
 )
 
 data class AndroidApkInfo(
@@ -315,7 +325,8 @@ internal fun parseDependencyResolutionIssues(output: String): List<AndroidBuildI
     if (!hasResolveSignal) return emptyList()
 
     val issues = mutableListOf<AndroidBuildIssue>()
-    val artifact = extractArtifactCoordinate(output)
+    val coordinates = extractAllArtifactCoordinates(output)
+    val artifact = coordinates.firstOrNull()
     val searched = extractSearchedLocations(output)
     val http = extractHttpFailure(output)
     val network = extractNetworkException(output)
@@ -363,31 +374,57 @@ internal fun parseDependencyResolutionIssues(output: String): List<AndroidBuildI
             issues += AndroidBuildIssue(
                 title = "Missing local artifact",
                 detail = buildString {
-                    if (artifact != null) append("Could not find ").append(artifact).append('.')
-                    else append("A dependency was not found in local repositories.")
+                    if (coordinates.isNotEmpty()) {
+                        append("Not found in the local Maven mirror: ")
+                        append(coordinates.joinToString(", "))
+                        append('.')
+                    } else {
+                        append("A dependency was not found in the local Maven mirror.")
+                    }
                     if (searched.isNotEmpty()) {
                         append(" Searched local path(s): ")
                         append(searched.take(4).joinToString("; "))
                     }
-                    append(" The build log does not show a remote repository failure or network error.")
+                    append(" No remote repository failure appears in this log — only the local mirror was searched.")
                 },
-                suggestion = "Add the artifact to the local Maven mirror, declare a repository that provides it, or correct the dependency coordinate/version.",
+                suggestion = "Use Fix to download these artifacts into the local mirror, then Build again. Or ensure a remote repository is available to the build.",
+                fixKind = if (coordinates.isNotEmpty()) AndroidBuildIssueFix.FETCH_LOCAL_MIRROR_ARTIFACTS else AndroidBuildIssueFix.NONE,
+                coordinates = coordinates,
             )
         }
         artifact != null -> {
-            issues += AndroidBuildIssue(
-                title = "Dependency not resolved",
-                detail = buildString {
-                    append("Could not resolve ").append(artifact).append('.')
-                    if (searched.isNotEmpty()) {
+            val onlyLocalEvidence = searched.isNotEmpty() && searched.all {
+                it.startsWith("file:") || it.startsWith("/") || "localmvn" in it.lowercase()
+            }
+            if (onlyLocalEvidence || searched.isEmpty()) {
+                issues += AndroidBuildIssue(
+                    title = "Missing local artifact",
+                    detail = buildString {
+                        append("Could not resolve ").append(coordinates.joinToString(", ")).append('.')
+                        if (searched.isNotEmpty()) {
+                            append(" Searched local path(s): ")
+                            append(searched.take(4).joinToString("; "))
+                        } else {
+                            append(" No repository locations were listed in the log.")
+                        }
+                    },
+                    suggestion = "Use Fix to fetch missing artifacts into the local Maven mirror, then Build again.",
+                    fixKind = AndroidBuildIssueFix.FETCH_LOCAL_MIRROR_ARTIFACTS,
+                    coordinates = coordinates,
+                )
+            } else {
+                issues += AndroidBuildIssue(
+                    title = "Dependency not resolved",
+                    detail = buildString {
+                        append("Could not resolve ").append(coordinates.joinToString(", ")).append('.')
                         append(" Searched: ")
                         append(searched.take(4).joinToString("; "))
-                    } else {
-                        append(" Check which repositories were configured and whether the version exists.")
-                    }
-                },
-                suggestion = "Verify the coordinate and version, and that a repository providing this artifact is configured and reachable.",
-            )
+                    },
+                    suggestion = "Verify the coordinate/version and that a repository providing it is reachable. If the files only need to live in the local mirror, use Fix.",
+                    fixKind = if (coordinates.isNotEmpty()) AndroidBuildIssueFix.FETCH_LOCAL_MIRROR_ARTIFACTS else AndroidBuildIssueFix.NONE,
+                    coordinates = coordinates,
+                )
+            }
         }
         else -> {
             val line = extractPrimaryErrorLine(output)
@@ -499,24 +536,32 @@ internal fun parseExecutionIssues(output: String): List<AndroidBuildIssue> {
 internal data class HttpFailure(val title: String, val detail: String, val suggestion: String, val url: String?)
 internal data class NetworkFailure(val title: String, val detail: String, val suggestion: String)
 
-internal fun extractArtifactCoordinate(output: String): String? {
-    val patterns = listOf(
-        Regex("""Could not (?:find|resolve)(?: all files for configuration| any matches for| [^\n]*?)?\s+([A-Za-z0-9._-]+:[A-Za-z0-9._-]+:[A-Za-z0-9._-]+)""", RegexOption.IGNORE_CASE),
-        Regex("""Could not find\s+([A-Za-z0-9._-]+\.(?:jar|aar|pom))""", RegexOption.IGNORE_CASE),
-        Regex("""Failed to resolve(?: to version)?[:\s]+([A-Za-z0-9._-]+:[A-Za-z0-9._-]+:[A-Za-z0-9._-]+)""", RegexOption.IGNORE_CASE),
-        Regex("""Could not get resource['\s]+'?(https?://[^'\s]+/([A-Za-z0-9._-]+\.(?:jar|aar|pom)))'?""", RegexOption.IGNORE_CASE),
-    )
-    for (p in patterns) {
-        p.find(output)?.let { m ->
-            return m.groupValues.lastOrNull { it.isNotBlank() && (":" in it || it.endsWith(".jar") || it.endsWith(".aar") || it.endsWith(".pom")) }
-                ?: m.groupValues.getOrNull(1)
-        }
-    }
-    // Group:artifact:version style without prefix
-    Regex("""([A-Za-z0-9._-]+:[A-Za-z0-9._-]+:[A-Za-z0-9._-]+)""").find(output)?.groupValues?.getOrNull(1)?.let { return it }
-    return null
+
+internal fun extractArtifactCoordinate(output: String): String? =
+    extractAllArtifactCoordinates(output).firstOrNull()
+
+/** All group:artifact:version references tied to resolution failures in the log. */
+internal fun extractAllArtifactCoordinates(output: String): List<String> {
+    val found = LinkedHashSet<String>()
+    Regex(
+        """Could not find\s+[A-Za-z0-9._-]+\.(?:jar|aar|pom)\s*\(\s*([A-Za-z0-9._-]+:[A-Za-z0-9._-]+:[A-Za-z0-9._-]+)\s*\)""",
+        RegexOption.IGNORE_CASE,
+    ).findAll(output).forEach { found += it.groupValues[1] }
+    Regex(
+        """Could not (?:find|resolve)(?: all files for configuration| any matches for)?[^\n]*?([A-Za-z0-9._-]+:[A-Za-z0-9._-]+:[A-Za-z0-9._-]+)""",
+        RegexOption.IGNORE_CASE,
+    ).findAll(output).forEach { found += it.groupValues[1] }
+    Regex(
+        """Failed to resolve(?: to version)?[:\s]+([A-Za-z0-9._-]+:[A-Za-z0-9._-]+:[A-Za-z0-9._-]+)""",
+        RegexOption.IGNORE_CASE,
+    ).findAll(output).forEach { found += it.groupValues[1] }
+    return found.toList()
 }
 
+/**
+ * Repository / filesystem locations Gradle reported for resolution.
+ * Ignores documentation and help URLs that appear in generic Gradle output.
+ */
 internal fun extractSearchedLocations(output: String): List<String> {
     val results = LinkedHashSet<String>()
     Regex("""Searched in (?:the following locations?:)?\s*((?:[^\n]+\n?)+)""", RegexOption.IGNORE_CASE)
@@ -524,25 +569,43 @@ internal fun extractSearchedLocations(output: String): List<String> {
         .forEach { block ->
             block.groupValues.getOrNull(1)?.lineSequence()?.forEach { line ->
                 val cleaned = line.trim().trimStart('-', '*', ' ')
-                if (cleaned.startsWith("file:") || cleaned.startsWith("http://") || cleaned.startsWith("https://") || cleaned.startsWith("/")) {
-                    results += cleaned.take(240)
-                }
+                if (isRealSearchLocation(cleaned)) results += cleaned.take(300)
             }
         }
     Regex("""(?:Required by|from)\s+(file:[^\s]+)""", RegexOption.IGNORE_CASE).findAll(output).forEach {
         results += it.groupValues[1]
     }
     Regex("""(file:/[^\s\]]+)""").findAll(output).forEach {
-        results += it.groupValues[1].trimEnd('.', ',', ')', ']')
+        val loc = it.groupValues[1].trimEnd('.', ',', ')', ']')
+        if (isRealSearchLocation(loc)) results += loc
     }
-    Regex("""((?:https?://)[^\s\]'"]+)""").findAll(output).take(8).forEach {
+    Regex("""((?:https?://)[^\s\]'"]+)""").findAll(output).forEach {
         val u = it.groupValues[1].trimEnd('.', ',', ')', ']')
-        if ("maven" in u || "google" in u || "gradle" in u || "repo" in u || u.endsWith(".jar") || u.endsWith(".pom") || u.endsWith(".aar")) {
-            results += u
-        }
+        if (isRealSearchLocation(u)) results += u
     }
     return results.toList()
 }
+
+internal fun isRealSearchLocation(raw: String): Boolean {
+    val s = raw.trim()
+    if (s.isEmpty()) return false
+    if (s.startsWith("file:")) return true
+    if (s.startsWith("/") && ("maven" in s || "m2" in s || "repository" in s || s.endsWith(".jar") || s.endsWith(".pom") || s.endsWith(".aar"))) {
+        return true
+    }
+    if (!s.startsWith("http://", ignoreCase = true) && !s.startsWith("https://", ignoreCase = true)) {
+        return false
+    }
+    val lower = s.lowercase()
+    if ("docs.gradle.org" in lower || "help.gradle.org" in lower || "guides.gradle.org" in lower) return false
+    if ("developer.android.com/studio" in lower) return false
+    return listOf(
+        "maven", "google", "repo.", "repository", ".jar", ".pom", ".aar",
+        "dl.google.com", "maven.google.com", "repo1.maven.org", "plugins.gradle.org",
+        "jitpack", "central.sonatype",
+    ).any { it in lower }
+}
+
 
 internal fun extractHttpFailure(output: String): HttpFailure? {
     val statusMatch = Regex(

@@ -121,4 +121,11 @@
     <string name="an_health_fix_log_hint">Steps taken by Health → Fix. Copy if you need to report a problem.</string>
     <string name="an_health_fix_log_collapse">Collapse</string>
     <string name="an_health_fix_log_expand">Expand</string>
+    <string name="an_build_fix_busy">A build or fix is already running.</string>
+    <string name="an_build_fix_no_coords">No dependency coordinates found to download.</string>
+    <string name="an_build_fix_fetch_ok">Downloaded %1$d artifact(s) into the local mirror. Build again.</string>
+    <string name="an_build_fix_fetch_failed">Could not download the missing artifacts.</string>
+    <string name="an_build_fix_fetch_partial">Downloaded %1$d artifact(s); %2$d failed. Build again or check the Fix log.</string>
+    <string name="an_build_fix_running">Fixing…</string>
+    <string name="an_build_fix_log_title">Build Fix log</string>
 </resources>

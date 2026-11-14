@@ -121,4 +121,11 @@
     <string name="an_health_fix_log_hint">مراحل Health → Fix. برای گزارش مشکل کپی کنید.</string>
     <string name="an_health_fix_log_collapse">جمع کردن</string>
     <string name="an_health_fix_log_expand">باز کردن</string>
+    <string name="an_build_fix_busy">Build یا Fix دیگری در حال اجراست.</string>
+    <string name="an_build_fix_no_coords">مختصات dependency برای دانلود پیدا نشد.</string>
+    <string name="an_build_fix_fetch_ok">%1$d artifact در mirror محلی دانلود شد. دوباره Build بزنید.</string>
+    <string name="an_build_fix_fetch_failed">دانلود artifactهای گم‌شده ممکن نشد.</string>
+    <string name="an_build_fix_fetch_partial">%1$d دانلود شد؛ %2$d ناموفق. دوباره Build یا لاگ Fix را ببینید.</string>
+    <string name="an_build_fix_running">در حال رفع…</string>
+    <string name="an_build_fix_log_title">لاگ Fix بیلد</string>
 </resources>

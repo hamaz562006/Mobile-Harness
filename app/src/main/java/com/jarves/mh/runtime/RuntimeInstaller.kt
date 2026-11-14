@@ -2249,6 +2249,96 @@ printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decis
 
     private fun File.readTextOrNull(): String? = runCatching { readText().trim() }.getOrNull()
 
+
+    data class FetchMavenArtifactsResult(
+        val downloaded: List<String>,
+        val failed: List<String>,
+        val messages: List<String>,
+    )
+
+    /**
+     * Downloads Maven coordinates (group:artifact:version) into the on-device local mirror
+     * at root/maven/localMvnRepository. Used by Build Issues → Fix for missing local artifacts.
+     * Does not modify the user's project build files.
+     */
+    suspend fun fetchMavenArtifactsIntoLocalMirror(
+        coordinates: List<String>,
+        onProgress: suspend (String) -> Unit = {},
+    ): FetchMavenArtifactsResult {
+        val mirror = File(rootfs, "root/maven/localMvnRepository")
+        mirror.mkdirs()
+        val downloaded = mutableListOf<String>()
+        val failed = mutableListOf<String>()
+        val messages = mutableListOf<String>()
+        val bases = listOf(
+            "https://repo1.maven.org/maven2",
+            "https://dl.google.com/dl/android/maven2",
+            "https://maven.google.com",
+        )
+        for (coord in coordinates.distinct()) {
+            val parts = coord.split(':')
+            if (parts.size < 3) {
+                failed += coord
+                messages += "Invalid coordinate: $coord"
+                continue
+            }
+            val (group, artifact, version) = parts
+            val groupPath = group.replace('.', '/')
+            val relativeDir = "$groupPath/$artifact/$version"
+            val destDir = File(mirror, relativeDir)
+            destDir.mkdirs()
+            onProgress("Fetching $coord…")
+            var ok = false
+            var lastErr: String? = null
+            for (ext in listOf("jar", "aar")) {
+                val fileName = "$artifact-$version.$ext"
+                val dest = File(destDir, fileName)
+                if (dest.isFile && dest.length() > 0L) {
+                    ok = true
+                    messages += "Already present: $fileName"
+                    break
+                }
+                for (base in bases) {
+                    val url = "$base/$relativeDir/$fileName"
+                    try {
+                        downloadFileNoChecksum(url, dest) { _, _ -> }
+                        if (dest.isFile && dest.length() > 0L) {
+                            ok = true
+                            messages += "Downloaded $fileName from $base"
+                            break
+                        }
+                    } catch (e: Throwable) {
+                        lastErr = e.message
+                        dest.delete()
+                    }
+                }
+                if (ok) break
+            }
+            // Always try pom (metadata) — helpful for Gradle
+            val pomName = "$artifact-$version.pom"
+            val pomDest = File(destDir, pomName)
+            if (!pomDest.isFile) {
+                for (base in bases) {
+                    val url = "$base/$relativeDir/$pomName"
+                    try {
+                        downloadFileNoChecksum(url, pomDest) { _, _ -> }
+                        if (pomDest.isFile && pomDest.length() > 0L) {
+                            messages += "Downloaded $pomName"
+                            break
+                        }
+                    } catch (_: Throwable) {
+                        pomDest.delete()
+                    }
+                }
+            }
+            if (ok) downloaded += coord else {
+                failed += coord
+                messages += "Failed $coord: ${lastErr ?: "not found on known repositories"}"
+            }
+        }
+        return FetchMavenArtifactsResult(downloaded, failed, messages)
+    }
+
     companion object {
         const val AGY_GUEST_PATH = "/root/.local/bin/agy"
         const val GITHUB_CLI_GUEST_PATH = "/root/.local/bin/gh"
