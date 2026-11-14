@@ -32,6 +32,24 @@ class AndroidBuildIssuesDiagnosisTest {
     }
 
     @Test
+    fun docsGradleUrl_notTreatedAsRemoteRepoSearch() {
+        val log = """
+            Could not find error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0).
+                 Searched in the following locations:
+                     file:/root/maven/localMvnRepository/com/google/errorprone/error_prone_annotations/2.18.0/error_prone_annotations-2.18.0.jar
+            See https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html
+            https://help.gradle.org
+        """.trimIndent()
+        val issues = parseAndroidBuildIssues(log, root, 1)
+        val text = issues.joinToString("\n") { "${it.title}\n${it.detail}" }
+        assertTrue(text.contains("Missing local", ignoreCase = true) || text.contains("local", ignoreCase = true))
+        assertFalse(text.contains("docs.gradle.org"))
+        assertFalse(text.contains("help.gradle.org"))
+        assertTrue(issues.any { it.fixKind == AndroidBuildIssueFix.FETCH_LOCAL_MIRROR_ARTIFACTS })
+        assertTrue(issues.any { "errorprone" in it.coordinates.joinToString() })
+    }
+
+    @Test
     fun dnsFailure_distinguishedFromHttp() {
         val log = """
             Could not resolve com.example:lib:1.0.
@@ -126,21 +144,3 @@ class AndroidBuildIssuesDiagnosisTest {
         assertTrue(text.contains("XYZ-42") || text.contains("obscure") || text.contains("exit code 7"))
     }
 }
-
-    @Test
-    fun docsGradleUrl_notTreatedAsRemoteRepoSearch() {
-        val log = """
-            Could not find error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0).
-                 Searched in the following locations:
-                     file:/root/maven/localMvnRepository/com/google/errorprone/error_prone_annotations/2.18.0/error_prone_annotations-2.18.0.jar
-            See https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html
-            https://help.gradle.org
-        """.trimIndent()
-        val issues = parseAndroidBuildIssues(log, root, 1)
-        val text = issues.joinToString("\n") { "${it.title}\n${it.detail}" }
-        assertTrue(text.contains("Missing local", ignoreCase = true) || text.contains("local", ignoreCase = true))
-        assertFalse(text.contains("docs.gradle.org"))
-        assertFalse(text.contains("help.gradle.org"))
-        assertTrue(issues.any { it.fixKind == AndroidBuildIssueFix.FETCH_LOCAL_MIRROR_ARTIFACTS })
-        assertTrue(issues.any { "errorprone" in it.coordinates.joinToString() })
-    }
