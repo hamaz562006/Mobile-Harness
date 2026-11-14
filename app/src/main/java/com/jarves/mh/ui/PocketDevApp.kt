@@ -5505,8 +5505,7 @@ private fun AndroidDashboardScreen(
                                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                             Text(stringResource(R.string.an_build_fix_log_title), fontWeight = FontWeight.SemiBold)
                                             Text(
-                                                state.androidBuildFixLog.joinToString("
-"),
+                                                state.androidBuildFixLog.joinToString("\n"),
                                                 fontFamily = FontFamily.Monospace,
                                                 fontSize = 10.sp,
                                             )
@@ -5884,8 +5883,7 @@ private fun ProfessionalAndroidOverview(
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(stringResource(R.string.an_build_fix_log_title), fontWeight = FontWeight.SemiBold)
                             Text(
-                                state.androidBuildFixLog.joinToString("
-"),
+                                state.androidBuildFixLog.joinToString("\n"),
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 10.sp,
                             )
