@@ -128,4 +128,6 @@
     <string name="an_build_fix_fetch_partial">Downloaded %1$d artifact(s); %2$d failed. Build again or check the Fix log.</string>
     <string name="an_build_fix_running">Fixing…</string>
     <string name="an_build_fix_log_title">Build Fix log</string>
+    <string name="an_apk_outputs_title">%1$d APK outputs</string>
+    <string name="an_apk_outputs_hint">Select which APK to install or share.</string>
 </resources>

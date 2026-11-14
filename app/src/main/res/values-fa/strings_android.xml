@@ -128,4 +128,6 @@
     <string name="an_build_fix_fetch_partial">%1$d دانلود شد؛ %2$d ناموفق. دوباره Build یا لاگ Fix را ببینید.</string>
     <string name="an_build_fix_running">در حال رفع…</string>
     <string name="an_build_fix_log_title">لاگ Fix بیلد</string>
+    <string name="an_apk_outputs_title">%1$d خروجی APK</string>
+    <string name="an_apk_outputs_hint">APK موردنظر برای نصب یا اشتراک را انتخاب کنید.</string>
 </resources>

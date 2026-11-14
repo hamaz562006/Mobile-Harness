@@ -93,6 +93,8 @@ import com.jarves.mh.runtime.androidGradleCommand
 import com.jarves.mh.runtime.diagnoseAndroidBuildFailure
 import com.jarves.mh.runtime.findAndroidProjectRoot
 import com.jarves.mh.runtime.findDebugApk
+import com.jarves.mh.runtime.findDebugApks
+import com.jarves.mh.runtime.apkModuleAndVariant
 import com.jarves.mh.runtime.findReusableDebugApk
 import com.jarves.mh.runtime.inferAndroidBuildStage
 import com.jarves.mh.runtime.isDebugApkStale
@@ -400,6 +402,8 @@ data class AppUiState(
     val androidBuildApkSizeBytes: Long? = null,
     val androidBuildRecentDurationsMillis: List<Long> = emptyList(),
     val androidApkInfo: AndroidApkInfo? = null,
+    /** All discovered installable APKs for the active project (newest first). */
+    val androidApkList: List<AndroidApkInfo> = emptyList(),
     val androidHealthChecks: List<AndroidHealthCheck> = emptyList(),
     val androidHealthRunning: Boolean = false,
     /** Observable trace of the last Health → Fix operation (newest last). */
@@ -1363,6 +1367,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun installLatestAndroidApk(launch: Boolean, action: AndroidAction) {
+        val selected = _state.value.androidApkInfo?.path?.let { File(it) }?.takeIf { it.isFile }
+        if (selected != null) {
+            beginAndroidInstall(selected, launch, action)
+            return
+        }
         val project = _state.value.activeProject ?: return
         val root = findAndroidProjectRoot(projectWorkspaceRoot(project))
         val apk = root?.let(::findDebugApk)
@@ -1773,32 +1782,52 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshAndroidApkInfo() {
         val project = _state.value.activeProject ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            val info = runCatching {
-                val projectRoot = findAndroidProjectRoot(projectWorkspaceRoot(project)) ?: return@runCatching null
-                val apk = findDebugApk(projectRoot) ?: return@runCatching null
+            val (list, selected) = runCatching {
+                val projectRoot = findAndroidProjectRoot(projectWorkspaceRoot(project))
+                    ?: return@runCatching (emptyList<AndroidApkInfo>() to null)
                 val app = getApplication<Application>()
-                @Suppress("DEPRECATION")
-                val archive = app.packageManager.getPackageArchiveInfo(apk.absolutePath, 0)
-                val packageName = archive?.packageName ?: AndroidAppInstaller.packageName(app, apk)
-                AndroidApkInfo(
-                    path = apk.absolutePath,
-                    fileName = apk.name,
-                    sizeBytes = apk.length(),
-                    builtAtMillis = apk.lastModified(),
-                    packageName = packageName,
-                    versionName = archive?.versionName,
-                    versionCode = archive?.let {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) it.longVersionCode else @Suppress("DEPRECATION") it.versionCode.toLong()
-                    },
-                    minSdk = archive?.applicationInfo?.minSdkVersion,
-                    targetSdk = archive?.applicationInfo?.targetSdkVersion,
-                    stale = isDebugApkStale(projectRoot, apk),
-                    installed = packageName?.let { AndroidAppInstaller.isInstalled(app, it) } == true,
-                    installedMatches = AndroidAppInstaller.installedMatches(app, apk),
+                val apks = findDebugApks(projectRoot)
+                val infos = apks.map { apk ->
+                    @Suppress("DEPRECATION")
+                    val archive = app.packageManager.getPackageArchiveInfo(apk.absolutePath, 0)
+                    val packageName = archive?.packageName ?: AndroidAppInstaller.packageName(app, apk)
+                    val (module, variant) = apkModuleAndVariant(projectRoot, apk)
+                    AndroidApkInfo(
+                        path = apk.absolutePath,
+                        fileName = apk.name,
+                        sizeBytes = apk.length(),
+                        builtAtMillis = apk.lastModified(),
+                        packageName = packageName,
+                        versionName = archive?.versionName,
+                        versionCode = archive?.let {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) it.longVersionCode
+                            else @Suppress("DEPRECATION") it.versionCode.toLong()
+                        },
+                        minSdk = archive?.applicationInfo?.minSdkVersion,
+                        targetSdk = archive?.applicationInfo?.targetSdkVersion,
+                        stale = isDebugApkStale(projectRoot, apk),
+                        installed = packageName?.let { AndroidAppInstaller.isInstalled(app, it) } == true,
+                        installedMatches = AndroidAppInstaller.installedMatches(app, apk),
+                        moduleName = module,
+                        variant = variant,
+                    )
+                }
+                val previous = _state.value.androidApkInfo?.path
+                val selectedInfo = infos.firstOrNull { it.path == previous } ?: infos.firstOrNull()
+                infos to selectedInfo
+            }.getOrElse { emptyList<AndroidApkInfo>() to null }
+            _state.update {
+                it.copy(
+                    androidApkList = list,
+                    androidApkInfo = selected,
                 )
-            }.getOrNull()
-            _state.update { it.copy(androidApkInfo = info) }
+            }
         }
+    }
+
+    fun selectAndroidApk(path: String) {
+        val chosen = _state.value.androidApkList.firstOrNull { it.path == path } ?: return
+        _state.update { it.copy(androidApkInfo = chosen) }
     }
 
     fun shareAndroidApk() {

@@ -150,6 +150,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.DropdownMenu
@@ -168,6 +169,7 @@ import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -459,6 +461,7 @@ fun PocketDevApp(viewModel: MainViewModel = viewModel()) {
             onUninstallAndroidApp = viewModel::uninstallAndroidApp,
             onOpenAndroidIssue = viewModel::openAndroidIssue,
             onFixAndroidBuildIssue = viewModel::fixAndroidBuildIssue,
+            onSelectAndroidApk = viewModel::selectAndroidApk,
             onAndroidHealthFix = viewModel::performAndroidHealthFix,
             onRefreshAndroidHealth = viewModel::refreshAndroidHealth,
             onStartAndroidLogcat = viewModel::startAndroidLogcat,
@@ -4737,6 +4740,7 @@ private fun WorkspaceScreen(
     onUninstallAndroidApp: () -> Unit,
     onOpenAndroidIssue: (AndroidBuildIssue) -> Unit,
     onFixAndroidBuildIssue: (AndroidBuildIssue) -> Unit,
+    onSelectAndroidApk: (String) -> Unit,
     onAndroidHealthFix: (AndroidHealthFix) -> Unit,
     onRefreshAndroidHealth: () -> Unit,
     onStartAndroidLogcat: () -> Unit,
@@ -4921,6 +4925,7 @@ private fun WorkspaceScreen(
             onUninstallApp = onUninstallAndroidApp,
             onOpenIssue = { issue -> showAndroidBuild = false; onOpenAndroidIssue(issue) },
             onFixBuildIssue = onFixAndroidBuildIssue,
+            onSelectApk = onSelectAndroidApk,
             onHealthFix = onAndroidHealthFix,
             onRefreshHealth = onRefreshAndroidHealth,
             onStartLogcat = onStartAndroidLogcat,
@@ -5272,6 +5277,7 @@ private fun AndroidDashboardScreen(
     onUninstallApp: () -> Unit,
     onOpenIssue: (AndroidBuildIssue) -> Unit,
     onFixBuildIssue: (AndroidBuildIssue) -> Unit,
+    onSelectApk: (String) -> Unit,
     onHealthFix: (AndroidHealthFix) -> Unit,
     onRefreshHealth: () -> Unit,
     onStartLogcat: () -> Unit,
@@ -5388,6 +5394,7 @@ private fun AndroidDashboardScreen(
                     onInstallTools = onInstallTools,
                     onOpenIssue = onOpenIssue,
                     onFixBuildIssue = onFixBuildIssue,
+                    onSelectApk = onSelectApk,
                 )
                 AndroidDashboardSection.BUILD -> {
                     LazyColumn(
@@ -5512,6 +5519,15 @@ private fun AndroidDashboardScreen(
                                         }
                                     }
                                 }
+                            }
+                        }
+                        if (state.androidApkList.size > 1) {
+                            item {
+                                AndroidApkOutputChooser(
+                                    list = state.androidApkList,
+                                    selectedPath = state.androidApkInfo?.path,
+                                    onSelect = onSelectApk,
+                                )
                             }
                         }
                         state.androidApkInfo?.let { apk ->
@@ -5711,6 +5727,7 @@ private fun ProfessionalAndroidOverview(
     onInstallTools: () -> Unit,
     onOpenIssue: (AndroidBuildIssue) -> Unit,
     onFixBuildIssue: (AndroidBuildIssue) -> Unit,
+    onSelectApk: (String) -> Unit,
 ) {
     val apk = state.androidApkInfo
     val toolsInstalled = DevStack.ANDROID in state.installedDevStacks
@@ -5772,6 +5789,15 @@ private fun ProfessionalAndroidOverview(
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        if (state.androidApkList.size > 1) {
+            item {
+                AndroidApkOutputChooser(
+                    list = state.androidApkList,
+                    selectedPath = state.androidApkInfo?.path,
+                    onSelect = onSelectApk,
+                )
+            }
+        }
         item {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)),
@@ -7557,6 +7583,64 @@ private fun FilesTab(files: List<WorkspaceEntry>, loading: Boolean, onRefresh: (
                 Text(entry.name, Modifier.weight(1f))
                 if (!entry.isDirectory) {
                     Text(formatFileSize(entry.sizeBytes), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun AndroidApkOutputChooser(
+    list: List<AndroidApkInfo>,
+    selectedPath: String?,
+    onSelect: (String) -> Unit,
+) {
+    if (list.size <= 1) return
+    Card(Modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                stringResource(R.string.an_apk_outputs_title, list.size),
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                stringResource(R.string.an_apk_outputs_hint),
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            list.forEach { item ->
+                val selected = item.path == selectedPath
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelect(item.path) },
+                    color = if (selected) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Row(
+                        Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = selected, onClick = { onSelect(item.path) })
+                        Column(Modifier.weight(1f)) {
+                            Text(item.fileName, fontWeight = FontWeight.SemiBold)
+                            val meta = buildString {
+                                item.moduleName?.let { append(it) }
+                                item.variant?.let {
+                                    if (isNotEmpty()) append(" · ")
+                                    append(it)
+                                }
+                                if (isNotEmpty()) append(" · ")
+                                append(formatFileSize(item.sizeBytes))
+                                item.packageName?.let {
+                                    append(" · ")
+                                    append(it)
+                                }
+                            }
+                            Text(meta, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
         }

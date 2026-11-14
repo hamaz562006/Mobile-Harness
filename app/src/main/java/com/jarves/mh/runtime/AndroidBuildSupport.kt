@@ -44,6 +44,10 @@ data class AndroidApkInfo(
     val stale: Boolean = false,
     val installed: Boolean = false,
     val installedMatches: Boolean = false,
+    /** Gradle module folder name when detectable (e.g. app, feature). */
+    val moduleName: String? = null,
+    /** Build variant folder under outputs/apk (debug, release, …). */
+    val variant: String? = null,
 )
 
 enum class AndroidHealthStatus { RUNNING, PASSED, WARNING, FAILED }
@@ -114,23 +118,60 @@ internal fun findAndroidProjectRoot(workspace: File): File? {
         }
 }
 
-internal fun findDebugApk(projectRoot: File): File? {
-    val metadata = projectRoot.walkTopDown().maxDepth(8)
+/**
+ * All installable APK outputs under the project (any module / variant).
+ * Prefers files listed in output-metadata.json, then falls back to *.apk under outputs/apk/.
+ * Deduplicated by absolute path; newest first.
+ */
+internal fun findDebugApks(projectRoot: File): List<File> {
+    val found = LinkedHashMap<String, File>()
+    projectRoot.walkTopDown().maxDepth(12)
         .filter { it.isFile && it.name == "output-metadata.json" && "/outputs/apk/" in it.invariantSeparatorsPath }
-        .maxByOrNull(File::lastModified)
-    if (metadata != null) {
-        runCatching {
-            val json = JSONObject(metadata.readText())
-            val elements = json.optJSONArray("elements") ?: return@runCatching null
-            (0 until elements.length()).asSequence()
-                .mapNotNull { elements.optJSONObject(it)?.optString("outputFile") }
-                .map { File(metadata.parentFile, it) }
-                .firstOrNull { it.isFile && it.length() > 0L }
-        }.getOrNull()?.let { return it }
+        .forEach { metadata ->
+            runCatching {
+                val json = JSONObject(metadata.readText())
+                val elements = json.optJSONArray("elements") ?: return@runCatching
+                for (i in 0 until elements.length()) {
+                    val name = elements.optJSONObject(i)?.optString("outputFile")?.takeIf { it.isNotBlank() } ?: continue
+                    val file = File(metadata.parentFile, name)
+                    if (file.isFile && file.length() > 0L) {
+                        found[file.absolutePath] = file
+                    }
+                }
+            }
+        }
+    projectRoot.walkTopDown().maxDepth(14)
+        .filter {
+            it.isFile &&
+                it.extension.equals("apk", true) &&
+                it.length() > 0L &&
+                "/outputs/apk/" in it.invariantSeparatorsPath &&
+                "/intermediates/" !in it.invariantSeparatorsPath
+        }
+        .forEach { found[it.absolutePath] = it }
+    return found.values.sortedByDescending { it.lastModified() }
+}
+
+/** Most recently modified installable APK (compat helper). */
+internal fun findDebugApk(projectRoot: File): File? = findDebugApks(projectRoot).firstOrNull()
+
+/** Module name and variant inferred from a typical Gradle outputs path. */
+internal fun apkModuleAndVariant(projectRoot: File, apk: File): Pair<String?, String?> {
+    val rel = runCatching { apk.canonicalFile.relativeTo(projectRoot.canonicalFile).invariantSeparatorsPath }
+        .getOrElse { apk.absolutePath }
+    // …/<module>/build/outputs/apk/<variant>/file.apk
+    val parts = rel.split('/')
+    val outputsIdx = parts.indexOf("outputs")
+    val buildIdx = parts.indexOf("build")
+    val module = when {
+        buildIdx > 0 -> parts[buildIdx - 1]
+        else -> null
     }
-    return projectRoot.walkTopDown().maxDepth(10)
-        .filter { it.isFile && it.extension.equals("apk", true) && "/outputs/apk/debug/" in it.invariantSeparatorsPath }
-        .maxByOrNull(File::lastModified)
+    val variant = when {
+        outputsIdx >= 0 && parts.getOrNull(outputsIdx + 1) == "apk" -> parts.getOrNull(outputsIdx + 2)
+        else -> null
+    }
+    return module to variant
 }
 
 /** Returns the last debug APK only when every build input is older than it. */
