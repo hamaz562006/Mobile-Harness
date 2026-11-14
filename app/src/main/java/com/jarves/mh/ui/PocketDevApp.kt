@@ -7598,7 +7598,10 @@ private fun AndroidApkOutputChooser(
     onSelect: (String) -> Unit,
 ) {
     if (list.size <= 1) return
-    Card(Modifier = Modifier.fillMaxWidth()) {
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
+    ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 stringResource(R.string.an_apk_outputs_title, list.size),
