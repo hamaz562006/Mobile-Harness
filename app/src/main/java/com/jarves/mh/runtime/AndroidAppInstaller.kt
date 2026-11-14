@@ -13,8 +13,14 @@ import com.jarves.mh.ui.AppStrings
 import java.io.File
 import java.security.MessageDigest
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 
 data class AndroidInstallEvent(
     val operationId: String,
@@ -128,27 +134,58 @@ object AndroidAppInstaller {
         return operationId
     }
 
+    private val hostScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    @Volatile private var resumeWatchJob: Job? = null
+
     /**
      * Called from MainActivity.onResume.
      * Completes a pending install when the system has the package (covers MIUI and
      * any OEM where PackageInstaller status is never delivered).
+     *
+     * PackageManager often lags the system installer UI by a short time, so we retry
+     * for several seconds instead of giving up on the first resume.
      */
     fun onHostResumed(context: Context) {
         val pending = pendingInstall ?: return
-        val apk = File(pending.apkPath)
-        if (!apk.isFile) return
-        val pkg = pending.packageName ?: archivePackageName(context, apk) ?: return
-        if (!isInstalled(context, pkg)) return
+        val app = context.applicationContext
+        resumeWatchJob?.cancel()
+        resumeWatchJob = hostScope.launch {
+            // Immediate attempt, then backoff — OEM installers often need a moment.
+            val delaysMs = longArrayOf(0L, 300L, 700L, 1200L, 2000L, 3000L, 5000L)
+            for (wait in delaysMs) {
+                if (wait > 0L) delay(wait)
+                if (pendingInstall?.operationId != pending.operationId) return@launch
+                if (tryCompletePendingIfInstalled(app, pending)) return@launch
+            }
+        }
+    }
 
-        // Prefer matching versionCode from the APK we handed to the installer.
+    /**
+     * Safety net while the UI is stuck on INSTALLING: call from ViewModel on a timer.
+     * Returns true if the pending install was completed.
+     */
+    fun pollPendingInstall(context: Context): Boolean {
+        val pending = pendingInstall ?: return false
+        return tryCompletePendingIfInstalled(context.applicationContext, pending)
+    }
+
+    private fun tryCompletePendingIfInstalled(context: Context, pending: PendingInstall): Boolean {
+        if (pendingInstall?.operationId != pending.operationId) return false
+        val apk = File(pending.apkPath)
+        if (!apk.isFile) return false
+        val pkg = pending.packageName ?: archivePackageName(context, apk) ?: return false
+        if (!isInstalled(context, pkg)) return false
+
         val installedVc = installedVersionCode(context, pkg)
+        // Only treat as cancelled when an *older* version is still the only one installed.
         if (pending.archiveVersionCode > 0L && installedVc > 0L && installedVc < pending.archiveVersionCode) {
-            // Older build still present — user likely cancelled the update.
-            return
+            return false
         }
 
         rememberInstalled(context, pkg, pending.fingerprint)
         pendingInstall = null
+        resumeWatchJob?.cancel()
+        resumeWatchJob = null
         val launched = if (pending.launchAfterInstall) launch(context, pkg) else false
         publish(
             AndroidInstallEvent(
@@ -158,6 +195,7 @@ object AndroidAppInstaller {
                 launched = launched,
             ),
         )
+        return true
     }
 
     fun cancelPendingInstall(operationId: String? = null) {
@@ -267,6 +305,17 @@ object AndroidAppInstaller {
 
     private const val PREFERENCES = "installed_android_apks"
 
-    private fun isMiuiDevice(): Boolean = Build.MANUFACTURER.lowercase() in
-        setOf("xiaomi", "redmi", "poco")
+    private fun isMiuiDevice(): Boolean {
+        val mfr = Build.MANUFACTURER.lowercase()
+        val brand = Build.BRAND.lowercase()
+        if (mfr in setOf("xiaomi", "redmi", "poco") || brand in setOf("xiaomi", "redmi", "poco")) return true
+        // Some HyperOS builds report differently; prefer system installer path when MIUI prop exists.
+        return runCatching {
+            val cl = Class.forName("android.os.SystemProperties")
+            val get = cl.getMethod("get", String::class.java)
+            val miui = (get.invoke(null, "ro.miui.ui.version.name") as? String).orEmpty()
+            miui.isNotBlank()
+        }.getOrDefault(false)
+    }
 }
+

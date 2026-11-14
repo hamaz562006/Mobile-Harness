@@ -1395,6 +1395,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         runCatching {
             AndroidAppInstaller.install(getApplication(), apk, launchAfterInstall = launch, operationId = operationId)
+            watchPendingAndroidInstall(operationId)
         }.onFailure { error ->
             pendingAndroidInstallId = null
             pendingAndroidInstallLaunch = false
@@ -1406,6 +1407,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     androidBuildMessage = error.message ?: str(R.string.an_could_not_start_install),
                     androidBuildIssues = listOf(AndroidBuildIssue(title = str(R.string.rt_apk_install_failed), detail = error.message ?: str(R.string.an_could_not_start_installer))),
                 )
+            }
+        }
+    }
+
+    /** Poll PackageManager while INSTALLING so MIUI/OEM gaps cannot leave the UI stuck forever. */
+    private fun watchPendingAndroidInstall(operationId: String) {
+        viewModelScope.launch {
+            // Up to ~2 minutes of light polling; onHostResumed handles the fast path.
+            repeat(40) {
+                delay(3_000)
+                if (pendingAndroidInstallId != operationId) return@launch
+                if (_state.value.androidBuildStage != AndroidBuildStage.INSTALLING) return@launch
+                val done = withContext(Dispatchers.IO) {
+                    AndroidAppInstaller.pollPendingInstall(getApplication())
+                }
+                if (done) return@launch
             }
         }
     }
