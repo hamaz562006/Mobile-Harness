@@ -248,6 +248,7 @@ import com.jarves.mh.runtime.RuntimeSetupService
 import com.jarves.mh.runtime.supportsArm64Runtime
 import com.jarves.mh.runtime.AntigravityAuthStatus
 import com.jarves.mh.runtime.AndroidAction
+import com.jarves.mh.runtime.AndroidApkInfo
 import com.jarves.mh.runtime.AndroidBuildIssue
 import com.jarves.mh.runtime.AndroidBuildIssueFix
 import com.jarves.mh.runtime.AndroidBuildStage
