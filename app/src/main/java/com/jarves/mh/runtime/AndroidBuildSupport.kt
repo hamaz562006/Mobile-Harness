@@ -194,7 +194,32 @@ internal fun findReusableDebugApk(projectRoot: File): File? {
     return apk.takeUnless { changedAfterApk }
 }
 
-internal fun isDebugApkStale(projectRoot: File, apk: File): Boolean = findReusableDebugApk(projectRoot) != apk
+/**
+ * True when sources relevant to this APK's module are newer than the APK file.
+ * Previously compared identity to the single "newest" APK, which marked every
+ * non-newest module APK as stale and forced Build&Run of the wrong artifact.
+ */
+internal fun isDebugApkStale(projectRoot: File, apk: File): Boolean {
+    if (!apk.isFile) return true
+    val (module, _) = apkModuleAndVariant(projectRoot, apk)
+    val scopeRoot = module
+        ?.let { name -> File(projectRoot, name).takeIf { it.isDirectory } }
+        ?: projectRoot
+    val ignoredDirectories = setOf("build", ".gradle", ".idea", ".git")
+    val buildInputExtensions = setOf(
+        "kt", "java", "xml", "gradle", "kts", "properties", "toml", "pro", "json", "jar", "aar",
+    )
+    return scopeRoot.walkTopDown()
+        .onEnter { directory -> directory == scopeRoot || directory.name !in ignoredDirectories }
+        .filter { file ->
+            if (!file.isFile) return@filter false
+            val relative = runCatching { file.relativeTo(scopeRoot).invariantSeparatorsPath }.getOrDefault(file.name)
+            val isAndroidSource = relative.startsWith("src/") || "/src/" in relative
+            isAndroidSource || file.extension.lowercase() in buildInputExtensions ||
+                file.name in setOf("gradlew", "gradlew.bat")
+        }
+        .any { it.lastModified() > apk.lastModified() }
+}
 
 internal fun inferAndroidBuildStage(output: String, current: AndroidBuildStage): AndroidBuildStage {
     val text = output.lowercase()

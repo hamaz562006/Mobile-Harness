@@ -5732,10 +5732,13 @@ private fun ProfessionalAndroidOverview(
 ) {
     val apk = state.androidApkInfo
     val toolsInstalled = DevStack.ANDROID in state.installedDevStacks
+    // Prefer installing the *selected* APK as-is. Never force Build&Run just because
+    // another module's APK is newer — that was installing sample-app for every selection.
     val primaryAction = when {
         apk == null -> AndroidAction.BUILD
+        apk.installedMatches && !apk.stale -> AndroidAction.RUN
+        !apk.installedMatches -> AndroidAction.INSTALL
         apk.stale -> AndroidAction.BUILD_AND_RUN
-        apk.installedMatches -> AndroidAction.RUN
         else -> AndroidAction.INSTALL
     }
     val primaryLabel = when (primaryAction) {

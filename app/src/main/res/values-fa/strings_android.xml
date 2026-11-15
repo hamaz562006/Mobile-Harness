@@ -131,4 +131,5 @@
     <string name="an_apk_outputs_title">%1$d خروجی APK</string>
     <string name="an_apk_outputs_hint">APK موردنظر برای نصب یا اشتراک را انتخاب کنید.</string>
     <string name="an_apk_outputs_collapsed">انتخاب‌شده: %1$s</string>
+    <string name="an_installing_named_apk">در حال نصب %1$s…</string>
 </resources>

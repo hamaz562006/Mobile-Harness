@@ -1375,9 +1375,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun installLatestAndroidApk(launch: Boolean, action: AndroidAction) {
         val stateNow = _state.value
-        val selectedPath = stateNow.androidApkInfo?.path
+        val selectedPath = preferredAndroidApkPath
+            ?: stateNow.androidApkInfo?.path
             ?: stateNow.androidApkList.firstOrNull()?.path
-        val selected = selectedPath?.let { File(it) }?.takeIf { it.isFile }
+        val fromList = selectedPath?.let { path ->
+            stateNow.androidApkList.firstOrNull { it.path == path }
+        }
+        val selected = (fromList?.path ?: selectedPath)?.let { File(it) }?.takeIf { it.isFile }
         if (selected != null) {
             beginAndroidInstall(selected, launch, action)
             return
@@ -1410,6 +1414,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 androidBuildFinishedAtMillis = null,
                 androidBuildApkPath = apk.absolutePath,
                 androidBuildApkSizeBytes = apk.length(),
+                toastMessage = str(R.string.an_installing_named_apk, apk.name),
             )
         }
         runCatching {
