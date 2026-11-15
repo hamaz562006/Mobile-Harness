@@ -1306,9 +1306,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (current.isRunning || current.projectTerminalRunning || current.androidBuildRunning) return false
         val workspace = findAndroidProjectRoot(projectWorkspaceRoot(project)) ?: return false
         val selectedFile = current.androidApkInfo?.path?.let { File(it) }?.takeIf { it.isFile }
-        val apk = when {
-            selectedFile != null && !isDebugApkStale(workspace, selectedFile) -> selectedFile
-            else -> findReusableDebugApk(workspace) ?: return false
+        // Multi-module: only the selected APK decides skip-vs-rebuild. Never fall back to
+        // another module's "reusable" APK when the user has an explicit selection.
+        val apk = if (selectedFile != null) {
+            if (isDebugApkStale(workspace, selectedFile)) return false
+            selectedFile
+        } else {
+            findReusableDebugApk(workspace) ?: return false
         }
         if (launch) {
             if (AndroidAppInstaller.openIfAlreadyInstalled(getApplication(), apk)) {

@@ -195,9 +195,8 @@ internal fun findReusableDebugApk(projectRoot: File): File? {
 }
 
 /**
- * True when sources relevant to this APK's module are newer than the APK file.
- * Previously compared identity to the single "newest" APK, which marked every
- * non-newest module APK as stale and forced Build&Run of the wrong artifact.
+ * True when this APK is out of date relative to its own module sources.
+ * Scoped to the module that produced the APK (not the whole multi-module tree).
  */
 internal fun isDebugApkStale(projectRoot: File, apk: File): Boolean {
     if (!apk.isFile) return true
@@ -205,18 +204,21 @@ internal fun isDebugApkStale(projectRoot: File, apk: File): Boolean {
     val scopeRoot = module
         ?.let { name -> File(projectRoot, name).takeIf { it.isDirectory } }
         ?: projectRoot
-    val ignoredDirectories = setOf("build", ".gradle", ".idea", ".git")
-    val buildInputExtensions = setOf(
-        "kt", "java", "xml", "gradle", "kts", "properties", "toml", "pro", "json", "jar", "aar",
+    val ignoredDirectories = setOf("build", ".gradle", ".idea", ".git", "out", "captures")
+    val sourceExt = setOf("kt", "java", "xml", "pro", "aidl")
+    val configNames = setOf(
+        "build.gradle", "build.gradle.kts", "AndroidManifest.xml",
+        "gradle.properties", "proguard-rules.pro", "Android.bp",
     )
     return scopeRoot.walkTopDown()
         .onEnter { directory -> directory == scopeRoot || directory.name !in ignoredDirectories }
         .filter { file ->
             if (!file.isFile) return@filter false
             val relative = runCatching { file.relativeTo(scopeRoot).invariantSeparatorsPath }.getOrDefault(file.name)
-            val isAndroidSource = relative.startsWith("src/") || "/src/" in relative
-            isAndroidSource || file.extension.lowercase() in buildInputExtensions ||
-                file.name in setOf("gradlew", "gradlew.bat")
+            val inSrc = relative.startsWith("src/") || "/src/" in relative
+            val isSource = inSrc && file.extension.lowercase() in sourceExt
+            val isModuleConfig = file.name in configNames && "/build/" !in relative
+            isSource || isModuleConfig
         }
         .any { it.lastModified() > apk.lastModified() }
 }
