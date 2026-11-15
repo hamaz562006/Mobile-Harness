@@ -85,18 +85,7 @@ object AndroidAppInstaller {
             archiveVersionCode = versionCode,
         )
 
-        // MIUI / HyperOS: system package installer UI (no reliable session callback).
-        if (isMiuiDevice()) {
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", apk)
-            context.startActivity(
-                Intent(Intent.ACTION_INSTALL_PACKAGE, uri).apply {
-                    setDataAndType(uri, "application/vnd.android.package-archive")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-                },
-            )
-            return operationId
-        }
-
+        // Prefer PackageInstaller sessions; onHostResumed/poll complete when OEM drops callbacks.
         val installer = context.packageManager.packageInstaller
         val isUpdate = packageName?.let { isInstalled(context, it) } == true
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
@@ -112,24 +101,34 @@ object AndroidAppInstaller {
                     setInstallerPackageName(context.packageName)
                 }
             }
-        val sessionId = installer.createSession(params)
-        installer.openSession(sessionId).use { session ->
-            apk.inputStream().buffered().use { input ->
-                session.openWrite("package", 0, apk.length()).use { output ->
-                    input.copyTo(output)
-                    session.fsync(output)
+        try {
+            val sessionId = installer.createSession(params)
+            installer.openSession(sessionId).use { session ->
+                apk.inputStream().buffered().use { input ->
+                    session.openWrite("package", 0, apk.length()).use { output ->
+                        input.copyTo(output)
+                        session.fsync(output)
+                    }
                 }
+                val callback = Intent(context, AndroidAppInstallReceiver::class.java).apply {
+                    action = ACTION_INSTALL_RESULT
+                    putExtra(EXTRA_OPERATION_ID, operationId)
+                    putExtra(EXTRA_LAUNCH_AFTER, launchAfterInstall)
+                    putExtra(EXTRA_APK_FINGERPRINT, fp)
+                }
+                val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
+                val pi = PendingIntent.getBroadcast(context, sessionId, callback, flags)
+                session.commit(pi.intentSender)
             }
-            val callback = Intent(ACTION_INSTALL_RESULT).apply {
-                setPackage(context.packageName)
-                putExtra(EXTRA_OPERATION_ID, operationId)
-                putExtra(EXTRA_LAUNCH_AFTER, launchAfterInstall)
-                putExtra(EXTRA_APK_FINGERPRINT, fp)
-            }
-            val flags = PendingIntent.FLAG_UPDATE_CURRENT or
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
-            val pi = PendingIntent.getBroadcast(context, sessionId, callback, flags)
-            session.commit(pi.intentSender)
+        } catch (e: Exception) {
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", apk)
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/vnd.android.package-archive")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                },
+            )
         }
         return operationId
     }
@@ -242,10 +241,23 @@ object AndroidAppInstaller {
 
     fun packageName(context: Context, apk: File): String? = archivePackageName(context, apk)
 
-    fun isInstalled(context: Context, packageName: String): Boolean = runCatching {
-        context.packageManager.getPackageInfo(packageName, 0)
-        true
-    }.getOrDefault(false)
+    fun isInstalled(context: Context, packageName: String): Boolean {
+        val pm = context.packageManager
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getPackageInfo(packageName, 0)
+            }
+            return true
+        }
+        return runCatching {
+            val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+            @Suppress("DEPRECATION")
+            pm.queryIntentActivities(intent, 0).any { it.activityInfo.packageName == packageName }
+        }.getOrDefault(false)
+    }
 
     fun installedMatches(context: Context, apk: File): Boolean {
         val packageName = archivePackageName(context, apk) ?: return false

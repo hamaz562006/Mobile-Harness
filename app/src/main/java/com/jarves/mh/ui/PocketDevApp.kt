@@ -7598,51 +7598,73 @@ private fun AndroidApkOutputChooser(
     onSelect: (String) -> Unit,
 ) {
     if (list.size <= 1) return
+    var expanded by remember(list.size) { mutableStateOf(true) }
+    val selectedName = list.firstOrNull { it.path == selectedPath }?.fileName
     Card(
         Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                stringResource(R.string.an_apk_outputs_title, list.size),
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                stringResource(R.string.an_apk_outputs_hint),
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            list.forEach { item ->
-                val selected = item.path == selectedPath
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelect(item.path) },
-                    color = if (selected) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Row(
-                        Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.an_apk_outputs_title, list.size),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        if (expanded) stringResource(R.string.an_apk_outputs_hint)
+                        else stringResource(R.string.an_apk_outputs_collapsed, selectedName ?: "—"),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                TextButton(onClick = { expanded = !expanded }) {
+                    Text(
+                        stringResource(
+                            if (expanded) R.string.an_health_fix_log_collapse
+                            else R.string.an_health_fix_log_expand,
+                        ),
+                    )
+                }
+            }
+            if (expanded) {
+                list.forEach { item ->
+                    val selected = item.path == selectedPath
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(item.path) },
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp),
                     ) {
-                        RadioButton(selected = selected, onClick = { onSelect(item.path) })
-                        Column(Modifier.weight(1f)) {
-                            Text(item.fileName, fontWeight = FontWeight.SemiBold)
-                            val meta = buildString {
-                                item.moduleName?.let { append(it) }
-                                item.variant?.let {
+                        Row(
+                            Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = selected, onClick = { onSelect(item.path) })
+                            Column(Modifier.weight(1f)) {
+                                Text(item.fileName, fontWeight = FontWeight.SemiBold)
+                                val meta = buildString {
+                                    item.moduleName?.let { append(it) }
+                                    item.variant?.let {
+                                        if (isNotEmpty()) append(" · ")
+                                        append(it)
+                                    }
                                     if (isNotEmpty()) append(" · ")
-                                    append(it)
+                                    append(formatFileSize(item.sizeBytes))
+                                    item.packageName?.let {
+                                        append(" · ")
+                                        append(it)
+                                    }
                                 }
-                                if (isNotEmpty()) append(" · ")
-                                append(formatFileSize(item.sizeBytes))
-                                item.packageName?.let {
-                                    append(" · ")
-                                    append(it)
-                                }
+                                Text(meta, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text(meta, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -7650,6 +7672,7 @@ private fun AndroidApkOutputChooser(
         }
     }
 }
+
 
 private fun formatFileSize(bytes: Long): String = when {
     bytes < 1_024 -> "$bytes B"

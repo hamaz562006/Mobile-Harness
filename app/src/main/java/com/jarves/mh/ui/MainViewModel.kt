@@ -500,6 +500,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var cachedRecentExitSummary: String? = null
     private var recentExitLoadedAtElapsedMillis = 0L
     private var pendingAndroidInstallId: String? = null
+    /** User-selected APK path; preserved across refreshAndroidApkInfo. */
+    private var preferredAndroidApkPath: String? = null
     private var pendingAndroidInstallLaunch = false
     private var androidLaunchAtMillis: Long? = null
     @Volatile private var setupCompletionHandled: Boolean = false
@@ -1303,7 +1305,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val project = current.activeProject ?: return false
         if (current.isRunning || current.projectTerminalRunning || current.androidBuildRunning) return false
         val workspace = findAndroidProjectRoot(projectWorkspaceRoot(project)) ?: return false
-        val apk = findReusableDebugApk(workspace) ?: return false
+        val selectedFile = current.androidApkInfo?.path?.let { File(it) }?.takeIf { it.isFile }
+        val apk = when {
+            selectedFile != null && !isDebugApkStale(workspace, selectedFile) -> selectedFile
+            else -> findReusableDebugApk(workspace) ?: return false
+        }
         if (launch) {
             if (AndroidAppInstaller.openIfAlreadyInstalled(getApplication(), apk)) {
                 androidLaunchAtMillis = System.currentTimeMillis()
@@ -1341,8 +1347,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun runLatestAndroidApk() {
         val project = _state.value.activeProject ?: return
+        val selected = _state.value.androidApkInfo?.path?.let { File(it) }?.takeIf { it.isFile }
         val root = findAndroidProjectRoot(projectWorkspaceRoot(project))
-        val apk = root?.let(::findDebugApk)
+        val apk = selected ?: root?.let(::findDebugApk)
         if (apk == null) {
             _state.update { it.copy(toastMessage = str(R.string.an_build_apk_before_run)) }
             return
@@ -1367,7 +1374,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun installLatestAndroidApk(launch: Boolean, action: AndroidAction) {
-        val selected = _state.value.androidApkInfo?.path?.let { File(it) }?.takeIf { it.isFile }
+        val stateNow = _state.value
+        val selectedPath = stateNow.androidApkInfo?.path
+            ?: stateNow.androidApkList.firstOrNull()?.path
+        val selected = selectedPath?.let { File(it) }?.takeIf { it.isFile }
         if (selected != null) {
             beginAndroidInstall(selected, launch, action)
             return
@@ -1423,8 +1433,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** Poll PackageManager while INSTALLING so MIUI/OEM gaps cannot leave the UI stuck forever. */
     private fun watchPendingAndroidInstall(operationId: String) {
         viewModelScope.launch {
-            // Up to ~2 minutes of light polling; onHostResumed handles the fast path.
-            repeat(40) {
+            repeat(60) {
                 delay(3_000)
                 if (pendingAndroidInstallId != operationId) return@launch
                 if (_state.value.androidBuildStage != AndroidBuildStage.INSTALLING) return@launch
@@ -1432,6 +1441,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     AndroidAppInstaller.pollPendingInstall(getApplication())
                 }
                 if (done) return@launch
+            }
+            if (pendingAndroidInstallId == operationId &&
+                _state.value.androidBuildStage == AndroidBuildStage.INSTALLING
+            ) {
+                withContext(Dispatchers.IO) {
+                    AndroidAppInstaller.pollPendingInstall(getApplication())
+                }
             }
         }
     }
@@ -1596,7 +1612,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     refreshAndroidApkInfo()
                 }
                 finishAndroidBuildForegroundService(project, message, failed = false)
-                if (shouldInstallAndRun) beginAndroidInstall(apk!!, launch = true, action = action)
+                if (shouldInstallAndRun) {
+                        val preferred = _state.value.androidApkInfo?.path?.let { File(it) }?.takeIf { it.isFile }
+                        beginAndroidInstall(preferred ?: apk!!, launch = true, action = action)
+                    }
             }.onFailure { error ->
                 val cancelled = error is java.util.concurrent.CancellationException || androidBuildStopRequested
                 val message = if (cancelled) str(R.string.an_build_cancelled) else error.message?.let { localizedAndroidBuildText(AppStrings.context(getApplication()), it) } ?: str(R.string.an_could_not_build_apk)
@@ -1812,8 +1831,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         variant = variant,
                     )
                 }
+                val preferred = preferredAndroidApkPath
                 val previous = _state.value.androidApkInfo?.path
-                val selectedInfo = infos.firstOrNull { it.path == previous } ?: infos.firstOrNull()
+                val selectedInfo = infos.firstOrNull { it.path == preferred }
+                    ?: infos.firstOrNull { it.path == previous }
+                    ?: infos.firstOrNull()
                 infos to selectedInfo
             }.getOrElse { emptyList<AndroidApkInfo>() to null }
             _state.update {
@@ -1827,6 +1849,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectAndroidApk(path: String) {
         val chosen = _state.value.androidApkList.firstOrNull { it.path == path } ?: return
+        preferredAndroidApkPath = path
         _state.update { it.copy(androidApkInfo = chosen) }
     }
 
