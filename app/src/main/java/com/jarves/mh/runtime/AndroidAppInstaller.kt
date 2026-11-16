@@ -259,9 +259,22 @@ object AndroidAppInstaller {
         }.getOrDefault(false)
     }
 
+    /**
+     * True when this APK file is the one currently installed for its package.
+     * Uses remembered fingerprint when available; otherwise falls back to versionCode
+     * and records the fingerprint so later checks stay consistent.
+     */
     fun installedMatches(context: Context, apk: File): Boolean {
         val packageName = archivePackageName(context, apk) ?: return false
-        return installedFingerprint(context, packageName) == fingerprint(apk)
+        if (!isInstalled(context, packageName)) return false
+        val fp = fingerprint(apk)
+        val remembered = installedFingerprint(context, packageName)
+        if (remembered != null) return remembered == fp
+        val apkVc = archiveVersionCode(context, apk)
+        val installedVc = installedVersionCode(context, packageName)
+        val match = apkVc > 0L && installedVc > 0L && apkVc == installedVc
+        if (match) rememberInstalled(context, packageName, fp)
+        return match
     }
 
     fun apkFingerprint(apk: File): String = fingerprint(apk)

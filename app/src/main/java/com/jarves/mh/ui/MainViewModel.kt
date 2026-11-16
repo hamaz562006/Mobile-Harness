@@ -594,14 +594,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         launchRequested -> str(R.string.an_app_installed_no_launcher)
                         else -> str(R.string.an_apk_installed)
                     }
-                    _state.update {
-                        it.copy(
+                    val installedPath = _state.value.androidBuildApkPath
+                    _state.update { cur ->
+                        val patchedList = cur.androidApkList.map { info ->
+                            if (installedPath != null && info.path == installedPath) {
+                                info.copy(installed = true, installedMatches = true)
+                            } else if (event.packageName != null && info.packageName == event.packageName) {
+                                // Same package as installed event
+                                if (info.path == installedPath || info.path == cur.androidApkInfo?.path) {
+                                    info.copy(installed = true, installedMatches = true)
+                                } else {
+                                    info.copy(installed = true)
+                                }
+                            } else {
+                                info
+                            }
+                        }
+                        val patchedSelected = patchedList.firstOrNull { it.path == cur.androidApkInfo?.path }
+                            ?: cur.androidApkInfo?.copy(installed = true, installedMatches = true)
+                        cur.copy(
                             androidBuildRunning = false,
                             androidBuildPhase = AndroidBuildPhase.SUCCEEDED,
                             androidBuildStage = AndroidBuildStage.COMPLETE,
                             androidBuildMessage = message,
                             androidBuildFinishedAtMillis = System.currentTimeMillis(),
                             toastMessage = message,
+                            androidApkList = patchedList,
+                            androidApkInfo = patchedSelected,
                         )
                     }
                     project?.let { saveAndroidBuildRecord(it.id) }
@@ -1857,9 +1876,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun selectAndroidApk(path: String) {
-        val chosen = _state.value.androidApkList.firstOrNull { it.path == path } ?: return
+        val project = _state.value.activeProject ?: return
         preferredAndroidApkPath = path
-        _state.update { it.copy(androidApkInfo = chosen) }
+        // Immediately show selection; recompute stale/installed on IO so the primary button updates.
+        _state.value.androidApkList.firstOrNull { it.path == path }?.let { chosen ->
+            _state.update { it.copy(androidApkInfo = chosen) }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val projectRoot = findAndroidProjectRoot(projectWorkspaceRoot(project)) ?: return@launch
+            val apkFile = File(path)
+            if (!apkFile.isFile) return@launch
+            val app = getApplication<Application>()
+            @Suppress("DEPRECATION")
+            val archive = app.packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+            val packageName = archive?.packageName ?: AndroidAppInstaller.packageName(app, apkFile)
+            val (module, variant) = apkModuleAndVariant(projectRoot, apkFile)
+            val info = AndroidApkInfo(
+                path = apkFile.absolutePath,
+                fileName = apkFile.name,
+                sizeBytes = apkFile.length(),
+                builtAtMillis = apkFile.lastModified(),
+                packageName = packageName,
+                versionName = archive?.versionName,
+                versionCode = archive?.let {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) it.longVersionCode
+                    else @Suppress("DEPRECATION") it.versionCode.toLong()
+                },
+                minSdk = archive?.applicationInfo?.minSdkVersion,
+                targetSdk = archive?.applicationInfo?.targetSdkVersion,
+                stale = isDebugApkStale(projectRoot, apkFile),
+                installed = packageName?.let { AndroidAppInstaller.isInstalled(app, it) } == true,
+                installedMatches = AndroidAppInstaller.installedMatches(app, apkFile),
+                moduleName = module,
+                variant = variant,
+            )
+            _state.update { cur ->
+                val list = cur.androidApkList.map { if (it.path == path) info else it }
+                cur.copy(androidApkList = list, androidApkInfo = info)
+            }
+        }
     }
 
     fun shareAndroidApk() {
