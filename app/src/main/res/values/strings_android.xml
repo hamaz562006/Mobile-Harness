@@ -132,4 +132,6 @@
     <string name="an_apk_outputs_hint">Select which APK to install or share.</string>
     <string name="an_apk_outputs_collapsed">Selected: %1$s</string>
     <string name="an_installing_named_apk">Installing %1$s…</string>
+    <string name="an_rebuild_before_install">Source changed — rebuilding, then install/update…</string>
+    <string name="an_apk_already_installed_run">This APK is already installed.</string>
 </resources>

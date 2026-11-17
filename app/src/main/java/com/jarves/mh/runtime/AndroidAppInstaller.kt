@@ -85,17 +85,42 @@ object AndroidAppInstaller {
             archiveVersionCode = versionCode,
         )
 
-        // Prefer PackageInstaller sessions; onHostResumed/poll complete when OEM drops callbacks.
+        val alreadyInstalled = packageName != null && isInstalled(context, packageName)
+        // Exact same binary already installed — no system UI will appear; treat as success.
+        if (alreadyInstalled && installedFingerprint(context, packageName!!) == fp) {
+            pendingInstall = null
+            val launched = if (launchAfterInstall) launch(context, packageName) else false
+            publish(
+                AndroidInstallEvent(
+                    operationId = operationId,
+                    packageName = packageName,
+                    success = true,
+                    launched = launched,
+                    message = "Already installed",
+                ),
+            )
+            return operationId
+        }
+
+        // Updates (and OEM installers): always surface the system install/update dialog.
+        // PackageInstaller with USER_ACTION_NOT_REQUIRED often shows nothing and does not update.
+        if (alreadyInstalled || isMiuiDevice()) {
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", apk)
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/vnd.android.package-archive")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                },
+            )
+            return operationId
+        }
+
         val installer = context.packageManager.packageInstaller
-        val isUpdate = packageName?.let { isInstalled(context, it) } == true
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
             .apply {
                 setSize(apk.length())
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    setRequireUserAction(
-                        if (isUpdate) PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED
-                        else PackageInstaller.SessionParams.USER_ACTION_REQUIRED,
-                    )
+                    setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_REQUIRED)
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     setInstallerPackageName(context.packageName)
